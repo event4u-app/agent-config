@@ -2,15 +2,16 @@
 // sentence naming an end state is stored verbatim per session; host-written
 // turns and pasted material store nothing; a revoke sentence ends the record
 // and is stored verbatim too.
-import { execFileSync, spawnSync } from 'node:child_process';
+import { execFileSync, spawn, spawnSync } from 'node:child_process';
 import * as fs from 'node:fs';
 import * as os from 'node:os';
 import * as path from 'node:path';
+import { pathToFileURL } from 'node:url';
 
 import { afterEach, beforeEach, describe, expect, it } from 'vitest';
 
 import { release, tryAcquire } from '../../src/scripts/_lib/generation_lock.js';
-import { goal_mandate_block, observe_prompt, write_stop } from '../../src/scripts/_lib/goal_mandate.js';
+import { beat_time, goal_mandate_block, observe_prompt, write_stop } from '../../src/scripts/_lib/goal_mandate.js';
 import { goal_mandate_for_subagent, goal_mandate_line, read_goal } from '../../src/scripts/_lib/goal_mandate_store.js';
 
 const T0 = new Date('2026-11-21T09:15:00Z');
@@ -491,5 +492,37 @@ describe('session-register user_prompt_submit beat — the hook carries the goal
         expect(reply.additional_context).toContain('"mach weiter bis zum merge"');
         const next = JSON.parse(beat('und jetzt die tests').stdout.trim()) as { additional_context: string };
         expect(next.additional_context).toContain('"mach weiter bis zum merge"');
+    }, 120_000);
+
+    it('beat_time is the process start for a fresh process and the current time for an old one', () => {
+        const origin = Math.trunc(performance.timeOrigin);
+        expect(beat_time(origin + 1_000).getTime()).toBe(origin);
+        expect(beat_time(origin + 120_000).getTime()).toBe(origin + 120_000);
+    });
+
+    // Ratification round 16: the stamp is when the hook process started, not when
+    // its code reached the recorder — so a goal hook that stalls after it started
+    // still loses to a stop the owner submitted after it.
+    it('a goal hook that stalls after starting loses to a later stop that finishes first', async () => {
+        const stall = path.join(root, 'stall.mjs');
+        fs.writeFileSync(stall, 'const end = Date.now() + 4000; while (Date.now() < end) {}\n');
+        const envelope = (prompt: string) =>
+            JSON.stringify({ event: 'user_prompt_submit', workspace_root: root, session_id: 'hook-goal-race', platform: 'claude', payload: { cwd: root, prompt } });
+        const goalDone = new Promise<void>((resolve) => {
+            // One node process (no tsx launcher child), so the stall runs after the
+            // process started and before the hook code reaches the recorder.
+            const loader = pathToFileURL(path.join(repo, 'node_modules', 'tsx', 'dist', 'loader.mjs')).href;
+            const child = spawn(process.execPath, ['--import', loader, '--import', pathToFileURL(stall).href, hook], {
+                env,
+                stdio: ['pipe', 'ignore', 'ignore'],
+            });
+            child.on('exit', () => resolve());
+            child.stdin.end(envelope('mach weiter bis zum merge'));
+        });
+        await new Promise((r) => setTimeout(r, 500));
+        const stop = spawnSync(tsx, [hook], { input: envelope('stop'), encoding: 'utf8', env, timeout: 60_000 });
+        expect(stop.status).not.toBeNull();
+        await goalDone;
+        expect(goal_mandate_line(read_goal(root, 'hook-goal-race'))).toBeNull();
     }, 120_000);
 });

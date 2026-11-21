@@ -66,9 +66,25 @@ export function write_stop(file: string, revoke: string, now: Date): void {
         }
         return;
     }
-    for (const n of fs.readdirSync(path.dirname(file))) {
-        if (n.startsWith(prefix) && n < own) fs.rmSync(path.join(path.dirname(file), n), { force: true });
+    // The stop is saved; pruning is housekeeping and never turns it into a failure.
+    try {
+        for (const n of fs.readdirSync(path.dirname(file))) {
+            if (n.startsWith(prefix) && n < own) fs.rmSync(path.join(path.dirname(file), n), { force: true });
+        }
+    } catch {
+        /* older stops stay; the latest still wins */
     }
+}
+
+/**
+ * The beat's stamp: when this hook process started — the host spawns one per
+ * submitted prompt — not when its code reached the recorder, so a beat that
+ * stalls after starting keeps its place in the owner's order. A process older
+ * than a minute is not a per-beat process, and the current time is used.
+ */
+export function beat_time(now: number = Date.now()): Date {
+    const origin = performance.timeOrigin;
+    return now - origin >= 0 && now - origin < 60_000 ? new Date(origin) : new Date(now);
 }
 
 /** Record a goal or a revocation from one owner prompt; return the record after it. Never throws. */

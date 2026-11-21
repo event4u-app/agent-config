@@ -70,7 +70,7 @@ import {
     ttl_seconds_for,
     write_record,
 } from './_lib/session_register.js';
-import { goal_mandate_block } from './_lib/goal_mandate.js';
+import { beat_time, goal_mandate_block } from './_lib/goal_mandate.js';
 import { pr_watch_block } from './_lib/session_pr_watch.js';
 import { pruneAgedRefusalState, readSessionCounts } from './_lib/turn_end_refusals.js';
 import { readHookStdin } from './hooks/hook_stdin.js';
@@ -938,7 +938,7 @@ export function main(): number {
                     payload !== null && typeof payload === 'object' && !Array.isArray(payload)
                         ? (payload as Record<string, unknown>)['prompt']
                         : null;
-                const goal = goal_mandate_block(root, session_id, typeof prompt === 'string' ? prompt : '', new Date());
+                const goal = goal_mandate_block(root, session_id, typeof prompt === 'string' ? prompt : '', beat_time());
                 const prs = pr_watch_block(root, session_id, new Date());
                 const context = [goal, prs].filter((b): b is string => b !== null).join('\n\n');
                 if (context !== '') {
