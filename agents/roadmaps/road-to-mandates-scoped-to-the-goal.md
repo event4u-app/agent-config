@@ -89,13 +89,18 @@ a file.
 
 ## Phase 0 — A baseline the repo generates
 
-- [ ] **0.1 Route the blocker before any build.** Run `agent-config
+- [x] **0.1 Route the blocker before any build.** Run `agent-config
       council:status`; when CONFIGURED, put `goal-scope-hard-floor-reach` to the
       council with `decision-revisit-gate`'s owner-reserved table attached and a
       neutral prompt (the transition, the two ADR excerpts cited in Context, no
       expected verdict). Write the verdict into the blocker's `Routed:` field.
       verify: `grep -c 'Routed:\*\* council 20' agents/roadmaps/road-to-mandates-scoped-to-the-goal.md` -> /^1$/
-- [ ] **0.2 Failing test for the re-ask counter.** Write
+      Done 2026-11-21: council `analysis`, two rounds, anthropic + openai, 2/2
+      present, $0 (subscription seats). Both seats ESCALATE on the row "cannot
+      be bounded from available evidence"; the verdict is in the blocker's
+      `Routed:` field. One council run carried the four questions of 0.1, 2.1,
+      3.1 and 3.3 as separate items.
+- [x] **0.2 Failing test for the re-ask counter.** Write
       `tests/scripts/mandate_reask_report.test.ts` against fixture transcripts
       under `tests/fixtures/mandate-reask/`: (a) a goal sentence followed in a
       later user turn by "erstelle den PR" / "push it" / "merge it" counts one
@@ -104,17 +109,32 @@ a file.
       `pr_target_asked_after_create`; (c) the rendered output contains no
       substring of any fixture prompt.
       verify: `npx vitest run tests/scripts/mandate_reask_report.test.ts` -> 1 failing on the missing module.
-- [ ] **0.3 Build the counter.** Implement `src/scripts/mandate_reask_report.ts`
+      Done 2026-11-21: seen red on `Failed to resolve import
+      "../../src/scripts/mandate_reask_report.js"`. The fixture store also
+      covers a replayed turn, a subagent file, a synthetic turn and a revoked
+      goal, each pinned to zero.
+- [x] **0.3 Build the counter.** Implement `src/scripts/mandate_reask_report.ts`
       on `src/scripts/_lib/cc_transcript.ts` (`listTranscriptFiles`, main
       bucket only, replay-deduped), flags `--sessions N`, `--since <iso>`,
       `--json`, `--write-baseline <path>`. Counts and session ids only. Not a
       gate: exit 1 only when the store is unreadable or empty.
       verify: the 0.2 test passes; `./scripts-run src/scripts/mandate_reask_report --sessions 50 --json` exits 0.
-- [ ] **0.4 Write the baseline by command.** Run it with
+      Done 2026-11-21: 7/7 green; the 50-session run exits 0. It reads user
+      turns as well as assistant turns, so it shares `listTranscriptFiles` and
+      the main-bucket rule with `cc_transcript.ts` but dedups by record `uuid`.
+      The phrase set lives in `src/scripts/_lib/goal_phrases.ts`, shared with the
+      Phase 2 hook so the baseline and the live recognizer cannot disagree.
+      `--root` (repeatable) exists for the fixture store.
+- [x] **0.4 Write the baseline by command.** Run it with
       `--write-baseline agents/evidence/mandate-reask/2026-11-baseline.json`
       over the host transcript store. The file records the command line, the
       transcript count and the two metrics; nobody edits it.
       verify: the file exists, parses as JSON, and its `command` field equals the invocation used.
+      Done 2026-11-21 over the current host profile's store (1,008 sessions):
+      `reask_after_goal` 3 (4 sessions carried a goal sentence),
+      `pr_target_asked_after_create` 0 (49 sessions ran `gh pr create`). A lower
+      bound — the retro's sample spanned several host profiles, and the record
+      names no store path.
 
 ## Phase 1 — The session's PR is the default target
 
@@ -281,7 +301,7 @@ test.
 ### blocker: goal-scope-hard-floor-reach
 - **Status:** open
 - **Owner:** owner
-- **Routed:** pending — not yet put to the council; step 0.1 routes it in the first execution pass. The transition crosses the `decision-revisit-gate` row "lowers/removes a safety floor" on its face (Hard-Floor push and prod-trunk merge rows), so the expected venue is the owner.
+- **Routed:** council 2026-11-21 ESCALATE — owner-reserved under "cannot be bounded from available evidence" (analysis mode, two rounds, anthropic and openai, 2/2 present, convergent in round 2). ADR-282 grants the merge "for the run it starts" and ADR-268 § 2 spends a mission grant "once, on the final green head"; neither establishes that a follow-up PR opened in a later turn belongs to that run, nor separates pushes to an existing PR branch from pushes to a new branch. Both seats asked for an operation-by-operation reconciliation (push to the PR branch, push to a new branch, PR open, separate merge) and named one open case: a revocation typed after a subagent started does not reach that subagent before it acts.
 - **Blocks:** Phase 4 — Hard-Floor reach, once decided
 - **Question:** Does an owner goal sentence ("bis zum merge", "mach PR und merge") reach, for that goal and until revoked, (a) pushes to further branches the session creates for it and (b) the routine-class merge of follow-up PRs opened in later turns — ahead of the kernel landing ADR-268 §§ 2-3 schedule? <!-- md-language-check: ignore -->
 - **Recommendation:** Yes for both, bounded to branches this session created for the goal and to `routine` PRs through the § 9a danger gate. ADR-268 § 2 already decided mission persistence and ADR-282 already accepts the owner's own words as the merge confirmation; this answer only says that a follow-up PR of the same goal is inside "the run it starts".
