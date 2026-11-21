@@ -28,8 +28,8 @@ and keep the full search — this file only adds candidates to it.
 | road-to-done-claims-with-read-exit-codes | active | ready | A completion claim in this suite has to rest on an exit code that came from the command that verified … |
 | road-to-gates-that-check-what-they-claim | active | ready | Every gate an external review has re-reported for two or more releases either checks what its name and its header … |
 | road-to-gates-that-do-not-trap-the-agent | active | ready | Every blockage that made the owner run a command, type a confirmation, or delete something on the agent's behalf is … |
+| road-to-goal-record-live-wiring | active | ready | The goal record that `src/scripts/_lib/goal_mandate.ts` and `src/scripts/_lib/goal_mandate_store.ts` already implement reaches the live hook path: the `session-register` `user_prompt_submit` beat records the … |
 | road-to-honest-graph-freshness | active | ready | `graphState` (`src/scripts/code_graph/detect.ts:323-334`) never returns a commit count it did not compute: a native graph built by this release reports `behind:N` … |
-| road-to-mandates-scoped-to-the-goal | active | ready | An owner sentence that names an end state — "bis zum merge", "mach PR und <!-- md-language-check: ignore --> merge", … |
 | road-to-questions-that-reach-the-right-decider | active | ready | A question reaches the owner only when it belongs to one of four owner classes: changing the purpose, lowering a … |
 | road-to-release-notes-that-match-the-span | active | ready | The CHANGELOG, `docs/MIGRATION.md` and `BREAKING_CHANGES.md` for a release name every consumer-visible change in the span the release covers. |
 | road-to-repo-knowledge-generated-not-written | active | ready | In each of the seven repositories named in the retro (galawork-api, galawork-web, javascript, elvau, agent-switch, azeroth-companion, agent-config), a command generates … |
@@ -145,6 +145,7 @@ and keep the full search — this file only adds candidates to it.
 | road-to-learning-you-can-see-carried | later | later | Every step the parent roadmap deferred is either done here or explicitly disposed of — a step that still cannot … |
 | road-to-listings-the-owner-submits | later | later | Every target in the parent's register has a ledger row that a live read moved to `accepted`, or a recorded … |
 | road-to-live-app-verdict | later | later | Live-app Playwright as the canonical verdict source (verify-repair-loop) |
+| road-to-mandates-scoped-to-the-goal | later | later | An owner sentence that names an end state — "bis zum merge", "mach PR und <!-- md-language-check: ignore --> merge", … |
 | road-to-mcp-full-power | later | later | MCP Full Power — Glama leverage, coverage expansion, execution bridge |
 | road-to-merge-surface-zero | later | later | A correct PR cannot go red or conflicted because someone else merged first. |
 | road-to-mission-catalogue | later | later | Mission catalogue — content + catalogue expansion (mission-mode follow-up) |
