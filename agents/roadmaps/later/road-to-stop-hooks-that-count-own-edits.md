@@ -1,6 +1,10 @@
 ---
 complexity: lightweight
-status: ready
+status: later
+entry_condition:
+  what: "the owner answers blocker legal-work-product-cadence, which step 4.4 waits on; every other open item is carried by road-to-stop-hooks-that-count-own-edits-live-wiring"
+  when: "on the owner's answer"
+  who: owner
 tree_pin: 811cea61d6
 execution:
   mode: autonomous
@@ -127,10 +131,12 @@ owner fills is added (D1).
 | D1 | product-owned | owner | Project verify commands are taken from the project's own manifests or recognised by shape; no hand-maintained list, settings key or context file | owner constraint in the 2026-11-21 retro | the owner withdraws the constraint |
 | D2 | reversible-technical | evidence | A ref-advance line counts as a push only inside a section opened by a `To <remote>` line; lines under a `From <remote>` header never count | git push prints `To <url>` before its ref table, git fetch prints `From <url>`; 1.3 pins both from a real bare-remote fixture | a supported git version prints push ref lines without a `To` header |
 | D3 | reversible-technical | evidence | `git grep -n` stays out of scope | *(executed)* not blocked at `811cea61d6` | a fixture shows it blocked again |
+| D4 | contested-technical | council:2026-11-21 | Charge only lines on paths the session's own write calls name (Edit/Write/MultiEdit/NotebookEdit plus the literal targets of `>`, `>>`, `tee`, `sed -i`, `cp`/`mv`), diffed from the session's start head so its own commits stay counted; under-report on doubt: a shell write whose target the text does not name makes the count `fallback`, and only the verified count may fire the advisory. The legacy count stays as a `baseline` shadow figure | anthropic and openai converged on under-reporting and on a path delta never proving authorship (openai: C with a B ledger, gated per adapter on demonstrated evidence; anthropic: transcript paths plus per-path baseline, shell writes otherwise unattributable); fixtures (a)-(c) in `own_edit_attribution.test.ts` | a file two writers touched is charged in full; revisit if shadow data shows a verified-count miss on a session that owed a review, or a host adapter exposes per-invocation file deltas |
+| D5 | contested-technical | council:2026-11-21 | Candidate A, narrowed: recognise a verifier run through `docker exec` / `docker compose exec` / `docker-compose exec` with options of known arity only; unknown options, missing values, a missing command and `sh -c` refuse. Repository-named scripts (`tools/test`, `scripts/check_*.py`), `agent-config` subcommands, `sail`, `podman`/`container exec` and manifest-declared tasks (B, C) stay unrecognised | anthropic and openai converged: a script's name says nothing about what it runs, and a manifest read at stop time cannot prove which recipe ran; B only with invocation-bound evidence, C only if B misses a measured budget | a labelled consumer corpus shows the unrecognised shapes are a large share of real verifications, or the run record carries invocation-bound recipe evidence |
 
 ## Phase 1 — Reproduce every false alarm as a failing test
 
-- [ ] **1.1 Foreign-diff repro for end-review-nudge.** In
+- [~] **1.1 Foreign-diff repro for end-review-nudge.** In
       `tests/scripts/end_review_nudge_hook.test.ts` add three fixtures over a
       temp git repo with a written baseline: (a) a transcript with no write
       tool call while a second writer adds 703 non-doc lines after the
@@ -140,22 +146,25 @@ owner fills is added (D1).
       any source edit and record that (a) and (b) are red.
       verify: `npx vitest run tests/scripts/end_review_nudge_hook.test.ts -t foreign` -> 1 with (a) and (b) failing, (c) passing
       uses: test-driven-development
+      Done off the live path in `tests/scripts/own_edit_attribution.test.ts`; the hook-level test is deferred to `road-to-stop-hooks-that-count-own-edits-live-wiring` step 2.1.
 
-- [ ] **1.2 Verify-shape repro for the turn-end gate.** Add to
+- [~] **1.2 Verify-shape repro for the turn-end gate.** Add to
       `tests/scripts/verification_command_anchoring.test.ts` the six F2
       commands as positives and these as negatives: `docker exec app ls
       tests`, `docker exec app cat test.log`, `tools/build`, `python3
       scripts/render_report.py`, `./agent-config ui:render x.svg`.
       verify: `npx vitest run tests/scripts/verification_command_anchoring.test.ts` -> 1 with only the six positives failing
+      Done 2026-11-21 in part: the five negatives are pinned green in `verification_command_anchoring.test.ts`; the six positives are pinned in `tests/scripts/project_verify_shapes.test.ts`, which also asserts the live predicate still refuses them. A red live suite cannot land on the trunk; the live positives ride with `road-to-stop-hooks-that-count-own-edits-live-wiring` step 3.1. Per D5 only the two container positives are to turn green.
 
-- [ ] **1.3 Fetch-as-push repro.** In `tests/scripts/push_settle_hook.test.ts`
+- [~] **1.3 Fetch-as-push repro.** In `tests/scripts/push_settle_hook.test.ts`
       capture real output from a temp bare remote: `git fetch` with a moved
       branch and a new branch, `git pull`, a plain `git push`, and one combined
       run (`git fetch && git merge && git push`). Expect fetch and pull silent
       with no merge marker written; push and the combined run fire.
       verify: `npx vitest run tests/scripts/push_settle_hook.test.ts -t fetch` -> 1 with fetch and pull cases failing
+      Done 2026-11-21 off the live path: real fetch, pull, push and combined reports from a temp bare remote in `tests/scripts/push_report.test.ts`, which also pins that the live `pushedBranch` reads the fetch as a push. The hook-level merge-marker test is deferred to `road-to-stop-hooks-that-count-own-edits-live-wiring` step 1.1.
 
-- [ ] **1.4 Credential-string repro.** Grep the local host transcript stores
+- [~] **1.4 Credential-string repro.** Grep the local host transcript stores
       (`~/.claude/projects/`, `~/.agent-switch/*/*/config/projects/`) for the
       guard's deny prefix `Blocked: \`` (`block_credential_reads.ts:123`) and
       collect each refused command where the credential token is a search
@@ -164,18 +173,21 @@ owner fills is added (D1).
       `tests/scripts/hooks/block_credential_reads.test.ts` as must-allow, and
       `cat .env`, `grep KEY .env`, `source .env`, `cp .env x` as must-refuse.
       verify: `npx vitest run tests/scripts/hooks/block_credential_reads.test.ts` -> 1 with only must-allow cases failing
+      Done 2026-11-21 off the live path: 29 distinct refused commands in the local stores, three of them pattern or filter shapes (redacted into the must-allow list); must-allow and must-refuse lists in `tests/scripts/credential_operands.test.ts`, which pins the live guard refusing every must-allow shape. The hook-level test is deferred to `road-to-stop-hooks-that-count-own-edits-live-wiring` step 4.1.
 
-- [ ] **1.5 Disclaimer cadence reading.** Write
+- [x] **1.5 Disclaimer cadence reading.** Write <!-- receipt: class=R2 · shadow · would-skip=revalidation · bound=production code touched: src/scripts/measure_work_product_line.ts -->
       `src/scripts/measure_work_product_line.ts`: over a transcript store it
       counts, per session, assistant replies carrying the attorney-review line
       and splits them by whether the same turn wrote or changed a file. Output
       counts only, no reply text. Run it on the local stores and keep the
       printed table for 4.3.
       verify: `npx vitest run tests/scripts/measure_work_product_line.test.ts` -> 0 on a three-session fixture with known counts
+      Done 2026-11-21: over 5,104 local sessions, 2 replies carried the line, both on no-write turns (sessions `407cd173`, `90446eb9`); the retro's 18-occurrence session is not in the local stores.
+      production entry: src/scripts/measure_work_product_line.ts
 
 ## Phase 2 — Charge a session only for its own edits
 
-- [ ] **2.1 Council settles attribution.** First action: run
+- [x] **2.1 Council settles attribution.** First action: run <!-- receipt: class=R2 · shadow · scope=safe · would-skip=revalidation · bound=raised to R2 from R0 -->
       `/council:design` with a neutral prompt carrying 1.1's fixtures, the
       `review_baseline.ts` header and three candidates — (A) paths from this
       session's write tool calls in the transcript, (B) a per-session path
@@ -183,32 +195,36 @@ owner fills is added (D1).
       rule for shell-made writes (`sed -i`, heredocs). Ask how shell writes
       and the `head-moved` case are attributed. Record the verdict as row D4
       in `## Decisions` with `council:<date>`.
-      verify: `grep -c '^| D4 | contested-technical | council:' agents/roadmaps/road-to-stop-hooks-that-count-own-edits.md` -> 1
+      verify: `grep -c '^| D4 | contested-technical | council:' agents/roadmaps/later/road-to-stop-hooks-that-count-own-edits.md` -> 1
       uses: ai-council
+      Done 2026-11-21: council (anthropic, openai), 2 rounds, quorum concluded; row D4.
 
-- [ ] **2.2 Implement D4 in the nudge.** Change `end_review_nudge_hook.ts`
+- [~] **2.2 Implement D4 in the nudge.** Change `end_review_nudge_hook.ts`
       (and the ledger concern plus its `hook_manifest.yaml` binding if D4
       chooses B) so the line count is the numstat restricted to attributed
       paths. Run `./scripts-run src/scripts/check_kernel_edit_ratified`; if it
       names a touched file, produce the ratification record before the step
       closes.
       verify: `npx vitest run tests/scripts/end_review_nudge_hook.test.ts tests/scripts/review_baseline_hook.test.ts` -> 0
+      Done 2026-11-21 off the live path: `src/scripts/_lib/own_edit_attribution.ts` (`sessionWritesFromTranscript`, `ownEditCount`); no hook imports it. The swap into the nudge is deferred to `road-to-stop-hooks-that-count-own-edits-live-wiring` step 2.1 (owner ruling: no hook-bundle raise in this change).
 
-- [ ] **2.3 Telemetry says how the count was made.** The `review_skipped`
+- [~] **2.3 Telemetry says how the count was made.** The `review_skipped`
       row (`appendReviewSkippedTelemetry`, `end_review_nudge_hook.ts:646`)
       gains `attribution: own | baseline | fallback`, so the F4 stub's
       calibration can select own-edit rows only.
       verify: `npx vitest run tests/scripts/end_review_nudge_hook.test.ts -t attribution` -> 0
+      Deferred to `road-to-stop-hooks-that-count-own-edits-live-wiring` step 2.2: the library returns `own | fallback`; the telemetry row is written by the live hook.
 
-- [ ] **2.4 Headers match the code.** Rewrite the "Diff source" block of
+- [~] **2.4 Headers match the code.** Rewrite the "Diff source" block of
       `end_review_nudge_hook.ts:24-55` and the "WHAT IT IS NOT" paragraph of
       `review_baseline.ts:33-38` to describe the D4 attribution and its
       residue.
       verify: `grep -c 'no paths, no fingerprints' src/scripts/_lib/review_baseline.ts` -> 0 when D4 records paths, else 1
+      Deferred to `road-to-stop-hooks-that-count-own-edits-live-wiring` step 2.3: the headers describe the live code, which is unchanged until the wiring lands.
 
 ## Phase 3 — Accept the project's own verify commands
 
-- [ ] **3.1 Council settles the source.** First action: run
+- [x] **3.1 Council settles the source.** First action: run <!-- receipt: class=R2 · shadow · scope=safe · would-skip=revalidation · bound=raised to R2 from R0 -->
       `/council:design` with the 1.2 fixtures, D1, the bundle ceiling in
       `src/config/hook-bundle-budget.json` and three candidates — (A) shape
       rules only (container-exec peel, path script whose basename matches
@@ -216,40 +232,46 @@ owner fills is added (D1).
       prefix); (B) A plus `resolve_toolchain()` loaded lazily at refusal time;
       (C) A plus a `session_start` concern writing the resolved commands to
       `agents/runtime/state/`. Record row D5 with `council:<date>`.
-      verify: `grep -c '^| D5 | contested-technical | council:' agents/roadmaps/road-to-stop-hooks-that-count-own-edits.md` -> 1
+      verify: `grep -c '^| D5 | contested-technical | council:' agents/roadmaps/later/road-to-stop-hooks-that-count-own-edits.md` -> 1
       uses: ai-council
+      Done 2026-11-21: council (anthropic, openai), 2 rounds, quorum concluded; row D5 (A, narrowed to container exec).
 
-- [ ] **3.2 Shape rules.** In `segmentVerifies`
+- [~] **3.2 Shape rules.** In `segmentVerifies`
       (`_lib/verification_command.ts:244`) peel `docker exec|compose exec|
       container exec` with their value-taking flags (`-w -e -u --env-file
       --workdir --user`) and the container or service name, plus `sail`; add
       the path-script and Python-script branches. 1.2's negatives stay false.
       verify: `npx vitest run tests/scripts/verification_command_anchoring.test.ts tests/scripts/verification_command_resolver_parity.test.ts` -> 0
+      Done 2026-11-21 off the live path, narrowed per D5: `src/scripts/_lib/project_verify_shapes.ts` peels `docker exec` / `docker compose exec` only; the path-script and Python branches are not built (D5). `DELEGATING_HEADS` and `bareName` are now exported from `verification_command.ts` (no bundle byte change). The swap into detector C is deferred to `road-to-stop-hooks-that-count-own-edits-live-wiring` step 3.1.
 
-- [ ] **3.3 Manifest-declared commands per D5.** Implement D5's B or C so
+- [x] **3.3 Manifest-declared commands per D5.** Implement D5's B or C so <!-- receipt: class=R2 · shadow · scope=safe · would-skip=revalidation · bound=raised to R2 from R0 -->
       that in a fixture repo whose `Taskfile.yml` declares a `quality` task
       running pest, `task quality` clears detector C; in a repo without it,
       it does not. Skip with a one-line Done note if D5 chose A.
       verify: `npx vitest run tests/scripts/turn_end_gate_hook.test.ts -t manifest-declared` -> 0
+      Done 2026-11-21: skipped, D5 chose A.
 
-- [ ] **3.4 Bundle and ratification stay green.** Rebuild the hook bundle
+- [x] **3.4 Bundle and ratification stay green.** Rebuild the hook bundle <!-- receipt: class=R2 · shadow · scope=safe · would-skip=revalidation · bound=raised to R2 from R0 -->
       and check its ceiling; run the ratification gate.
       verify: `./scripts-run src/scripts/check_hook_bundle_composition` -> 0 and `./scripts-run src/scripts/check_kernel_edit_ratified` -> 0
+      Done 2026-11-21: bundle 1,595,224 B under the unchanged 1,595,300 B ceiling (byte-identical to origin/main); no ratification-watched file touched.
 
-- [ ] **3.5 Replay on real transcripts.** Run
+- [~] **3.5 Replay on real transcripts.** Run
       `./scripts-run src/scripts/measure_turn_end_gate --store <store> --show-fires`
       on the local stores before (at `tree_pin`) and after; the `verification`
       fires on turns whose last shell call is one of the F2 shapes drop to 0.
       verify: the after-run prints 0 `verification` fires whose command matches an F2 shape
+      Deferred to `road-to-stop-hooks-that-count-own-edits-live-wiring` step 3.2: an after-run needs the wired detector.
 
 ## Phase 4 — Push reading, credential operands, work-product line
 
-- [ ] **4.1 Push needs a `To` section.** In `push_settle_hook.ts` scope
+- [~] **4.1 Push needs a `To` section.** In `push_settle_hook.ts` scope
       `REF_ADVANCED` (`:99`) and `pushedBranch` (`:151`) to lines after a
       `To <remote>` header and before the next `From`/`To` header, per D2.
       verify: `npx vitest run tests/scripts/push_settle_hook.test.ts` -> 0
+      Done 2026-11-21 off the live path: `src/scripts/_lib/push_report.ts` (`pushedBranchFromReport`, D2). The swap into `push_settle_hook.ts` is deferred to `road-to-stop-hooks-that-count-own-edits-live-wiring` step 1.1.
 
-- [ ] **4.2 Pattern operands are not paths.** Run the threat pass first
+- [~] **4.2 Pattern operands are not paths.** Run the threat pass first
       (`threat-modeling`: a refused read must stay refused under every
       wrapper the guard already looks through). Then teach `segmentVerdict`
       (`_lib/credential_files.ts:329`) that the pattern operand of
@@ -259,8 +281,9 @@ owner fills is added (D1).
       `road-to-17-0-follow-ups` with a pointer to this step.
       verify: `npx vitest run tests/scripts/hooks/block_credential_reads.test.ts` -> 0 and `./scripts-run src/scripts/check_kernel_edit_ratified` -> 0
       uses: threat-modeling
+      Done 2026-11-21 off the live path: threat pass recorded in the header of `src/scripts/_lib/credential_operands.ts` (an operand misread only moves the pattern earlier; file-reading options, substitutions, redirections, wrappers and piped `echo` are never narrowed); `narrowedSegmentVerdict` only narrows. The guard edit, its ratification record and the flip of step 1.8 of `road-to-17-0-follow-ups` are deferred to `road-to-stop-hooks-that-count-own-edits-live-wiring` step 4.1.
 
-- [ ] **4.3 Route the work-product cadence.** First action: put to the
+- [x] **4.3 Route the work-product cadence.** First action: put to the <!-- receipt: class=R2 · shadow · scope=safe · would-skip=revalidation · bound=raised to R2 from R0 -->
       council, with the owner-reserved table of `decision-revisit-gate`
       attached and 1.5's table as evidence, the transition "the line is
       carried once per new or changed legal deliverable, not on every reply",
@@ -269,10 +292,12 @@ owner fills is added (D1).
       On DECIDE record row D6; on ESCALATE add blocker
       `legal-work-product-cadence` to `## Blockers` with the verdict in
       `Routed:` and mark 4.4 `blocked-by` it.
-      verify: `grep -c -E '^\| D6 \||^### blocker: legal-work-product-cadence' agents/roadmaps/road-to-stop-hooks-that-count-own-edits.md` -> 1
+      verify: `grep -c -E '^\| D6 \||^### blocker: legal-work-product-cadence' agents/roadmaps/later/road-to-stop-hooks-that-count-own-edits.md` -> 1
       uses: ai-council
+      Done 2026-11-21: council ESCALATE (anthropic and openai); blocker `legal-work-product-cadence` added, 4.4 marked blocked-by it.
 
-- [ ] **4.4 Apply the cadence verdict.** On D6 only: edit the startup stub
+- [ ] **4.4 Apply the cadence verdict.**
+      <!-- blocked-by: legal-work-product-cadence --> On D6 only: edit the startup stub
       wording, regenerate with `task sync` and `task generate-tools`, and
       produce the ratification record (high-consequence rule).
       verify: `npx vitest run tests/scripts/legal-disclaimer-presence.test.ts tests/scripts/lint_legal_pack.test.ts` -> 0 and `./scripts-run src/scripts/check_kernel_edit_ratified` -> 0
@@ -287,6 +312,21 @@ owner fills is added (D1).
      window opens.
 -->
 
+## Blockers
+
+### blocker: legal-work-product-cadence
+- **Status:** open — raised 2026-11-21 by step 4.3.
+- **Owner:** owner
+- **Routed:** council 2026-11-21 ESCALATE (anthropic, openai) — the transition touches a recorded safety floor and its coverage cannot be bounded from the evidence: "once per new or changed deliverable" could exempt an unchanged draft delivered again, the 1.5 reading counts write calls rather than delivered work product (a chat-only draft writes no file), and the local stores hold 2 carriages against the retro's unverified 18.
+- **Blocks:** 4.4
+- **Question:** is the floor satisfied when every legal-pack work product — including chat-only drafts, excerpts offered for material use, and unchanged copies delivered again — carries the full notice in its body, with the notice optional on replies that only discuss the work? Or is the startup stub's broader "every output" wording itself a recorded requirement?
+- **Recommendation:** answer "every work product, including re-delivered and chat-only drafts"; it keeps the body's floor and drops the line only from replies that hand over no work product.
+- **If you do nothing:** the stub keeps "every output" and the line keeps appearing on conversational replies.
+- **What to do:**
+  1. Read step 4.3's Done note and step 1.5's reading.
+  2. Answer with one of: every work product (as recommended), every output (keep as is), or a wording of your own.
+- **Resolved when:** an owner directive naming the answer exists under `agents/evidence/owner-directives/`.
+
 ## Risk Register
 <!-- risk-review: v1 | reviewed: 2026-11-21 | reviewer: claude/session-retro-roadmaps -->
 
@@ -300,9 +340,9 @@ owner fills is added (D1).
 
 ## Acceptance Criteria
 
-- [ ] AC-1 — A read-only session in a worktree with 703 foreign dirty lines gets no review advisory, and a session's count equals its attributed lines (1.1 fixtures green).
-- [ ] AC-2 — The six F2 commands clear detector C and the five negatives do not (1.2 green); a manifest-declared task clears it where D5 says so.
-- [ ] AC-3 — A `git fetch` or `git pull` report writes no merge marker and emits no push reminder (1.3 green).
-- [ ] AC-4 — Every must-allow shape from 1.4 passes the credential guard and every must-refuse shape is still refused.
-- [ ] AC-5 — The work-product cadence is either changed under a recorded D6 with a ratification record, or held by an open owner blocker carrying the council verdict.
-- [ ] AC-6 — `check_kernel_edit_ratified` and `check_hook_bundle_composition` exit 0 on the final tree.
+- [~] AC-1 — (met off the live path by `own_edit_attribution.test.ts`; the live half is deferred to `road-to-stop-hooks-that-count-own-edits-live-wiring` AC-1) A read-only session in a worktree with 703 foreign dirty lines gets no review advisory, and a session's count equals its attributed lines (1.1 fixtures green).
+- [~] AC-2 — (narrowed by D5 to the container shapes; met off the live path; the live half is deferred to `road-to-stop-hooks-that-count-own-edits-live-wiring` AC-2) The six F2 commands clear detector C and the five negatives do not (1.2 green); a manifest-declared task clears it where D5 says so.
+- [~] AC-3 — (met off the live path by `push_report.test.ts`; the live half is deferred to `road-to-stop-hooks-that-count-own-edits-live-wiring` AC-3) A `git fetch` or `git pull` report writes no merge marker and emits no push reminder (1.3 green).
+- [~] AC-4 — (met off the live path by `credential_operands.test.ts`; the live half is deferred to `road-to-stop-hooks-that-count-own-edits-live-wiring` AC-4) Every must-allow shape from 1.4 passes the credential guard and every must-refuse shape is still refused.
+- [x] AC-5 — The work-product cadence is either changed under a recorded D6 with a ratification record, or held by an open owner blocker carrying the council verdict.
+- [x] AC-6 — `check_kernel_edit_ratified` and `check_hook_bundle_composition` exit 0 on the final tree.
