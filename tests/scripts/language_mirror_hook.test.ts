@@ -1806,10 +1806,9 @@ describe("inline terminal-pane regions (#2950)", () => {
 // What the hook pins from a prompt, row by row: the owner's language, or `und`
 // where the owner typed fewer than `MIN_MARKERS` markers (an `und` keeps the
 // previous pin, D1). `[context]` rows are the roadmap's § Context shapes and
-// their variants; `[1.2 synthetic-turn]` rows are the class
-// `agents/evidence/analysis/language-split-baseline.md` found (140 of 148
-// replayed fires), paraphrased, no session text; `[regression]` rows were
-// already right before the fix and must stay so.
+// their variants; `[1.2 synthetic-turn]` rows are the class the language-split
+// baseline found most often, paraphrased, no session text; `[regression]` rows
+// were already right before the fix and must stay so.
 // ---------------------------------------------------------------------------
 
 /** The hook's own order: a host-generated turn never reaches `classify`. */

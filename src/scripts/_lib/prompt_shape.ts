@@ -232,7 +232,10 @@ function collapseHunks(lines: string[]): string[] {
       } else if (old === 0 && neu === 0) break;
       else if (row.startsWith("-") && old > 0) old--;
       else if (row.startsWith("+") && neu > 0) neu--;
-      else if ((row === "" || row.startsWith(" ")) && old > 0 && neu > 0) (old--, neu--);
+      else if ((row === "" || row.startsWith(" ")) && old > 0 && neu > 0) {
+        old--;
+        neu--;
+      }
       else break;
       out[j] = FENCE_LINE;
       i = j;
