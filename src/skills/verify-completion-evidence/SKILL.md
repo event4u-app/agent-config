@@ -156,6 +156,28 @@ When reporting completion to the user:
    omit the section.
 6. **Next step** — e.g. "Ready for `/commit`" or "Awaiting review"
 
+### Verified and not verified — the closing split
+
+A closing summary after a change carries two parts, and the second is not
+optional when it would be non-empty:
+
+* **`Verified:`** — each command that verified, with the exit code that was
+  **read from that command**. An exit code from an appended `echo`, a trailing
+  `; …`, or a pipe into `tail` / `head` / `grep` without `set -o pipefail` is
+  not the verifier's and is not evidence.
+* **`Not verified:`** — each changed surface that got no live check, with the
+  reason: no derived surface for it, or no tool in this session that can drive
+  it. A ratio of work done (`165 of 405`) that is not the whole goes here too,
+  never beside "done".
+
+Which surfaces exist is read, not remembered: `agent-config verify:surfaces`
+derives them from the repo's own files (`package.json` dev/start/preview/serve,
+`tauri.conf.json`, `playwright.config.*`, compose ports, Taskfile dev/run/serve)
+into `agents/state/live-surfaces.json`. Where a changed surface is reachable,
+start it with its derived command — or `agent-config ui:render` for a web page —
+and drive it before claiming. Where it is not, list it under `Not verified:`;
+the reply never hands that check to the user as a task.
+
 ## Gotchas
 
 * A "no output" result from a linter is not proof it ran — check the

@@ -305,7 +305,7 @@ Exit: the map is generated for three fixture repos, the skill states the split,
 and the detector records an unlisted surface. Rollback: revert the skill and
 context edits and delete the script. The map is gitignored state.
 
-- [ ] **4.1 Red first: `tests/scripts/derive_live_surfaces.test.ts`.**
+- [x] **4.1 Red first: `tests/scripts/derive_live_surfaces.test.ts`.** <!-- receipt: class=R2 · shadow · would-skip=revalidation · bound=dependency manifest: tests/fixtures/live-surfaces/vite/package.json -->
       Fixture repos go under `tests/fixtures/live-surfaces/`:
       - `tauri/`: `tauri.conf.json` with a window of 1040×620;
       - `vite/`: `package.json` with `dev` and `preview` scripts, plus a
@@ -315,7 +315,11 @@ context edits and delete the script. The map is gitignored state.
       Expected: each runnable surface with its start command, size or URL, and a
       `derived_from` file:line, and `[]` for `none`.
       verify: `npx vitest run tests/scripts/derive_live_surfaces.test.ts` -> 1 (red: the script does not exist yet)
-- [ ] **4.2 Write `src/scripts/derive_live_surfaces.ts` and register it in `src/cli/registry.ts`.**
+      **Done 2026-11-21:** Three fixture repos under `tests/fixtures/live-
+      surfaces/` (`tauri`, `vite`, `none`), copied to a temp dir per case so the
+      map is never written into a fixture; red on the missing module (exit 1)
+      before 4.2.
+- [x] **4.2 Write `src/scripts/derive_live_surfaces.ts` and register it in `src/cli/registry.ts`.** <!-- receipt: class=R2 · shadow · would-skip=revalidation · bound=production code touched: src/scripts/derive_live_surfaces.ts -->
       The CLI name is `verify:surfaces`, registered next to `roadmap:context`
       (`:89`).
       - It reads `package.json` scripts (`dev|start|preview|serve`),
@@ -327,7 +331,13 @@ context edits and delete the script. The map is gitignored state.
         regenerates when an input file's mtime is newer than the output.
 
       verify: `npx vitest run tests/scripts/derive_live_surfaces.test.ts` -> 0
-- [ ] **4.3 State the split in `src/skills/verify-completion-evidence/SKILL.md`, with a pointer from `src/agent-src/contexts/communication/rules-auto/reply-close-mechanics.md`.**
+      **Done 2026-11-21:** `derive_live_surfaces.ts` reads the five input kinds,
+      names `file:line` for each entry, and regenerates `agents/state/live-
+      surfaces.json` when an input is newer or new. `verify:surfaces` is
+      registered in `src/cli/registry.ts` and wired in `_dispatch.bash`, where
+      the global `--root` arrives as `AGENT_CONFIG_PROJECT_ROOT`; checked by
+      hand on a copy of the vite fixture (3 surfaces, exit 0). 5 tests, exit 0.
+- [x] **4.3 State the split in `src/skills/verify-completion-evidence/SKILL.md`, with a pointer from `src/agent-src/contexts/communication/rules-auto/reply-close-mechanics.md`.** <!-- receipt: class=R0 · shadow · would-skip=council,evidence,retro,revalidation,review · bound=every touched path is non-behavioural -->
       A closing summary after a change carries two parts:
       - `Verified:`: each command, with the exit code that was read (never one
         from an appended `echo` or `tail`).
@@ -339,7 +349,11 @@ context edits and delete the script. The map is gitignored state.
       command, or `ui:render` for web, before claiming. Nothing asks the owner
       to smoke-test (D3).
       verify: `./scripts-run src/scripts/check_references` -> 0
-- [ ] **4.4 Red first, then a second reason for detector `coverage`: `unlisted_surface`.**
+      **Done 2026-11-21:** New `Verified and not verified` section in the skill,
+      one pointer bullet in `reply-close-mechanics`; projections regenerated
+      (`task sync`, `task generate-tools`, both exit 0). `check_references` exit
+      0.
+- [x] **4.4 Red first, then a second reason for detector `coverage`: `unlisted_surface`.** <!-- receipt: class=R3 · shadow · would-skip=none · bound=override-list path: src/scripts/hooks/turn_end_gate_hook.ts -->
       The case: a reply with a completion claim, a turn that edited a file
       under a surface root from the 4.2 map, no tool call that ran that surface,
       and no `Not verified:` / `Nicht verifiziert:` line.
@@ -349,6 +363,11 @@ context edits and delete the script. The map is gitignored state.
       - It records and does not refuse.
 
       verify: `npx vitest run tests/scripts/turn_end_gate_hook.test.ts` -> 0
+      **Done 2026-11-21:** `unlistedSurfaceIn` in `_lib/coverage_claim.ts`
+      derives the map in memory (the Stop path writes nothing into a consumer
+      repo) and accepts a start command, URL, `ui:render` or `playwright test`
+      as driving. Five cases, two red before the fix; the hook stays at 1,497
+      lines. 5 test files, 250 tests, exit 0.
 
 ## Phase 5: Arming by measurement and council
 

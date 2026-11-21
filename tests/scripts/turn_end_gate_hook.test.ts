@@ -2246,3 +2246,50 @@ describe('detector G — a partial ratio reported as complete', () => {
         expect(rec.codes['partial_ratio']).toBe(1);
     });
 });
+
+describe('detector G — an edited surface nothing drove and nothing lists', () => {
+    // road-to-done-claims-with-read-exit-codes 4.4. The surface map is derived
+    // from the workspace's own package.json; the turn edits a file under it.
+    function appWorkspace(): string {
+        const dir = fs.realpathSync(fs.mkdtempSync(path.join(os.tmpdir(), 'coverage-surface-')));
+        tmp_dirs.push(dir);
+        fs.writeFileSync(
+            path.join(dir, 'package.json'),
+            JSON.stringify({ name: 'app', private: true, scripts: { dev: 'vite' } }, null, 2),
+        );
+        fs.mkdirSync(path.join(dir, 'src'));
+        return dir;
+    }
+    const edit = (dir: string): ToolCall => ({ name: 'Edit', path: path.join(dir, 'src', 'App.tsx') });
+
+    it('records unlisted_surface for a done claim over an undriven, unlisted surface', () => {
+        const dir = appWorkspace();
+        const f = detectCoverageGap('Fertig. Der Button ist umgebaut.', [edit(dir)], dir);
+        expect(f?.detector).toBe('coverage');
+        expect(f?.code).toBe('unlisted_surface');
+    });
+
+    it('records nothing when the reply lists the surface under Not verified', () => {
+        const dir = appWorkspace();
+        const reply = 'Fertig. Der Button ist umgebaut.\n\nNot verified:\n- dev (npm run dev): no browser in this session';
+        expect(detectCoverageGap(reply, [edit(dir)], dir)).toBeNull();
+    });
+
+    it('records nothing when the turn rendered the page', () => {
+        const dir = appWorkspace();
+        const calls: ToolCall[] = [edit(dir), { name: 'Bash', command: 'npx agent-config ui:render http://localhost:5173' }];
+        expect(detectCoverageGap('Fertig. Der Button ist umgebaut.', calls, dir)).toBeNull();
+    });
+
+    it('records nothing when the turn edited nothing', () => {
+        const dir = appWorkspace();
+        expect(detectCoverageGap('Fertig.', [], dir)).toBeNull();
+    });
+
+    it('never refuses', () => {
+        const dir = appWorkspace();
+        const f = detectCoverageGap('Fertig.', [edit(dir)], dir);
+        expect(f).not.toBeNull();
+        expect(refusingFindings([f!])).toEqual([]);
+    });
+});

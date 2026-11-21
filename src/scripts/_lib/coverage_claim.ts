@@ -23,6 +23,7 @@
 import * as fs from 'node:fs';
 import * as path from 'node:path';
 
+import { deriveLiveSurfaces, type LiveSurface } from '../derive_live_surfaces.js';
 import { RECORDED_SUFFIX, type RefusalDetectorId } from './turn_end_refusals.js';
 
 /**
@@ -158,6 +159,84 @@ export interface RecordedCounts {
     codes: Record<string, number>;
     first_at: string;
     last_at: string;
+}
+
+/** The structural slice of a transcript tool call this detector reads. */
+export interface CallLike {
+    name: string;
+    command?: string;
+    path?: string;
+}
+
+const EDIT_TOOLS: ReadonlySet<string> = new Set(['Edit', 'Write', 'MultiEdit', 'NotebookEdit']);
+
+/** A call that drove `surface`: its start command, its URL, or a real render or browser run. */
+function drives(command: string, surface: LiveSurface): boolean {
+    if (/\bui:render\b|\bplaywright\s+test\b/.test(command)) return true;
+    if (surface.start !== null && command.includes(surface.start)) return true;
+    return surface.url !== undefined && command.includes(surface.url);
+}
+
+/**
+ * Reason `unlisted_surface`: a completion claim, a turn that edited a file
+ * under a derived surface's root, no call that drove that surface, and no
+ * `Not verified:` block naming it.
+ *
+ * The map is derived in memory (`deriveLiveSurfaces`), never written from the
+ * Stop path: the gate runs in consumer repos, and a turn-end hook that drops a
+ * file into one is a side effect nobody asked for.
+ */
+export function unlistedSurfaceIn(
+    fenceStripped: string,
+    visible: string,
+    calls: readonly CallLike[],
+    workspaceRoot: string,
+    surfaces: readonly LiveSurface[] = deriveLiveSurfaces(workspaceRoot),
+): CoverageFinding | null {
+    if (surfaces.length === 0 || completionClaimAt(visible) === null) return null;
+    const edits = calls.filter((c) => EDIT_TOOLS.has(c.name) && c.path !== undefined).map((c) => c.path as string);
+    if (edits.length === 0) return null;
+    const commands = calls.map((c) => c.command ?? '').filter((c) => c !== '');
+    const text = ratioProse(fenceStripped);
+    const listed = notVerifiedSpans(text).map(([s, e]) => text.slice(s, e)).join('\n');
+    for (const surface of surfaces) {
+        const root = path.resolve(workspaceRoot, surface.root);
+        const edited = edits.find((p) => {
+            const rel = path.relative(root, path.resolve(workspaceRoot, p));
+            return rel !== '' && !rel.startsWith('..') && !path.isAbsolute(rel);
+        });
+        if (edited === undefined) continue;
+        if (commands.some((c) => drives(c, surface))) continue;
+        const names = [surface.name, surface.start, surface.url].filter((x): x is string => typeof x === 'string');
+        if (names.some((n) => listed.includes(n))) continue;
+        return {
+            detector: 'coverage',
+            code: 'unlisted_surface',
+            evidence: `${path.relative(workspaceRoot, edited)} under ${surface.kind} ${surface.name}`,
+            reason:
+                `unlisted_surface: a completion claim over ${surface.kind} "${surface.name}" ` +
+                `(${surface.start ?? 'no start command'}), which nothing in the turn drove — drive it, ` +
+                'or list it under "Not verified:" (verify-completion-evidence)',
+        };
+    }
+    return null;
+}
+
+/** Both reasons, ratio first: the hook's one entry point for detector G. */
+export function coverageGapIn(
+    fenceStripped: string,
+    visible: string,
+    calls: readonly CallLike[],
+    workspaceRoot: string | undefined,
+): CoverageFinding | null {
+    const ratio = partialRatioIn(fenceStripped, visible);
+    if (ratio !== null || workspaceRoot === undefined) return ratio;
+    try {
+        return unlistedSurfaceIn(fenceStripped, visible, calls, workspaceRoot);
+    } catch {
+        // A surface read that fails is no finding; this detector never decides a turn.
+        return null;
+    }
 }
 
 /** Fold record-only findings into a session's counters. Pure. */

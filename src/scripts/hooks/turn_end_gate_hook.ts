@@ -218,7 +218,7 @@ import {
     RECORD_ONLY_DETECTORS,
     foldRecorded,
     lineAround,
-    partialRatioIn,
+    coverageGapIn,
     readRecorded,
     recordedFile,
 } from '../_lib/coverage_claim.js';
@@ -583,8 +583,8 @@ export function detectCompletionClaim(
 }
 
 /** Detector G — see `_lib/coverage_claim.ts`. Records only. */
-export function detectCoverageGap(reply: string): Finding | null {
-    return partialRatioIn(stripFencedBlocks(reply), visibleProse(reply));
+export function detectCoverageGap(reply: string, calls: readonly ToolCall[] = [], root?: string): Finding | null {
+    return coverageGapIn(stripFencedBlocks(reply), visibleProse(reply), calls, root);
 }
 
 /** The findings that refuse the turn; a record-only detector's are counted instead. */
@@ -1278,7 +1278,7 @@ function runDetectors(inputs: DetectorInputs): Finding[] {
         openSvgObligation(workspaceRoot, toolCalls, runState?.asset_renders ?? null),
         dispatchOpen ? null : detectUntestedChange(lastAssistant, toolCalls, runState),
         // G is a completion claim too, so an open dispatch excuses it like D.
-        dispatchOpen ? null : detectCoverageGap(lastAssistant),
+        dispatchOpen ? null : detectCoverageGap(lastAssistant, toolCalls, workspaceRoot),
     ]) {
         if (f) findings.push(f);
     }

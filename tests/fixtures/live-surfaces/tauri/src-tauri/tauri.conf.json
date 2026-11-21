@@ -1,0 +1,16 @@
+{
+  "productName": "fixture-tauri-app",
+  "build": {
+    "beforeDevCommand": "npm run build",
+    "devUrl": "http://localhost:1420"
+  },
+  "app": {
+    "windows": [
+      {
+        "title": "Fixture",
+        "width": 1040,
+        "height": 620
+      }
+    ]
+  }
+}

@@ -265,6 +265,10 @@ Tier 2 — maintenance / internal (hooks, MCP, memory, telemetry):
                              files they change, remote branches carrying a roadmap
                              slug, live sessions, agents/tmp/ note NAMES, and sibling
                              roadmaps on the same topic. --roadmap <slug>, --json
+  verify:surfaces            Derive the repo's runnable surfaces (dev/start/preview/serve
+                             scripts, tauri windows, playwright baseURL, compose ports,
+                             Taskfile dev/run/serve) into agents/state/live-surfaces.json.
+                             --json, --force, --root <dir>
   roadmap:progress           Regenerate agents/roadmaps-progress.md from open roadmaps
                              (archives completed roadmaps; --no-archive to skip)
   roadmap:progress-check     Fail if agents/roadmaps-progress.md is stale (for CI)
@@ -840,6 +844,12 @@ cmd_mcp_run() {
 # as cmd_sessions_list below, and for the same reason.
 cmd_roadmap_context() {
   exec_ts "$PACKAGE_ROOT/src/scripts/roadmap_context.ts" "$@"
+}
+
+# Reachability map for the verify skill's "Not verified:" list. PACKAGE_ROOT for
+# the same reason as cmd_roadmap_context above; it runs against the caller's cwd.
+cmd_verify_surfaces() {
+  exec_ts "$PACKAGE_ROOT/src/scripts/derive_live_surfaces.ts" "$@"
 }
 
 cmd_sessions_list() {
@@ -1768,6 +1778,7 @@ main() {
     media:bundle)            cmd_media_bundle "$@" ;;
     worktree:cleanup)        cmd_worktree_cleanup "$@" ;;
     roadmap:context)         cmd_roadmap_context "$@" ;;
+    verify:surfaces)         cmd_verify_surfaces "$@" ;;
     roadmap:progress)        cmd_roadmap_progress "$@" ;;
     roadmap:progress-check)  cmd_roadmap_progress_check "$@" ;;
     roadmap:archive)         cmd_roadmap_archive "$@" ;;

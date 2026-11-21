@@ -1,0 +1,8 @@
+{
+  "name": "fixture-tauri-app",
+  "private": true,
+  "scripts": {
+    "build": "vite build",
+    "tauri": "tauri"
+  }
+}
