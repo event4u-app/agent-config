@@ -16,6 +16,7 @@ import { describe, expect, it } from 'vitest';
 import {
     INSTRUMENT_GAP_REASONS,
     classifyRun,
+    describeRecordFinding,
     isInstrumentGap,
     parseSummary,
     readRunEvidence,
@@ -71,9 +72,11 @@ describe('classifyRun — a missing exit code is the host gap, never a pass', ()
         expect(reason(classifyRun({ command: 'npx vitest run' }))).toBe('exit_code_unavailable');
     });
 
-    it('marks exactly the two instrument-gap reasons as never-refusable', () => {
+    it('marks exactly the three instrument-gap reasons as never-refusable', () => {
+        // `exit_masked` joined on 2026-11-21 and records until its arming verdict.
         expect([...INSTRUMENT_GAP_REASONS].sort()).toEqual([
             'exit_code_unavailable',
+            'exit_masked',
             'unreadable_record',
         ]);
         expect(isInstrumentGap(classifyRun(rec({ exit_code: null })))).toBe(true);
@@ -438,6 +441,77 @@ describe('classifyRun — a failure the shell discarded is never pass-evidence',
     it('a discarded segment does not hide an undiscarded verification beside it', () => {
         expect(
             classifyRun(rec({ command: 'npx eslint . || true; npx tsc --noEmit', exit_code: 0 })).kind,
+        ).toBe('PASS_EVIDENCE_OK');
+    });
+});
+
+describe('classifyRun — an exit code the command line masked is not the verifier\'s', () => {
+    // road-to-done-claims-with-read-exit-codes 1.1. Each masked command was
+    // probed on 2026-11-21 with exit 0 and a tsc error in its output, and each
+    // classified PASS_EVIDENCE_OK: the 0 came from `tail` or `echo`, not tsc.
+    const TSC_ERR = "src/a.ts(1,7): error TS2322: Type 'string' is not assignable to type 'number'.\n";
+
+    it.each([
+        'npx tsc --noEmit | tail -5',
+        'task ci; echo "exit=$?"',
+        'task ci 2>&1 | tail -20',
+        'task ci || echo failed',
+    ])('`%s` with exit 0 classifies exit_masked', (command) => {
+        expect(classifyRun(rec({ command, exit_code: 0, stdout_tail: TSC_ERR }))).toEqual({
+            kind: 'INVALID_RUN',
+            reason: 'exit_masked',
+        });
+    });
+
+    it('`set -o pipefail; task ci | tail -5` keeps its exit code', () => {
+        expect(
+            classifyRun(rec({ command: 'set -o pipefail; task ci | tail -5', exit_code: 0 })).kind,
+        ).toBe('PASS_EVIDENCE_OK');
+    });
+
+    it('`task ci && echo ok` only echoes on success, so it masks nothing', () => {
+        expect(classifyRun(rec({ command: 'task ci && echo ok', exit_code: 0 })).kind).toBe(
+            'PASS_EVIDENCE_OK',
+        );
+    });
+
+    it('an echoed real code of 0 is read instead of the masked one', () => {
+        expect(
+            classifyRun(rec({ command: 'task ci; echo "exit=$?"', exit_code: 0, stdout_tail: 'ok\nexit=0\n' }))
+                .kind,
+        ).toBe('PASS_EVIDENCE_OK');
+    });
+
+    it('an echoed real code of 1 is read as the run failing', () => {
+        expect(
+            reason(
+                classifyRun(
+                    rec({ command: 'task ci; echo "exit=$?"', exit_code: 0, stdout_tail: 'boom\nexit=1\n' }),
+                ),
+            ),
+        ).toBe('nonzero_exit_without_test_failure');
+    });
+
+    it('records and does not refuse until the arming phase decides', () => {
+        expect(INSTRUMENT_GAP_REASONS.has('exit_masked')).toBe(true);
+    });
+
+    it('the finding names both repairs', () => {
+        const text = describeRecordFinding(false, ['exit_masked']);
+        expect(text).toMatch(/set -o pipefail/);
+        expect(text).toMatch(/filter flag/);
+    });
+});
+
+describe('classifyRun — an rtk-wrapped run gets a verdict', () => {
+    it.each(['rtk vitest run', 'rtk proxy npx vitest run'])('`%s` with exit 1 is classified', (command) => {
+        const v = classifyRun(rec({ command, exit_code: 1 }));
+        expect(['FAIL_EVIDENCE', 'nonzero_exit_without_test_failure']).toContain(reason(v));
+    });
+
+    it('`rtk vitest run` with a passing summary is pass evidence', () => {
+        expect(
+            classifyRun(rec({ command: 'rtk vitest run', exit_code: 0, stdout_tail: 'Tests  3 passed (3)\n' })).kind,
         ).toBe('PASS_EVIDENCE_OK');
     });
 });

@@ -101,7 +101,14 @@ const DELEGATING_HEADS: ReadonlySet<string> = new Set([
     'sudo',
     'time',
     'command',
+    // `rtk` rewrites commands to filter their output and passes the wrapped
+    // command's exit code through; `rtk proxy` runs it unfiltered. Without
+    // these a run the operator really read classified as no verification.
+    'rtk',
 ]);
+
+/** A subcommand of `rtk` that delegates to the rest of the line unchanged. */
+const RTK_DELEGATING_SUBCOMMANDS: ReadonlySet<string> = new Set(['proxy']);
 
 /** A Maven / Gradle goal that runs the test phase, bare or task-path qualified. */
 const JVM_TEST_GOAL = /^(?:[\w.-]*:)*(test|verify|check)$/;
@@ -244,8 +251,14 @@ export function undiscardedSegments(command: string): string[] {
 function segmentVerifies(rawWords: readonly string[]): boolean {
     const w = rawWords.filter((x) => x.length > 0);
     let idx = 0;
-    // Peel delegating prefixes: `npx vitest run`, `sudo make test`.
-    while (idx < w.length && DELEGATING_HEADS.has(bareName(w[idx] as string))) idx += 1;
+    // Peel delegating prefixes: `npx vitest run`, `sudo make test`, `rtk proxy tsc`.
+    while (idx < w.length && DELEGATING_HEADS.has(bareName(w[idx] as string))) {
+        const peeled = bareName(w[idx] as string);
+        idx += 1;
+        if (peeled === 'rtk' && idx < w.length && RTK_DELEGATING_SUBCOMMANDS.has(bareName(w[idx] as string))) {
+            idx += 1;
+        }
+    }
     if (idx >= w.length) return false;
 
     const head = bareName(w[idx] as string);
@@ -347,6 +360,65 @@ export function isVerificationCommand(command: string): boolean {
     if (!command) return false;
     const segments = splitSegments(stripComment(command));
     return segments.some((seg) => !failureIsDiscarded(seg) && segmentVerifies(seg.words));
+}
+
+/** How a command line hides its verifier's exit code from the recorder. */
+export type ExitMasking = 'pipe' | 'trailing';
+
+/** `set -o pipefail`, `set -euo pipefail`, `set -e -o pipefail`. */
+const SETS_PIPEFAIL = /^set\s+(?:-[A-Za-z]+\s+)*-[A-Za-z]*o\s+pipefail\b/;
+
+/**
+ * Does the exit code of this command line belong to something other than the
+ * command that verified?
+ *
+ * The recorder keeps ONE exit code per call, and it is the last pipeline's.
+ * `tsc | tail -5` reports `tail`'s 0, and `task ci; echo "exit=$?"` reports
+ * `echo`'s 0, so a failing run reads as a pass. Two shapes:
+ *
+ * - `pipe`: a verifying segment pipes into another command, and no earlier
+ *   segment on the same line set `pipefail`, and the line never reads
+ *   `PIPESTATUS`. A pipefail from an rc file or a sourced script is invisible
+ *   here, which is why the reason starts as an instrument gap.
+ * - `trailing`: a verifying segment is followed by `;` or `||` and then by a
+ *   command that does not verify. `cmd || true` is a discard and stays
+ *   `failureIsDiscarded`'s case; `cmd || exit 1` / `cmd; exit $?` propagate
+ *   the failure; `task sync; task ci` ends on a verifier whose code is real.
+ */
+export function exitMasking(command: string): ExitMasking | null {
+    if (!command) return null;
+    const segments = splitSegments(stripComment(command));
+    const readsPipestatus = /\bPIPESTATUS\b/.test(command);
+    let pipefailSet = false;
+    for (const seg of segments) {
+        const text = seg.words.join(' ');
+        if (SETS_PIPEFAIL.test(text)) pipefailSet = true;
+        if (failureIsDiscarded(seg) || !segmentVerifies(seg.words)) continue;
+        if (seg.nextSep === '|') {
+            if (!pipefailSet && !readsPipestatus) return 'pipe';
+            continue;
+        }
+        if (seg.nextSep === ';' || seg.nextSep === '||') {
+            if (failurePropagates(seg, segments)) continue;
+            const next = segments[segments.indexOf(seg) + 1];
+            if (next && segmentVerifies(next.words)) continue;
+            return 'trailing';
+        }
+    }
+    return null;
+}
+
+/** `cmd || exit 1`, `cmd || false`, `cmd; exit $?` — the failure reaches the caller. */
+function failurePropagates(seg: Segment, segments: readonly Segment[]): boolean {
+    const next = segments[segments.indexOf(seg) + 1];
+    if (!next) return true;
+    const head = seg.nextHead;
+    const arg = (next.words[1] ?? '').replace(/^["']|["']$/g, '');
+    if (head === 'exit' || head === 'return') {
+        if (seg.nextSep === '||') return arg !== '0';
+        return arg === '' || arg === '$?';
+    }
+    return seg.nextSep === '||' && head === 'false';
 }
 
 /**

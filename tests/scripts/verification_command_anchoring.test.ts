@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 
-import { isVerificationCommand } from '../../src/scripts/_lib/verification_command.js';
+import { exitMasking, isVerificationCommand } from '../../src/scripts/_lib/verification_command.js';
 
 /**
  * G1 and G2 — the two directions the tree's two classifiers disagreed in.
@@ -105,5 +105,48 @@ describe('a chained segment is classified on its own head', () => {
 
     it('does not let a non-verifying head carry an argument token', () => {
         expect(isVerificationCommand('git add tests && git commit -m ci')).toBe(false);
+    });
+});
+
+describe('exitMasking — whose exit code does the record carry', () => {
+    it.each([
+        ['npx tsc --noEmit | tail -5', 'pipe'],
+        ['task ci 2>&1 | tail -20', 'pipe'],
+        ['task ci | tee ci.log', 'pipe'],
+        ['task ci; echo "exit=$?"', 'trailing'],
+        ['task ci || echo failed', 'trailing'],
+        ['npx vitest run; ls', 'trailing'],
+    ])('`%s` masks via %s', (command, kind) => {
+        expect(exitMasking(command)).toBe(kind);
+    });
+
+    it.each([
+        'task ci',
+        'set -o pipefail; task ci | tail -5',
+        'set -euo pipefail; task ci | tail -5',
+        'task ci | tail -5; echo "${PIPESTATUS[0]}"',
+        'task ci && echo ok',
+        'npx vitest run || exit 1',
+        'npx vitest run; exit $?',
+        'task sync; task ci',
+        'npm test || true',
+        'git log | head -5',
+        'cat x | npx vitest run',
+    ])('`%s` masks nothing', (command) => {
+        expect(exitMasking(command)).toBeNull();
+    });
+
+    it('a pipefail set AFTER the pipe does not cover it', () => {
+        expect(exitMasking('task ci | tail -5; set -o pipefail')).toBe('pipe');
+    });
+});
+
+describe('rtk-wrapped verification is classified on the wrapped command', () => {
+    it.each(['rtk vitest run', 'rtk proxy npx vitest run', 'rtk tsc --noEmit'])('recognises: %s', (command) => {
+        expect(isVerificationCommand(command)).toBe(true);
+    });
+
+    it('does not recognise `rtk gain`', () => {
+        expect(isVerificationCommand('rtk gain')).toBe(false);
     });
 });

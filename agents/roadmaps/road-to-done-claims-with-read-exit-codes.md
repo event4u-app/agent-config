@@ -123,7 +123,7 @@ Exit: 1.1's cases are green and the coverage report prints the new reason.
 Rollback: revert the `verification_command.ts` and `verification_evidence.ts`
 hunks. The detector reads the same records as before.
 
-- [ ] **1.1 Red first: masked-exit cases in `tests/scripts/verification_evidence.test.ts`.**
+- [x] **1.1 Red first: masked-exit cases in `tests/scripts/verification_evidence.test.ts`.**
       Add one case per shape:
       - The four masked commands from Context, each with `exit_code: 0` and a
         failing `tsc` line in `stdout_tail`. Each expects
@@ -137,7 +137,11 @@ hunks. The detector reads the same records as before.
 
       Run the file and record the red count in the Done note.
       verify: `npx vitest run tests/scripts/verification_evidence.test.ts` -> /exit_masked/
-- [ ] **1.2 Add `exitMasking(command)` to `src/scripts/_lib/verification_command.ts`, built on `splitSegments`.**
+      **Done 2026-11-21:** Ten cases added across the four masked shapes, the
+      three controls, the echoed `exit=1` case, the gap pin and the finding
+      text; seen red before the fix (31 red across this file and the 1.2 file,
+      10 of them in this file).
+- [x] **1.2 Add `exitMasking(command)` to `src/scripts/_lib/verification_command.ts`, built on `splitSegments`.**
       It returns `'pipe' | 'trailing' | null`:
       - `pipe`: a verifying segment's `nextSep` is `|`, and the same line does
         not first set `pipefail` (`set -o pipefail` or a combined `set -…o pipefail`)
@@ -149,7 +153,10 @@ hunks. The detector reads the same records as before.
       Unit cases go in `tests/scripts/verification_command_anchoring.test.ts`,
       red first.
       verify: `npx vitest run tests/scripts/verification_command_anchoring.test.ts` -> 0
-- [ ] **1.3 Wire masking into `classifyRun`.** Add `exit_masked` to
+      **Done 2026-11-21:** `exitMasking` returns `pipe` / `trailing` / null;
+      `cmd || exit 1`, `cmd; exit $?` and `task sync; task ci` stay unmasked. 18
+      unit cases in the anchoring file, red first.
+- [x] **1.3 Wire masking into `classifyRun`.** Add `exit_masked` to
       `InvalidRunReason`. Place the check after the failing-summary check
       (`verification_evidence.ts:354`), because printed failures still win, and
       before the exit code is read.
@@ -161,23 +168,33 @@ hunks. The detector reads the same records as before.
 
       1.1 turns green.
       verify: `npx vitest run tests/scripts/verification_evidence.test.ts` -> 0
-- [ ] **1.4 Name the repair in the finding.** `describeRecordFinding`
+      **Done 2026-11-21:** `exit_masked` is in `InvalidRunReason` and
+      `INSTRUMENT_GAP_REASONS`; an echoed `exit=N` / `exit code: N` replaces the
+      masked code. The pinned gap-set test now names three reasons.
+- [x] **1.4 Name the repair in the finding.** `describeRecordFinding`
       (`verification_evidence.ts:617`) gets an `exit_masked` branch naming both
       repairs: `set -o pipefail`, or the runner's own filter flag instead of a
       pipe. Add one assertion on the text to the 1.1 file.
       verify: `npx vitest run tests/scripts/verification_evidence.test.ts` -> 0
-- [ ] **1.5 Classify `rtk`-wrapped runs.** Red first: `rtk vitest run` with
+      **Done 2026-11-21:** `describeRecordFinding` names `set -o pipefail;` and
+      the runner's own filter flag when `exit_masked` is among the reasons.
+- [x] **1.5 Classify `rtk`-wrapped runs.** Red first: `rtk vitest run` with
       exit 1 expects `FAIL_EVIDENCE` or `nonzero_exit_without_test_failure`, not
       `not_a_verification_command`. Then peel `rtk` and `rtk proxy` in
       `DELEGATING_HEADS` (`verification_command.ts:98`) and in
       `COMMAND_PREFIXES` (`verification_evidence.ts`).
       verify: `npx vitest run tests/scripts/verification_command_anchoring.test.ts tests/scripts/verification_evidence.test.ts` -> 0
-- [ ] **1.6 Count masked records per host.** `report_verification_record_coverage.ts`
+      **Done 2026-11-21:** `rtk` peeled in `DELEGATING_HEADS` (with `rtk proxy`)
+      and in `COMMAND_PREFIXES`; `rtk gain` stays non-verifying. Red first.
+- [x] **1.6 Count masked records per host.** `report_verification_record_coverage.ts`
       prints an `exit_masked` column with its denominator (records per host),
       following the stub's section 2 bullet 1. Red first: a fixture witness
       record in `tests/scripts/report_verification_record_coverage.test.ts`
       carrying a masked command.
       verify: `npx vitest run tests/scripts/report_verification_record_coverage.test.ts` -> 0
+      **Done 2026-11-21:** New `exit_masked` field per host and a column printed
+      as `N of records`; two red-first cases. The 21 test files that import the
+      classifier, the recorder or the turn-end gate pass (668 tests, exit 0).
 
 ## Phase 2: Masked commands in claimed verification
 
