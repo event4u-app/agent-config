@@ -26,7 +26,7 @@ Round 18: anthropic ratified; openai refused on three points, fixed with tests i
 
 - **A skipped `||` fallback.** `task ci | tail -5 || npx tsc --noEmit` is now `pipe`: `tail`'s 0 skips `tsc`, so the earlier verifier's masking is read (test).
 - **Requests that never reach the surface.** A surface URL credits an HTTP client or render only when one of its arguments IS the URL (`curl 'https://example.invalid/?next=http://localhost:3000'` does not); a start command behind `false &&` is not reached (tests).
-- **Documentation edits.** An edit to a documentation file (`.md`, `.mdx`, `.markdown`, `.txt`, `.rst`, `.adoc`, or anything under `docs/`) is not an edit to a runnable surface (test: an edit to `docs/README.md` records nothing). Every derived surface's root is the repo root, so this is the boundary that ties an edit to "something that runs".
+- **Documentation edits.** An edit to a documentation file (`.md`, `.mdx`, `.markdown`, `.txt`, `.rst`, `.adoc`, or anything under `docs/`) is not an edit to a runnable surface (test: an edit to `docs/README.md` records nothing). Every derived surface's root is the repo root, so this is the boundary that ties an edit to "something that runs". <!-- ref-ignore -->
 
 Round 17: anthropic ratified; openai refused on two points plus two suggestions, done in the `fix(turn-end-gate)` commit before `0e2901aae6`:
 
