@@ -53,6 +53,7 @@ import {
     run as beforeCompleteRun,
     statePathFor as ciStatePathFor,
 } from '../../src/scripts/before_complete_hook.js';
+import { readRecorded } from '../../src/scripts/_lib/coverage_claim.js';
 import {
     run as languageMirrorRun,
     STATE_FILE as LANGUAGE_LEGACY_STATE_FILE,
@@ -2251,6 +2252,18 @@ describe('detector G — a negated claim on its own line', () => {
     it('a claim line after another line still reads its own negation', () => {
         expect(detectCoverageGap('Progress update.\nFertig ist der Fix noch nicht.\n165 von 405', [], undefined)).toBeNull();
     });
+
+    it('a claim line after a blank line still reads its own negation', () => {
+        expect(detectCoverageGap('Progress update.\n\nFertig ist der Fix noch nicht.\n165 von 405', [], undefined)).toBeNull();
+    });
+
+    it('a counter path that is a FIFO does not block reading the counters', () => {
+        const dir = fs.mkdtempSync(path.join(os.tmpdir(), 'recorded-fifo-'));
+        tmp_dirs.push(dir);
+        const file = path.join(dir, 'k.recorded.json');
+        if (spawnSync('mkfifo', [file]).status !== 0) return;
+        expect(readRecorded(file)).toBeNull();
+    });
 });
 
 describe('detector G — an edited surface nothing drove and nothing lists', () => {
@@ -2329,6 +2342,12 @@ describe('detector G — an edited surface nothing drove and nothing lists', () 
             { name: 'Bash', command: 'npx playwright test -c e2e/other.config.ts && npx playwright test -c playwright.config.ts' },
         ];
         expect(detectCoverageGap('Fertig.', calls, dir)).toBeNull();
+    });
+
+    it('a browser run against another app\'s config does not drive the root npm surface', () => {
+        const dir = appWorkspace();
+        const calls: ToolCall[] = [edit(dir), { name: 'Bash', command: 'npx playwright test -c apps/admin/playwright.config.ts' }];
+        expect(detectCoverageGap('Fertig.', calls, dir)?.code).toBe('unlisted_surface');
     });
 
     it('a playwright run over this config drives its surface', () => {

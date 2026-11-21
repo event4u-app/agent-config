@@ -49,6 +49,7 @@ import * as fs from 'node:fs';
 import * as path from 'node:path';
 
 import { read_lockfile } from './installed_lock.js';
+import { readText } from './live_surfaces.js';
 
 /**
  * The seven detectors, in the order the gate runs them. G (`coverage`) records
@@ -740,7 +741,9 @@ export function pruneAgedRefusalState(
         if (name.endsWith(SHADOW_SUFFIX) || name.endsWith(RECORDED_SUFFIX)) {
             let lastAt: string | null = null;
             try {
-                const raw = fs.readFileSync(file, 'utf-8');
+                // The counter file is read bounded and non-blocking, as the hook reads it.
+                const raw = name.endsWith(RECORDED_SUFFIX) ? readText(file) : fs.readFileSync(file, 'utf-8');
+                if (raw === null) throw new Error('unreadable counter');
                 lastAt = name.endsWith(RECORDED_SUFFIX)
                     ? recordedLastAt(raw)
                     : (parseShadowRecord(raw)?.last_at ?? null);

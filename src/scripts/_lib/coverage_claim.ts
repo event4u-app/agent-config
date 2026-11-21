@@ -20,10 +20,9 @@
  * in a reply that also says "fertig"). The arming decision reads a measurement
  * of how often it fires and on what.
  */
-import * as fs from 'node:fs';
 import * as path from 'node:path';
 
-import { deriveLiveSurfaces, type LiveSurface } from './live_surfaces.js';
+import { deriveLiveSurfaces, readText, type LiveSurface } from './live_surfaces.js';
 import { commandSegments } from './verification_command.js';
 import { RECORDED_SUFFIX, type RefusalDetectorId } from './turn_end_refusals.js';
 
@@ -66,8 +65,9 @@ export const NEGATED_CLAIM_RE =
 
 /** The line `at` falls on — the scope a negation has to appear in to count. */
 export function lineAround(prose: string, at: number): string {
-    // A match anchored on `(^|\n)` starts AT the newline; its line is the next one.
-    if (prose[at] === '\n') at += 1;
+    // A match anchored on `(^|\n)\s*` can start at a newline, or before a blank
+    // line; its line is the one the first non-blank character is on.
+    while (at < prose.length && /\s/.test(prose[at] as string)) at += 1;
     const start = prose.lastIndexOf('\n', at) + 1;
     const end = prose.indexOf('\n', at);
     return prose.slice(start, end === -1 ? prose.length : end);
@@ -199,7 +199,6 @@ const RENDER_RUN = /^(?:\w+=\S*\s+)*(?:(?:npx|bunx|pnpm(?:\s+exec)?|yarn)\s+)?(?
 function drives(command: string, surface: LiveSurface, root: string): boolean {
     const segs = commandSegments(command).map((x) => x.trim());
     const playwrightRuns = segs.filter((x) => PLAYWRIGHT_RUN.test(x));
-    const browser = playwrightRuns.length > 0 || segs.some((x) => RENDER_RUN.test(x));
     if (surface.kind === 'playwright' && playwrightRuns.length > 0) {
         const config = surface.derived_from.replace(/:\d+$/, '');
         return playwrightRuns.some((run) => {
@@ -207,7 +206,16 @@ function drives(command: string, surface: LiveSurface, root: string): boolean {
             return named === null || path.relative(root, path.resolve(root, named)).split(path.sep).join('/') === config;
         });
     }
-    if (BROWSER_KINDS.has(surface.kind) && browser) return true;
+    // A playwright run credits an npm surface only through this repo's own root config
+    // (its webServer); a run naming another app's config does not.
+    if (surface.kind === 'npm-script' && playwrightRuns.length > 0) {
+        const own = playwrightRuns.some((run) => {
+            const named = playwrightConfig(run);
+            return named === null || /^playwright\.config\.[cm]?[jt]s$/.test(path.relative(root, path.resolve(root, named)));
+        });
+        if (own) return true;
+    }
+    if (BROWSER_KINDS.has(surface.kind) && segs.some((x) => RENDER_RUN.test(x))) return true;
     if (surface.start !== null && runsCommand(command, surface.start)) return true;
     // A URL counts in a command that is not just printing it, and as a whole host:port.
     if (surface.url === undefined) return false;
@@ -307,7 +315,10 @@ export function foldRecorded(
 /** Read a session's record-only counters; anything unreadable starts fresh. */
 export function readRecorded(file: string): RecordedCounts | null {
     try {
-        const o = JSON.parse(fs.readFileSync(file, 'utf-8')) as Partial<RecordedCounts>;
+        // Bounded, non-blocking, regular files only: a FIFO here must not stall the Stop hook.
+        const raw = readText(file);
+        if (raw === null) return null;
+        const o = JSON.parse(raw) as Partial<RecordedCounts>;
         if (typeof o.counts !== 'object' || o.counts === null) return null;
         return {
             counts: o.counts,
