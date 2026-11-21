@@ -68,12 +68,14 @@
  *
  * Usage:
  *   ./scripts-run src/scripts/probe_unblocked_ask [--limit N] [--store PATH] [--json]
+ *   ./scripts-run src/scripts/probe_unblocked_ask --all-asks --store PATH [--store PATH …] --write
  *   ./scripts-run src/scripts/probe_unblocked_ask --self-test
  *   ./scripts-run src/scripts/probe_unblocked_ask --help
  *
  * Exit codes: 0 always — a measurement, not a gate. `--self-test` exits 1 when
  * the detector fails to fire on its fixtures.
  */
+import { execFileSync } from 'node:child_process';
 import fs from 'node:fs';
 import os from 'node:os';
 import path from 'node:path';
@@ -82,6 +84,19 @@ import { pathToFileURL } from 'node:url';
 import { defaultStore, HARNESS_TEXT, isInjectedBody } from './conformance_scan.js';
 import { isStructuredAskTool } from './_lib/structured_ask.js';
 import { isSyntheticPrompt } from './_lib/prompt_shape.js';
+import {
+    census,
+    classifyReply,
+    emitFixtures,
+    labelsFromLines,
+    normaliseProducer,
+    ownerReaching,
+    readLabels,
+    renderCensus,
+    sample,
+    sampleKey,
+    type AskRow,
+} from './_lib/decision_asks.js';
 
 /** A numbered-options block — the surface `check_reply_consistency` already reads. */
 export const NUMBERED_BLOCK = /^\s{0,3}(\d+)[.)]\s+\S/m;
@@ -250,6 +265,102 @@ export function measure(store: string, limit: number): Result {
 }
 
 /**
+ * The `--all-asks` fixtures.
+ *
+ * Each case drives `main` over a fixture store, the way an operator would, so a
+ * missing mode fails here rather than passing on a unit that nobody calls.
+ */
+function allAsksSelfTest(): number {
+    let failed = 0;
+    const check = (ok: boolean, name: string, detail: string): void => {
+        process.stdout.write(`${ok ? '✅' : '❌'}  ${name}${ok ? '' : ` — ${detail}`}\n`);
+        if (!ok) failed += 1;
+    };
+    const fx = fs.mkdtempSync(path.join(os.tmpdir(), 'probe-all-asks-'));
+    const mk = (role: string, content: unknown, extra: Record<string, unknown> = {}): string =>
+        JSON.stringify({ type: role, timestamp: '2026-01-01T00:00:00Z', entrypoint: 'cli', ...extra, message: { role, content } });
+    const block = '1. merge it\n2. hold it\n\nRecommendation: 1';
+    try {
+        fs.mkdirSync(path.join(fx, '-x-event4u-agent-config'), { recursive: true });
+        fs.writeFileSync(
+            path.join(fx, '-x-event4u-agent-config', 'aaaaaaaa-0000.jsonl'),
+            [
+                mk('user', '<command-name>/roadmap:next</command-name>'),
+                mk('assistant', [{ type: 'text', text: block }]),
+                mk('user', '1'),
+                mk('assistant', [{ type: 'text', text: block }]),
+                mk('user', 'mach weiter'),
+                mk('assistant', [{ type: 'text', text: block }]),
+                mk('user', 'weiter'),
+                mk('assistant', [{ type: 'text', text: block }]),
+                mk('user', 'ok'),
+                mk('assistant', [{ type: 'text', text: block }]),
+                mk('user', '2'),
+                mk('assistant', [{ type: 'text', text: block }]),
+                mk('user', 'no, open an issue instead'),
+                mk('assistant', [{ type: 'text', text: 'Soll ich das so umsetzen?' }], { isSidechain: true }),
+                mk('user', 'ja', { isSidechain: true }),
+            ].join('\n'),
+            'utf8',
+        );
+        let out = '';
+        const write = process.stdout.write.bind(process.stdout);
+        process.stdout.write = ((chunk: string): boolean => {
+            out += chunk;
+            return true;
+        }) as typeof process.stdout.write;
+        try {
+            main(['--all-asks', '--store', fx, '--json']);
+        } finally {
+            process.stdout.write = write;
+        }
+        let rows: AskRow[] = [];
+        try {
+            rows = (JSON.parse(out) as { rows: AskRow[] }).rows ?? [];
+        } catch {
+            rows = [];
+        }
+        const replies = rows.map((r) => r.reply);
+        check(rows.filter((r) => r.hasBlock).length >= 6, 'a hand-back with a numbered block counts as an ask', `asks ${String(rows.length)}`);
+        check(replies[0] === 'confirmed-recommendation', 'reply 1 to Recommendation: 1 is confirmed-recommendation', String(replies[0]));
+        check(
+            replies[1] === 'confirmed-recommendation' && replies[2] === 'confirmed-recommendation' && replies[3] === 'confirmed-recommendation',
+            'mach weiter, weiter and ok are confirmed-recommendation',
+            replies.slice(1, 4).join(','),
+        );
+        check(replies[4] === 'overrode', 'picking another number is overrode', String(replies[4]));
+        check(replies[5] === 'redirected', 'free text is redirected', String(replies[5]));
+        check(rows[6]?.sessionKind === 'subagent', 'an isSidechain turn is tagged subagent', String(rows[6]?.sessionKind));
+        check(rows[0]?.producer === 'roadmap:next', 'the producer is the last slash command', String(rows[0]?.producer));
+        check(classifyReply('no recommendation here', '3') === 'picked', 'a number with no recommendation is picked', '');
+        const owner = ownerReaching(rows);
+        const md = renderCensus(
+            { stores: [fx], files: 1, duplicates: 0, rows },
+            { commit: 'abc', date: '2026-01-01', command: 'x', reported: 269, sampleRows: sample(rows, 3, 1), seed: 1 },
+        );
+        check(md.includes(`measured: ${String(owner.length)} · reported: 269`), 'the artefact states measured next to reported', '');
+        check(!md.includes('open an issue instead') && !md.includes('merge it'), 'the artefact carries no transcript text', '');
+        const labelled = md.replace(/\| \? \| \? \|$/m, '| dominant | fixture-labeller |');
+        const labels = readLabels(labelled);
+        check(labels.size === 1, 'a filled label row reads back', String(labels.size));
+        const fdir = path.join(fx, 'fixtures');
+        const em = emitFixtures(sample(census([fx], OFFER_SHAPES).rows, 3, 1), labels, fdir);
+        check(em.written === 1 && fs.readdirSync(fdir).length === 1, 'one fixture per labelled row', JSON.stringify(em));
+        const dup = census([fx, fx], []);
+        check(dup.duplicates === 1, 'a session seen in two stores counts once', String(dup.duplicates));
+        check(sampleKey({ session: 'aaaaaaaa', turn: 3 }) === 'aaaaaaaa#3', 'sample keys are session#turn', '');
+        check(
+            normaliseProducer('/clear') === 'freeform' && normaliseProducer('some-consumer-skill') === 'other-project',
+            'a host built-in resets the producer and a foreign name is other-project',
+            `${normaliseProducer('/clear')} ${normaliseProducer('some-consumer-skill')}`,
+        );
+    } finally {
+        fs.rmSync(fx, { recursive: true, force: true });
+    }
+    return failed;
+}
+
+/**
  * Prove the detector fires, and prove it stays silent where it must.
  *
  * An instrument never seen fire has unknown sensitivity — and one that fires on
@@ -321,6 +432,7 @@ export function selfTest(): number {
     } finally {
         fs.rmSync(fx, { recursive: true, force: true });
     }
+    failed += allAsksSelfTest();
     const positives = cases.filter((c) => c[3]).length;
     if (positives < 3) {
         process.stderr.write('❌  probe_unblocked_ask --self-test: fewer than 3 positive cases — a truncated suite must fail.\n');
@@ -357,17 +469,139 @@ Options:
   --json        emit the Result object instead of the report
   --self-test   run the detector fixtures, incl. the form-partition identity
   --help        this text
+
+Decision-asks census:
+  --all-asks              count EVERY ask, numbered blocks included, with producer,
+                          session kind, impact class and reply class (default --json)
+  --store PATH            repeatable; each store is scanned recursively, a session
+                          id seen twice counts once
+  --write [PATH]          write the census artefact (counts only, never text)
+  --sample N --seed S     add a seeded label sheet of N owner-reaching asks
+  --show-sample           print the sample's ask text to stdout for the labeller
+  --labels FILE           read labels back from a census artefact
+  --label-file FILE       read a labeller's 'S01 <label>' lines onto the sample
+  --labeller ID           who labelled (recorded per row)
+  --label-prompt FILE     the labeller's instruction, recorded in the artefact
+  --emit-fixtures DIR     one redacted fixture per labelled row (needs --labels)
+  --reported N            the figure the census is reconciled against (default 269)
 `;
+
+/**
+ * `--all-asks`: the decision-asks census. Every ask, blocks included, with its
+ * producer, session kind, impact class and reply class.
+ */
+function allAsksMain(o: {
+    stores: string[];
+    json: boolean;
+    write: string | null;
+    sampleN: number;
+    seed: number;
+    reported: number;
+    labels: string | null;
+    emitFixtures: string | null;
+    showSample: boolean;
+    labelFile: string | null;
+    labeller: string;
+    labelPrompt: string | null;
+}): number {
+    const res = census(o.stores, OFFER_SHAPES);
+    if (o.json) {
+        process.stdout.write(`${JSON.stringify({ ...res, rows: res.rows.map((r) => ({ ...r, tail: undefined })) }, null, 2)}\n`);
+        return 0;
+    }
+    const picked = o.sampleN > 0 ? sample(res.rows, o.sampleN, o.seed) : [];
+    const labels =
+        o.labelFile !== null
+            ? labelsFromLines(fs.readFileSync(o.labelFile, 'utf8'), picked, o.labeller)
+            : o.labels !== null && fs.existsSync(o.labels)
+              ? readLabels(fs.readFileSync(o.labels, 'utf8'))
+              : undefined;
+    if (o.showSample) {
+        // stdout only, for the labeller: the artefact never carries this text.
+        picked.forEach((r, i) => {
+            process.stdout.write(`--- S${String(i + 1).padStart(2, '0')} ${sampleKey(r)} ${r.producer} ${r.impact} ${r.reply}\n${r.tail}\n\n`);
+        });
+        return 0;
+    }
+    if (o.emitFixtures !== null) {
+        if (!labels) {
+            process.stderr.write('probe_unblocked_ask: --emit-fixtures needs --labels <census artefact>\n');
+            return 0;
+        }
+        const em = emitFixtures(picked, labels, o.emitFixtures);
+        process.stdout.write(
+            `fixtures: ${String(em.written)} written, ${String(em.refused)} refused by the redactor, ` +
+                `${String(em.otherProject)} from another project's sessions skipped\n`,
+        );
+        return 0;
+    }
+    const date = new Date().toISOString().slice(0, 10);
+    let commit = 'unknown';
+    try {
+        commit = execFileSync('git', ['rev-parse', '--short=10', 'HEAD'], { encoding: 'utf8' }).trim();
+    } catch {
+        // not a checkout: the artefact says so rather than inventing a pin
+    }
+    const md = renderCensus(res, {
+        commit,
+        date,
+        command: `probe_unblocked_ask ${process.argv
+            .slice(2)
+            .join(' ')
+            .replace(/\/(?:private|tmp|var)\/\S*\/([^/\s]+)/g, '<local>/$1')
+            .replace(/\/Users\/[^/ ]+/g, '~')}`,
+        reported: o.reported,
+        sampleRows: picked,
+        seed: o.seed,
+        ...(labels ? { labels } : {}),
+        ...(o.labelPrompt !== null ? { labelPrompt: fs.readFileSync(o.labelPrompt, 'utf8') } : {}),
+    });
+    const target = o.write ?? path.join('agents', 'evidence', 'analysis', `decision-asks-census-${date}.md`);
+    fs.mkdirSync(path.dirname(target), { recursive: true });
+    fs.writeFileSync(target, `${md}\n`, 'utf8');
+    const owner = ownerReaching(res.rows).length;
+    process.stdout.write(`decision-asks census: ${String(res.rows.length)} ask(s), ${String(owner)} owner-reaching → ${target}\n`);
+    return 0;
+}
 
 export function main(argv: string[]): number {
     let limit = 60;
     let storeArg: string | null = null;
+    const stores: string[] = [];
     let json = false;
+    let allAsks = false;
+    let write: string | null = null;
+    let doWrite = false;
+    let sampleN = 0;
+    let seed = 20261121;
+    let reported = 269;
+    let labels: string | null = null;
+    let fixturesDir: string | null = null;
+    let showSample = false;
+    let labelFile: string | null = null;
+    let labeller = 'unknown';
+    let labelPrompt: string | null = null;
     for (let i = 0; i < argv.length; i += 1) {
         const a = argv[i] as string;
         if (a === '--limit') limit = Number(argv[++i]);
-        else if (a === '--store') storeArg = String(argv[++i]);
-        else if (a === '--json') json = true;
+        else if (a === '--store') {
+            storeArg = String(argv[++i]);
+            stores.push(storeArg);
+        } else if (a === '--json') json = true;
+        else if (a === '--all-asks') allAsks = true;
+        else if (a === '--write') {
+            doWrite = true;
+            const nx = argv[i + 1];
+            if (nx !== undefined && !nx.startsWith('--')) write = String(argv[++i]);
+        } else if (a === '--sample') sampleN = Number(argv[++i]);
+        else if (a === '--seed') seed = Number(argv[++i]);
+        else if (a === '--reported') reported = Number(argv[++i]);
+        else if (a === '--labels') labels = String(argv[++i]);
+        else if (a === '--emit-fixtures') fixturesDir = String(argv[++i]);
+        else if (a === '--show-sample') showSample = true;
+        else if (a === '--label-file') labelFile = String(argv[++i]);
+        else if (a === '--labeller') labeller = String(argv[++i]);
+        else if (a === '--label-prompt') labelPrompt = String(argv[++i]);
         // --self-test runs BEFORE the store is resolved: the fixtures are
         // in-process, and resolving a transcript store that may not exist here
         // would make the sensitivity proof depend on the host having one.
@@ -380,6 +614,23 @@ export function main(argv: string[]): number {
             process.stderr.write(`probe_unblocked_ask: unrecognized argument: ${a}\n`);
             return 0;
         }
+    }
+    if (allAsks) {
+        if (!doWrite && !json && !showSample && fixturesDir === null) json = true;
+        return allAsksMain({
+            stores: stores.length > 0 ? stores : [defaultStore(process.cwd())],
+            json,
+            write,
+            sampleN,
+            seed,
+            reported,
+            labels,
+            emitFixtures: fixturesDir,
+            showSample,
+            labelFile,
+            labeller,
+            labelPrompt,
+        });
     }
     const store = storeArg ?? defaultStore(process.cwd());
     const r = measure(store, limit);

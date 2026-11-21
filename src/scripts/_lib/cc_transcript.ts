@@ -229,7 +229,7 @@ export function measureContentBytes(raw: RawAssistantRecord): number | null {
 }
 
 /** Subagent iff a non-empty top-level `agentId` OR `isSidechain === true` — see module doc comment. */
-function classifyBucket(raw: RawAssistantRecord): TranscriptBucket {
+export function classifyBucket(raw: RawAssistantRecord): TranscriptBucket {
     const hasAgentId = typeof raw.agentId === 'string' && raw.agentId.length > 0;
     return hasAgentId || raw.isSidechain === true ? 'subagent' : 'main';
 }
