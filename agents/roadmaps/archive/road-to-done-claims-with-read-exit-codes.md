@@ -358,7 +358,7 @@ context edits and delete the script. The map is gitignored state.
       one pointer bullet in `reply-close-mechanics`; projections regenerated
       (`task sync`, `task generate-tools`, both exit 0). `check_references` exit
       0.
-- [x] **4.4 Red first, then a second reason for detector `coverage`: `unlisted_surface`.** <!-- receipt: class=R3 · shadow · would-skip=none · bound=override-list path: src/scripts/hooks/turn_end_gate_hook.ts -->
+- [~] **4.4 Red first, then a second reason for detector `coverage`: `unlisted_surface`.** <!-- receipt: class=R3 · shadow · would-skip=none · bound=override-list path: src/scripts/hooks/turn_end_gate_hook.ts -->
       The case: a reply with a completion claim, a turn that edited a file
       under a surface root from the 4.2 map, no tool call that ran that surface,
       and no `Not verified:` / `Nicht verifiziert:` line.
@@ -373,6 +373,17 @@ context edits and delete the script. The map is gitignored state.
       repo) and accepts a start command, URL, `ui:render` or `playwright test`
       as driving. Five cases, two red before the fix; the hook stays at 1,497
       lines. 5 test files, 250 tests, exit 0.
+      **Deferred 2026-11-21 (D11):** the reason and its tests stay, but the
+      live path no longer runs it; `runDetectors` calls `partialRatioIn` alone.
+      Criterion carried verbatim, blocker: the dispatch-bundle raise for the
+      repository reader did not converge in 23 ratification rounds. Options:
+      continue the loop, split the PR, move the reader into a claim chunk.
+      Verdict (council strategy round, 2026-11-21): anthropic chunk, openai
+      ratify the classifier on its own scope first; both satisfied by taking
+      the reader off the live path now and loading it from a chunk later.
+      Dissent: none recorded. Destination:
+      `agents/roadmaps/road-to-unlisted-surface-in-a-claim-chunk.md`, step 1.2.
+      Closes when that roadmap's AC-1 holds.
 
 ## Phase 5: Arming by measurement and council
 
@@ -455,6 +466,7 @@ the verdict's revert is one constant (`INSTRUMENT_GAP_REASONS`) and one switch
 | D8 | reversible-technical | council:2026-11-21 | A masked exit code is never replaced by an `exit=N` line from the output: a masked run classifies `exit_masked`, and masking is consulted only where the exit code would decide (after printed failures, load failures and empty suites). This reverses the echoed-code reading of step 1.3. | The bundle-raise ratification rounds 1-6 of 2026-11-21 (anthropic + openai seats): every round the openai seat refused on a new way the echoed line could belong to another command (a filter's `PIPESTATUS`, a later echo, a constant `printf`, a skipped `|| echo`, a redirected echo), each able to pass a failed run or refuse a clean one; the command text cannot establish where the echo's output went. Dropping the reading costs nothing against origin/main, where those lines read the echo's own 0 | shell-backed run records carry the verifier's own status (a wrapper that captures it), so provenance no longer has to be inferred from the command text |
 | D9 | reversible-technical | council:2026-11-21 | Masking replaces only a recorded exit code of 0: a masked run with a nonzero recorded code keeps the verdict it had before this roadmap. So `exit_masked` can turn a pass into an instrument gap (both unrefusable) and can never demote a refusal. | Bundle-raise ratification round 7 of 2026-11-21: the openai seat showed shell paths where the masking reading attributes a verifier's own nonzero status to a filter (`tsc && task ci \| tail`, `set -e; tsc; echo done`) and so would demote a real failure; requiring the recorded 0 removes that whole class rather than one shape at a time | records carry the verifier's own status (D8's condition), or a measured case shows a nonzero filter code refusing honest work often enough to matter |
 | D10 | reversible-technical | council:2026-11-21 | An `exit "${PIPESTATUS[k]}"` hands no status on: the masking reading treats it like any other unknown `exit` argument, so a line ending in one reads as masked; pipefail is on only after a plain, lone, unconditional `set -o pipefail`, and any other `set` / `shopt` naming pipefail turns it off for what follows, reached or not. Detector G credits a URL only as a request target: a word owned by a value-taking option (`-e`, `--referer`, `-x`, `-H`, any option not known to take no value) is not one, words are read as dequoted shell words, and the URL must be the whole word or the URL plus a path, query or fragment. | Bundle-raise ratification rounds 20 and 21 of 2026-11-21: the openai seat showed `task ci \| tail -5 \|\| printf x \| npx tsc --noEmit; exit "${PIPESTATUS[1]}"` exiting 0 with the filter's status because the fallback was skipped, which the walker read as the verifier's pass; and `curl --referer 'http://localhost:3000' https://example.invalid` crediting the local surface. Round 21: `set -o pipefail; true && set +o pipefail; npx tsc --noEmit \| tail -5` kept pipefail on past a reached unset, and `curl --header='Referer: http://localhost:3000' https://example.invalid` split inside the quoted value. Dropping the PIPESTATUS credit removes the whole class (which pipeline ran last is not in the text), as D8 and D9 did; the cost is a spurious, unrefusable gap on that idiom, where origin/main reads the same line as a pass | records carry the verifier's own status (D8's condition) |
+| D11 | reversible-technical | council:2026-11-21 | Detector G's `unlisted_surface` reason and the live-surface reader leave the live hook path: `runDetectors` calls `partialRatioIn` alone, the dispatch-bundle raise covers the classifier, the shared completion trigger and the ratio check (+11,772 B instead of +27,499 B), and step 4.4's live wiring is carried to `road-to-unlisted-surface-in-a-claim-chunk` as a chunk loaded only on a claim. | 23 bundle-raise ratification rounds of 2026-11-21: the anthropic seat ratified 22, the openai seat refused all 23 with 2-3 new findings each, about 60 % of them in G's repository-reading half; council strategy round of 2026-11-21 (`agents/evidence/council/done-claims-ratification-strategy-20261121.question.md`): anthropic chose a conditional chunk, openai asked for the classifier to be ratified on its own scope first | the chunk lands, or `unlisted_surface` is armed under D7 |
 
 ## Risk Register
 <!-- risk-review: v1 | reviewed: 2026-11-21 | reviewer: claude/host -->
