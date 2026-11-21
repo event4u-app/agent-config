@@ -65,7 +65,7 @@ import {
   _pruneLegacyState,
   _pruneStaleSessions,
 } from "../../src/scripts/language_mirror_hook.js";
-import { stripInjectedRegions } from "../../src/scripts/_lib/prompt_shape.js";
+import { ownerSpans, stripInjectedRegions } from "../../src/scripts/_lib/prompt_shape.js";
 import { tryAcquire } from "../../src/scripts/_lib/generation_lock.js";
 
 // Round-5 audit: the live state file read `language: "en", source: "prompt",
@@ -2044,6 +2044,17 @@ describe("owner prose only", () => {
     run(envelope("Please check this and then continue with the tests that are failing."), { consumer_root: tmp, env: {} });
     run(envelope("Error: build failed\n    at run (a.js:1:1)\n- ```\n  42\n\nBehebe das bitte und prüfe das."), { consumer_root: tmp, env: {} });
     expect(readState().language).toBe("de");
+  });
+
+  it("a 200,000-line unclosed fence classifies without throwing", () => {
+    const prompt = `Bitte prüfe das.\n\n\`\`\`\n${Array(200_000).fill("x").join("\n")}`;
+    expect(() => classify(prompt)).not.toThrow();
+  });
+
+  it("a closer five spaces into a `10. ~~~` item still closes the fence", () => {
+    const spans = ownerSpans("10. ~~~\n     x\n     ~~~\n\nBehebe das bitte.");
+    expect(spans.lead).toBe("");
+    expect(spans.trailing).toBe("Behebe das bitte.");
   });
 
   it("a long whitespace-only line costs linear time", () => {

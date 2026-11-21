@@ -162,9 +162,9 @@ const FENCE_LINE = "\u0000";
  * starts, after at most three spaces and an optional list marker, with three or more backticks (no
  * backtick after them, so inline ` ``` ` in a sentence opens nothing) or
  * tildes (whose info string may hold tildes), and closes on a line of the same
- * character at least as long, indented at most three spaces (or to a list
- * item's content column) and followed only by spaces or tabs (not a no-break
- * space); an unclosed
+ * character at least as long, indented at most three spaces past the opener's
+ * content column (column 0 outside a list) and followed only by spaces or tabs
+ * (not a no-break space); an unclosed
  * fence is no fence — its lines stay, so a misread opener can never hide what
  * follows it. CR, CRLF and LF all end a line.
  */
@@ -175,15 +175,15 @@ function fenced(text: string): string[] {
   let held: string[] = [];
   for (const line of text.split(/\r\n?|\n/)) {
     // An opener may follow a list marker (`- ```, `10. ```), as inside a
-    // Markdown list item; its closer may then be indented to the item's
-    // content column.
+    // Markdown list item; its closer may then be indented up to three spaces
+    // past the item's content column, as CommonMark allows.
     const open = /^( {0,3}(?:(?:[-*+]|\d{1,9}[.)])[ \t]+)?)(`{3,}(?=[^`]*$)|~{3,})/.exec(line);
     const lead = /^( *)(`{3,}|~{3,})[ \t]*$/.exec(line);
     if (fence === "" && open === null) {
       out.push(line);
     } else if (fence === "") {
       fence = open?.[2] ?? "";
-      indent = Math.max(3, open?.[1]?.length ?? 0);
+      indent = (open?.[1]?.length ?? 0) + 3;
       held = [line];
     } else if (lead !== null && (lead[1]?.length ?? 0) <= indent && (lead[2] ?? "").startsWith(fence)) {
       out.push(FENCE_LINE);
@@ -194,7 +194,7 @@ function fenced(text: string): string[] {
   }
   // A fence that never closes hides nothing: a misread opener must not swallow
   // the owner's text below it.
-  if (fence !== "") out.push(...held);
+  if (fence !== "") for (const line of held) out.push(line);
   return out;
 }
 
@@ -245,7 +245,10 @@ export interface OwnerSpans {
  * as paste. None of them leaves owner prose the reader can see, so none has
  * anything for the veto to protect. And a single line that mixes typed and
  * pasted text (`mach das: <long English error>`) is one unit; its markers
- * decide it as a whole.
+ * decide it as a whole. More generally, pasted prose can set a pin
+ * only where the owner's own text is under the floor in the other language
+ * (`Fix.` over `Error: x` and an English explanation pins English): the veto
+ * protects owner text that reaches the floor, not owner text that does not.
  */
 export function ownerSpans(text: string): OwnerSpans {
   const lines = fenced(text);
