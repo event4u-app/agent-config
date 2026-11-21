@@ -1,0 +1,101 @@
+{
+  "schema": 1,
+  "suites": {
+    "blameless-post-mortem": {
+      "date": "2026-11-02",
+      "blob": "9c3b5e94654bf105a1a9c820b7696ad270e9e197",
+      "run_id": "41460474334",
+      "model": "claude-sonnet-4-5",
+      "precision": 1,
+      "recall": 1
+    },
+    "condense-memory": {
+      "date": "2026-11-09",
+      "blob": "44474519f2bce7f9f968f43b553fbcd1d62a007c",
+      "run_id": "42637634902",
+      "model": "claude-sonnet-4-5",
+      "precision": 0.833,
+      "recall": 1
+    },
+    "evaluate-llm-feature": {
+      "date": "2026-11-16",
+      "blob": "b9e934de3ed0664ddee35e66ed41528ec84e4761",
+      "run_id": "43884764376",
+      "model": "claude-sonnet-4-5",
+      "precision": 1,
+      "recall": 1
+    },
+    "feature-planning": {
+      "date": "2026-11-02",
+      "blob": "a28d0bc00e69a13493453036bb1e6cfb5fd01a97",
+      "run_id": "41460474334",
+      "model": "claude-sonnet-4-5",
+      "precision": 1,
+      "recall": 1
+    },
+    "forensics-report": {
+      "date": "2026-11-09",
+      "blob": "a941bbc5452ac6536beb02d6d20a5701362b71e6",
+      "run_id": "42637634902",
+      "model": "claude-sonnet-4-5",
+      "precision": 0.833,
+      "recall": 1
+    },
+    "migration-architect": {
+      "date": "2026-11-02",
+      "blob": "161c115f547d9e030c9646b9428cdd6e6dbfb9b6",
+      "run_id": "41460474334",
+      "model": "claude-sonnet-4-5",
+      "precision": 0.8,
+      "recall": 1
+    },
+    "prompt-engineering-patterns": {
+      "date": "2026-11-16",
+      "blob": "ae1abbc3bb36da9153b0030dc41f796174fc0211",
+      "run_id": "43884764376",
+      "model": "claude-sonnet-4-5",
+      "precision": 1,
+      "recall": 1
+    },
+    "screenshot-hygiene": {
+      "date": "2026-11-16",
+      "blob": "9dd88676167e5d7846cd9517b98e1d81a403088b",
+      "run_id": "43884764376",
+      "model": "claude-sonnet-4-5",
+      "precision": 0.833,
+      "recall": 1
+    },
+    "server-hardening": {
+      "date": "2026-09-07",
+      "blob": "3ec5848866f4572864117c1e714bee22af24a048",
+      "run_id": "34114844799",
+      "model": "claude-sonnet-4-5",
+      "precision": 1,
+      "recall": 1
+    },
+    "source-discovery": {
+      "date": "2026-11-16",
+      "blob": "666a0c22f4a2836efd3f9ab9c97740605e2da162",
+      "run_id": "43884764376",
+      "model": "claude-sonnet-4-5",
+      "precision": 1,
+      "recall": 1
+    },
+    "wireframe": {
+      "date": "2026-11-02",
+      "blob": "4550a91dc77613377de9c2907af7d7c0c604f9e9",
+      "run_id": "41460474334",
+      "model": "claude-sonnet-4-5",
+      "precision": 1,
+      "recall": 1
+    },
+    "worktree-lifecycle": {
+      "date": "2026-11-02",
+      "blob": "ab9a97b60ee359798f9c28c19d8423a34c0abcae",
+      "run_id": "41460474334",
+      "model": "claude-sonnet-4-5",
+      "precision": 1,
+      "recall": 1
+    }
+  }
+}

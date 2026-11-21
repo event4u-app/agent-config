@@ -93,6 +93,16 @@ describe('skill_trigger_eval — triggers', () => {
         const p = tmpFile('triggers.json', JSON.stringify({ skill: 'demo', queries: [] }));
         expect(() => ste.load_triggers(p)).toThrow(/zero queries/);
     });
+
+    it('load_triggers_any reads the split shape the gate also accepts', () => {
+        const p = tmpFile(
+            'triggers.json',
+            JSON.stringify({ should_trigger: ['a'], should_not_trigger: [{ q: 'b' }] }),
+        );
+        const [skill, queries] = ste.load_triggers_any(p, 'legacy');
+        expect(skill).toBe('legacy');
+        expect(queries).toEqual([ste.Query('a', true), ste.Query('b', false)]);
+    });
 });
 
 // -- metrics math ---------------------------------------------------------
