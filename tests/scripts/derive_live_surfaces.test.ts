@@ -78,6 +78,15 @@ describe('deriveLiveSurfaces', () => {
         expect(deriveLiveSurfaces(dir)).toEqual([]);
     });
 
+    it('does not read through a symlinked directory out of the repo', () => {
+        const outside = fs.mkdtempSync(path.join(os.tmpdir(), 'live-surfaces-outdir-'));
+        const dir = fs.mkdtempSync(path.join(os.tmpdir(), 'live-surfaces-dirlink-'));
+        tmps.push(outside, dir);
+        fs.writeFileSync(path.join(outside, 'tauri.conf.json'), JSON.stringify({ app: { windows: [{ title: 'x' }] } }));
+        fs.symlinkSync(outside, path.join(dir, 'src-tauri'));
+        expect(deriveLiveSurfaces(dir)).toEqual([]);
+    });
+
     it('skips an input that is not a regular file, so a FIFO cannot block the read', () => {
         const dir = fs.mkdtempSync(path.join(os.tmpdir(), 'live-surfaces-fifo-'));
         tmps.push(dir);

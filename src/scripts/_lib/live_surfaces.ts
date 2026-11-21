@@ -62,9 +62,16 @@ const MAX_INPUT_BYTES = 1024 * 1024;
  * in a repo it does not control, so a FIFO or device named `package.json`
  * would block a synchronous read that no `try` can recover from.
  */
-export function readText(file: string): string | null {
+export function readText(file: string, root?: string): string | null {
     let fd: number | null = null;
     try {
+        // A symlinked parent directory (`src-tauri -> /elsewhere`) is not caught
+        // by O_NOFOLLOW, which guards the last component only.
+        if (root !== undefined) {
+            const base = fs.realpathSync(root);
+            const real = fs.realpathSync(file);
+            if (real !== base && !real.startsWith(base + path.sep)) return null;
+        }
         // Non-blocking open, then check the OPENED file: a path swapped between a
         // stat and a read cannot slip a FIFO or a large file past the check.
         // O_NOFOLLOW: a symlinked input could point out of the repo.
@@ -90,7 +97,7 @@ export function rel(root: string, file: string): string {
 
 function npmScripts(root: string, inputs: string[]): { surfaces: LiveSurface[]; scripts: Record<string, string> } {
     const file = path.join(root, 'package.json');
-    const text = readText(file);
+    const text = readText(file, root);
     if (text === null) return { surfaces: [], scripts: {} };
     inputs.push(file);
     let scripts: Record<string, string> = {};
@@ -118,7 +125,7 @@ function tauriWindows(root: string, scripts: Record<string, string>, inputs: str
     const out: LiveSurface[] = [];
     for (const candidate of ['tauri.conf.json', path.join('src-tauri', 'tauri.conf.json')]) {
         const file = path.join(root, candidate);
-        const text = readText(file);
+        const text = readText(file, root);
         if (text === null) continue;
         inputs.push(file);
         let conf: { app?: { windows?: unknown }; tauri?: { windows?: unknown }; build?: { devUrl?: unknown } };
@@ -158,7 +165,7 @@ function playwrightBaseUrls(root: string, inputs: string[]): LiveSurface[] {
     const out: LiveSurface[] = [];
     for (const ext of ['ts', 'js', 'mjs', 'cjs', 'mts']) {
         const file = path.join(root, `playwright.config.${ext}`);
-        const text = readText(file);
+        const text = readText(file, root);
         if (text === null) continue;
         inputs.push(file);
         const m = /baseURL\s*:\s*['"`]([^'"`]+)['"`]/.exec(text);
@@ -189,7 +196,7 @@ function composePorts(root: string, inputs: string[]): LiveSurface[] {
     }
     for (const name of names) {
         const file = path.join(root, name);
-        const text = readText(file);
+        const text = readText(file, root);
         if (text === null) continue;
         inputs.push(file);
         let doc: { services?: Record<string, { ports?: unknown }> };
@@ -228,7 +235,7 @@ function taskfileTasks(root: string, inputs: string[]): LiveSurface[] {
     const out: LiveSurface[] = [];
     for (const name of ['Taskfile.yml', 'Taskfile.yaml']) {
         const file = path.join(root, name);
-        const text = readText(file);
+        const text = readText(file, root);
         if (text === null) continue;
         inputs.push(file);
         let doc: { tasks?: Record<string, unknown> };
