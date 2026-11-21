@@ -12,6 +12,8 @@
  * live recognizer can never disagree about what a goal sentence is.
  */
 
+import { humanAuthoredLead, isSyntheticPrompt, stripInjectedRegions } from './prompt_shape.js';
+
 /** Owner end-state phrases, DE and EN. */
 export const GOAL_PATTERNS: readonly RegExp[] = [
     /\bbis\s+zum\s+merge\b/i,
@@ -25,26 +27,22 @@ export const GOAL_PATTERNS: readonly RegExp[] = [
 
 /** Owner sentences that end a recorded goal. */
 export const REVOKE_PATTERNS: readonly RegExp[] = [
-    /^\s*(?:stop|stopp|halt)\b/i,
+    /^\s*(?:stop|stopp|halt)\s*(?:[.!,;:]|$)/i,
     /\bnicht\s+mergen\b/i,
     /\bkein(?:en)?\s+merge\b/i,
     /\b(?:don'?t|do\s+not)\s+merge\b/i,
 ];
 
 /**
- * Harness-written user-role turns. They are not the owner typing, so a goal
- * phrase inside one (a slash-command body, a task notification) records nothing.
+ * Harness-written user-role turns beyond the ones `isSyntheticPrompt` knows: a
+ * slash-command expansion and its echo frames. A goal phrase inside one (a
+ * command body that says "bis zum merge") is the command's text, not the owner's.
  */
 const SYNTHETIC_PREFIXES: readonly string[] = [
     '<command-name>',
     '<command-message>',
     '<command-args>',
-    '<task-notification>',
-    '<system-reminder>',
     '<local-command-',
-    '<bash-input>',
-    '<bash-stdout>',
-    '<bash-stderr>',
     '<user-prompt-submit-hook>',
     '[Request interrupted',
     'Caveat:',
@@ -54,19 +52,27 @@ const SYNTHETIC_PREFIXES: readonly string[] = [
 /** Above this length a prompt is a paste with a remark, not a goal sentence. */
 export const MAX_GOAL_PROMPT_CHARS = 1500;
 
+/**
+ * Above this length a line is prose about something else that happens to carry
+ * the phrase. It also bounds the per-prompt line under the session-register
+ * concern's registered byte budget, so a long line is skipped, never truncated.
+ */
+export const MAX_GOAL_LINE_CHARS = 300;
+
 export function isSyntheticTurn(text: string): boolean {
     const head = text.trimStart();
-    return SYNTHETIC_PREFIXES.some((p) => head.startsWith(p));
+    return isSyntheticPrompt(text) || SYNTHETIC_PREFIXES.some((p) => head.startsWith(p));
 }
 
 /**
- * The owner's own prose lines: fenced blocks, quoted lines and indented lines
- * are pasted material (logs, tool output, a quoted chat) and are dropped.
+ * The owner's own prose lines: the human-authored lead (host regions stripped,
+ * cut at the first pasted document), without fenced blocks, quoted lines and
+ * indented lines — pasted material such as logs, tool output or a quoted chat.
  */
 export function ownerProseLines(text: string): string[] {
     const out: string[] = [];
     let inFence = false;
-    for (const line of text.split('\n')) {
+    for (const line of humanAuthoredLead(stripInjectedRegions(text)).split('\n')) {
         if (/^\s*(?:```|~~~)/.test(line)) {
             inFence = !inFence;
             continue;
@@ -83,7 +89,9 @@ export function ownerProseLines(text: string): string[] {
 function proseMatches(text: string, patterns: readonly RegExp[]): string | null {
     if (isSyntheticTurn(text) || text.length > MAX_GOAL_PROMPT_CHARS) return null;
     for (const line of ownerProseLines(text)) {
-        if (patterns.some((re) => re.test(line))) return line.trim();
+        const trimmed = line.trim();
+        if (trimmed.length > MAX_GOAL_LINE_CHARS) continue;
+        if (patterns.some((re) => re.test(trimmed))) return trimmed;
     }
     return null;
 }
