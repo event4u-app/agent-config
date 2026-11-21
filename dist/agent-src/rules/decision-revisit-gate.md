@@ -131,15 +131,19 @@ the council decides. Yes, or not establishable from tree evidence → the owner.
 The routing unit is the **transition**, never the document: the same ADR may be
 strengthened by the council and weakened only by the owner.
 
-| Reserved to the owner | Council-decidable |
-|---|---|
-| Changes the project's purpose or a declared non-negotiable outcome | Any mechanism serving that purpose |
-| **Lowers or removes** a recorded security / privacy / safety / data-handling floor | Strengthening a floor, or an equivalent swap above it |
-| Irreversible or materially destructive | Reversible within the envelope |
-| Spend or liability **above** a delegated threshold | Budgeted, threshold-bounded spend |
-| Creates / removes / weakens a legal, regulatory, contractual, licensing, compatibility, or public commitment | Internal-only commitments |
-| Governance self-amendment — reopening authority, quorum, escalation, this set | What the rules already permit |
-| Cannot be bounded from available evidence | Bounded, with the evidence cited |
+| Reserved to the owner | Council-decidable | Owner class |
+|---|---|---|
+| Changes the project's purpose or a declared non-negotiable outcome | Any mechanism serving that purpose | purpose |
+| **Lowers or removes** a recorded security / privacy / safety / data-handling floor | Strengthening a floor, or an equivalent swap above it | safety-floor |
+| Irreversible or materially destructive | Reversible within the envelope | irreversible |
+| Spend or liability **above** a delegated threshold | Budgeted, threshold-bounded spend | money |
+| Creates / removes / weakens a legal, regulatory, contractual, licensing, compatibility, or public commitment | Internal-only commitments | outside |
+| Governance self-amendment — reopening authority, quorum, escalation, this set | What the rules already permit | outside |
+| Cannot be bounded from available evidence | Bounded, with the evidence cited | outside |
+
+`Owner class` names which of the owner's four classes a row is. `outside`
+marks a row a council round mapped outside the four; the row still binds until
+the owner decides to fold, keep or remove it.
 
 Council split, abstention, or no quorum is an **escalation condition**, not a
 class: that transition escalates, the ADR does not become owner-reserved
