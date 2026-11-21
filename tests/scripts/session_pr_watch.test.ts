@@ -121,12 +121,13 @@ describe('default_pr_target — the session PR a PR command takes without a URL'
         expect(block).toContain(`Default PR target for PR commands: #2534 ${URL}`);
     });
 
-    // Goal-record ratification round 2: a default read from a failed probe is
-    // stale state and must say so on its own line.
-    it('marks the default unverified when the last read failed', () => {
+    // Goal-record ratification rounds 2 and 4: a default read from a failed probe
+    // is stale state, so no default is named until a read succeeds.
+    it('names no default when the last read failed', () => {
         record_pr(root, 's1', URL);
         const block = pr_watch_block(root, 's1', T0, () => null);
-        expect(block).toContain(`Default PR target for PR commands: #2534 ${URL} (state unverified — run \`gh pr view 2534\` first)`);
+        expect(block).not.toContain('Default PR target');
+        expect(block).toMatch(/FAILED — state unverified/);
     });
 
     it('names no default when two PRs are open', () => {

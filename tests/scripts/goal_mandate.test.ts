@@ -11,7 +11,7 @@ import { afterEach, beforeEach, describe, expect, it } from 'vitest';
 
 import { release, tryAcquire } from '../../src/scripts/_lib/generation_lock.js';
 import { goal_mandate_block, observe_prompt } from '../../src/scripts/_lib/goal_mandate.js';
-import { goal_mandate_line, read_goal } from '../../src/scripts/_lib/goal_mandate_store.js';
+import { goal_mandate_for_subagent, goal_mandate_line, read_goal } from '../../src/scripts/_lib/goal_mandate_store.js';
 
 const T0 = new Date('2026-11-21T09:15:00Z');
 const T1 = new Date('2026-11-21T10:40:00Z');
@@ -89,18 +89,35 @@ describe('observe_prompt — goal sentences', () => {
     });
 
     // Ratification round 3: the read-compare-write runs under the record's lock.
-    it('writes nothing while another writer holds the record lock', () => {
+    // Round 4: a contended goal write is dropped, a contended stop is not.
+    it('writes no goal while another writer holds the record lock', () => {
+        fs.mkdirSync(path.join(root, '.git', 'agent-session-mandates'), { recursive: true });
+        const held = tryAcquire(path.join(root, '.git', 'agent-session-mandates', 's1.json.lock'), { staleMs: 60_000 });
+        expect(held).not.toBeNull();
+        try {
+            observe_prompt(root, 's1', 'until merged', T0);
+            expect(read_goal(root, 's1')).toBeNull();
+        } finally {
+            if (held) release(held);
+        }
+    });
+
+    it('a stop submitted once under lock contention still ends the goal for a later subagent', () => {
         observe_prompt(root, 's1', 'until merged', T0);
         const held = tryAcquire(path.join(root, '.git', 'agent-session-mandates', 's1.json.lock'), { staleMs: 60_000 });
         expect(held).not.toBeNull();
         try {
-            observe_prompt(root, 's1', 'stop', T1);
-            expect(read_goal(root, 's1')?.revoked_by).toBeUndefined();
+            expect(goal_mandate_block(root, 's1', 'stop', T1)).toBeNull();
         } finally {
             if (held) release(held);
         }
+        expect(goal_mandate_for_subagent(root, 's1')).toBeNull();
+    });
+
+    it('a stop wins over a goal with the same stamp, in either order', () => {
         observe_prompt(root, 's1', 'stop', T1);
-        expect(read_goal(root, 's1')?.revoked_by).toBe('stop');
+        observe_prompt(root, 's1', 'until merged', T1);
+        expect(goal_mandate_line(read_goal(root, 's1'))).toBeNull();
     });
 
     // Ratification round 3: a negated goal phrase is not a goal.

@@ -64,25 +64,25 @@ export function observe_prompt(root: string, session_id: string, prompt: string,
         const goal = revoke === null ? goalSentenceIn(prompt) : null;
         const file = goal_store_file(root, session_id);
         if ((revoke === null && goal === null) || file === null) return read_goal(root, session_id);
-        // The read-compare-write runs under the record's lock, so two beats of one
-        // session cannot interleave; a beat that finds it held writes nothing. A
-        // lock that cannot be created at all (an unwritable store) blocks a goal
-        // but not a revocation, which then goes ahead unguarded: ending a goal is
-        // the direction that cannot widen what an agent does.
+        // The read-compare-write runs under the record's lock, so two goal beats of
+        // one session cannot interleave; a goal beat that cannot take it writes
+        // nothing. A revocation that cannot take it (held, or not creatable in an
+        // unwritable store) goes ahead unguarded: ending a goal is the direction
+        // that cannot widen what an agent does, and a stop typed once must hold.
         fs.mkdirSync(path.dirname(file), { recursive: true });
-        let unlockable = false;
         try {
             held = acquire(`${file}.lock`, { staleMs: 5_000, waitMs: 250 });
         } catch {
-            unlockable = true;
+            held = null;
         }
         const current = read_goal(root, session_id);
-        if (!held && !(unlockable && revoke !== null)) return current;
+        if (!held && revoke === null) return current;
         // A prompt older than the stored stamp lost a race with a later one (beats
         // of one session are not guaranteed to finish in submission order); the
-        // later owner turn stands. Equal stamps: the beat that writes last wins.
+        // later owner turn stands. On equal stamps a stop wins over a goal.
         const stored = current === null ? Number.NEGATIVE_INFINITY : Date.parse(current.revoked_at ?? current.recorded_at);
         if (now.getTime() < stored) return current;
+        if (now.getTime() === stored && revoke === null && current?.revoked_by !== undefined) return current;
         const at = now.toISOString();
         if (revoke !== null) {
             // Written on an empty store too, and advanced by every newer stop, so a
