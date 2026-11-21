@@ -270,6 +270,14 @@ export interface OwnerSpans {
  */
 export function ownerSpans(text: string): OwnerSpans {
   const lines = fenced(text);
+  // A unified-diff hunk body (`-`, `+`, ` ` and `\` lines under an `@@ -n` head)
+  // is patch content, not prose; it is collapsed like a fence (round 19).
+  for (let i = 0, hunk = false; i < lines.length; i++) {
+    const l = lines[i] ?? "";
+    if (/^@@ -\d/.test(l)) hunk = true;
+    else if (hunk && /^[-+ \\]/.test(l) && l.trim() !== "") lines[i] = FENCE_LINE;
+    else hunk = false;
+  }
   // `OUTPUT_HEAD`'s `To <x>` arm is git's push line, one token after `To`; a
   // sentence such as `To fix this, …` is the owner's, not output.
   const blank = (l: string): boolean => l.trim() === "";

@@ -67,7 +67,7 @@ import {
 } from "../../src/scripts/language_mirror_hook.js";
 import { ownerProse, ownerSpans, stripInjectedRegions } from "../../src/scripts/_lib/prompt_shape.js";
 import { gatePinLanguage } from "../../src/scripts/hooks/language_pin_gate.js";
-import { detectLanguage } from "../../src/scripts/hooks/turn_end_gate_hook.js";
+import { detectLanguage, readLanguagePin } from "../../src/scripts/hooks/turn_end_gate_hook.js";
 import { tryAcquire } from "../../src/scripts/_lib/generation_lock.js";
 
 // Round-5 audit: the live state file read `language: "en", source: "prompt",
@@ -1748,9 +1748,10 @@ describe("inline terminal-pane regions (#2950)", () => {
   });
 
   it("the cost, end to end: the kept English pin makes the gate refuse a German reply", () => {
-    run(envelope("Please check the release notes and tell me what is missing."), { consumer_root: tmp, env: {} });
-    run(envelope(TERMINAL_PANE_LINE + "\nwarum ist das leer und wo ist die ausgabe?"), { consumer_root: tmp, env: {} });
-    const pin = gatePinLanguage(readState() as unknown as Record<string, unknown>);
+    const sid = "7f1c2a9e-4b3d-4e6f-9a1b-2c3d4e5f6a7b";
+    run(envelope("Please check the release notes and tell me what is missing.", sid), { consumer_root: tmp, env: {} });
+    run(envelope(TERMINAL_PANE_LINE + "\nwarum ist das leer und wo ist die ausgabe?", sid), { consumer_root: tmp, env: {} });
+    const pin = readLanguagePin(tmp, sid);
     expect(pin).toBe("en");
     expect(detectLanguage("Das ist leer, weil die Ausgabe im Terminal bleibt und nicht hier ankommt.", pin)).not.toBeNull();
   });
@@ -2158,6 +2159,31 @@ describe("owner prose only", () => {
     // would expose it as a document head and empty the trailing span.
     const spans = ownerSpans("~~~\nx\n\t~~~\n# pasted heading\n~~~\n\nBehebe das bitte.");
     expect(spans.trailing).toBe("Behebe das bitte.");
+  });
+
+  it("a pasted unified diff never pins from its hunk lines (read through the gate)", () => {
+    // Ratification round 19: the three headers made the guard's output run, and
+    // the `-` / `+` lines became the trailing span and pinned English.
+    const sid = "3e9b1d24-8c7a-4f50-b6e2-1a2b3c4d5e6f";
+    const patch = [
+      "--- a/x",
+      "+++ b/x",
+      "@@ -1,2 +1,2 @@",
+      " the context line that was there",
+      "-the output was there and it is gone",
+      "+the padding is missing here and that should be fixed",
+    ].join("\n");
+    expect(ownerSpans(patch).trailing).toBe("");
+    run(envelope("Bitte prüfe das und mach dann weiter mit den Tests.", sid), { consumer_root: tmp, env: {} });
+    run(envelope(patch, sid), { consumer_root: tmp, env: {} });
+    expect(readLanguagePin(tmp, sid)).toBe("de");
+  });
+
+  it("malformed counts and a count without a source oblige nothing", () => {
+    expect(gatePinLanguage({ language: "de", source: "prompt", owner_prose_chars: -1 })).toBe("und");
+    expect(gatePinLanguage({ language: "de", source: "prompt", owner_prose_chars: 0.5 })).toBe("und");
+    expect(gatePinLanguage({ language: "de", owner_prose_chars: 5 })).toBe("und");
+    expect(gatePinLanguage({ language: "de", source: "prompt", owner_prose_chars: 5 })).toBe("de");
   });
 
   it("an unindented line ends a list item and the fence inside it", () => {
