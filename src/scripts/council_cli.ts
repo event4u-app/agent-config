@@ -2230,6 +2230,33 @@ function _resolved_chairman_override(raw: string | null) {
     }
 }
 
+/** The record writer's own subject declaration: one line, the digest alone. */
+const RATIFICATION_SUBJECT_LINE = /^`?subject: [0-9a-f]{64}`?\s*$/gmu;
+const RATIFICATION_LABELS = ['ratified', 'confirmed-non-expanding', 'refused'] as const;
+
+/** A prompt that declares exactly one `subject:` line is a ratification prompt (ratification_record_writer.ts). */
+export function isRatificationPrompt(text: string): boolean {
+    return [...text.matchAll(RATIFICATION_SUBJECT_LINE)].length === 1;
+}
+
+/**
+ * Why a ratification prompt cannot produce a record, or null. The record writer
+ * derives each seat's verdict from its closing stance line only; 24 rounds that
+ * asked for `VERDICT:` instead produced no record at all (PR #3005).
+ */
+export function ratificationPromptProblem(text: string): string | null {
+    if (!isRatificationPrompt(text)) return null;
+    const stance = text.split('\n').find((l) => /STANCE:/u.test(l) && /DEALBREAKER:/u.test(l));
+    if (stance === undefined) {
+        return 'a ratification prompt (it declares a `subject:` line) must ask every seat to close on ' +
+            '`STANCE: <ratified | confirmed-non-expanding | refused> | CONFIDENCE: <high | med | low> | DEALBREAKER: <yes | no>` — ' +
+            'the record writer reads nothing else, so any other closing line yields no record';
+    }
+    const missing = RATIFICATION_LABELS.filter((l) => !new RegExp(`(^|[^a-z-])${l}([^a-z-]|$)`, 'u').test(stance));
+    if (missing.length > 0) return `the stance line of this ratification prompt does not offer ${missing.map((m) => `\`${m}\``).join(', ')}`;
+    return null;
+}
+
 function cmd_run(
     args: Args,
     opts: { settings?: Dict | null; members?: ExternalAIClient[] | null; table?: PriceTable | null } = {},
@@ -2293,6 +2320,16 @@ function cmd_run(
         max_bundle_bytes: _getattr<number | null>(args, 'max_bundle_bytes', null),
         prompt_mode_override: _getattr<string | null>(args, 'prompt_mode', null),
     });
+    const raw_prompt = args.input_mode === 'prompt' ? fs.readFileSync(args.question as string, 'utf-8') : '';
+    const ratification_problem = ratificationPromptProblem(raw_prompt);
+    if (ratification_problem !== null) {
+        _stderr(`❌  council:run: ${ratification_problem}.\n`);
+        return 2;
+    }
+    // A ratification prompt always gets the stance contract and one unattended
+    // repair re-prompt for a seat that omits the line: a round with no stance
+    // line is a paid round that cannot be recorded.
+    const ratification_prompt = isRatificationPrompt(raw_prompt);
     const [proceed, gate_exit] = _necessity_gate({
         prompt: question.user_prompt,
         lens: question.mode,
@@ -2417,9 +2454,10 @@ function cmd_run(
     const rounds = _resolve_rounds(args, ai_cfg);
     // Phase 1: stance tally — defensive read; malformed/absent block reads as off.
     const stance_tally_on =
-        _isDict(ai_cfg) &&
-        _isDict(ai_cfg['stance_tally']) &&
-        (ai_cfg['stance_tally'] as Dict)['enabled'] === true;
+        ratification_prompt ||
+        (_isDict(ai_cfg) &&
+            _isDict(ai_cfg['stance_tally']) &&
+            (ai_cfg['stance_tally'] as Dict)['enabled'] === true);
     // road-to-council-blind-review Phase 1 (Ü2): five orthogonal stances
     // rotated deterministically over the config-ordered member list; the
     // outsider seat additionally drops project_context. Default off.
@@ -2455,7 +2493,7 @@ function cmd_run(
         // Interactive one-line confirm (cmd_run has no --auto-continue); the
         // repaired-call cost is collected so cost_usd_actual stays honest.
         on_stance_repair: stance_tally_on
-            ? (member: string): boolean => _make_repair_confirm(false)(member, 'missing stance line')
+            ? (member: string): boolean => _make_repair_confirm(ratification_prompt)(member, 'missing stance line')
             : null,
         on_stance_repair_result: (r: CouncilResponse): void => {
             stance_repairs.push(r);
