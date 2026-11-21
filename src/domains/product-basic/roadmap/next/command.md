@@ -221,11 +221,27 @@ a PR exists — so the failure mode is a re-opened window, not a wrong result.
 `agent-config sessions:claim --release` drops the claim if the run is abandoned
 before the session ends; otherwise `session_end` clears the whole record.
 
-### 4. Workspace — branch by default, worktree on request
+### 4. Workspace — the project's rule first, then a branch by default
 
-Default: a feature branch in the current checkout, named
-`feat/<roadmap-slug>` per [`commit-conventions`](../../rules/commit-conventions.md).
-Propose the name once and proceed; no naming menu.
+The workspace is decided in this order; the first that speaks wins:
+
+1. **An explicit user instruction** for this run — "in a worktree", "on
+   `main`", a branch name.
+2. **The project's own delivery rule**, read per
+   [`playbook-precedence`](../../rules/playbook-precedence.md) from the
+   project's own instruction files and playbooks: work on a branch, in a
+   worktree, or on the trunk with a manual test before each commit
+   (branch, worktree, or trunk-plus-manual-test). The project rule wins over the
+   default below, which is only this command's assumption about a project that
+   said nothing.
+3. **The feature-branch default**: a feature branch in the current checkout,
+   named `feat/<roadmap-slug>` per
+   [`commit-conventions`](../../rules/commit-conventions.md). Propose the name
+   once and proceed; no naming menu.
+
+A project rule that forbids a branch or a PR ends the run at "work done on the
+project's terms, nothing pushed", and the run says so in one line instead of
+opening a PR.
 
 `--worktree` — or the user saying "in a worktree" — routes through
 [`/worktree:create`](../../worktree/create.md) in full, including its
@@ -369,8 +385,13 @@ sweep and preflight, and CI gates the branch once the PR exists.
   ([`parallel-sessions`](../../../../docs/guides/parallel-sessions.md)).
 - **A judgement-call blocker goes to the council, not to the user.**
   A human-ACTION blocker goes to neither — it disqualifies.
-- **No merge, ever.** The PR is opened for review; merging is
-  conversational ([`non-destructive-by-default`](../../rules/non-destructive-by-default.md)).
+- **Merge only on the owner's word, through process-full.** The run merges
+  exactly when [`/roadmap:process-full`](process-full.md#--merge--merging-on-the-owners-word-only-adr-282)
+  would: on `--merge`, or on the owner's own words in the session that runs the
+  work — through that section's danger gate, never for a `needs-owner` PR.
+  Without either, the PR stays open for review
+  ([`non-destructive-by-default`](../../rules/non-destructive-by-default.md)).
+  This command grants no merge authority of its own.
 - All rules from [`/roadmap:process-full`](process-full.md#rules) apply
   unchanged to the execution half.
 
