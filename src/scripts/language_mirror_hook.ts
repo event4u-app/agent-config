@@ -509,6 +509,12 @@ export interface PinState extends JsonObject {
    * every state written before this field existed is still a valid pin.
    */
   tool_calls_since_pin?: number;
+  /**
+   * Characters of owner prose behind the pin (`classify`'s scored text); 0 on
+   * a locale pin. The turn-end gate refuses on language only when this is
+   * above 0. Optional: a pin written before the field keeps today's reading.
+   */
+  owner_prose_chars?: number;
 }
 
 function _loadState(target: string): Partial<PinState> {
@@ -624,6 +630,7 @@ export function nextState(
       en_markers: classification.en_markers,
       session_id,
       tool_calls_since_pin: 0,
+      owner_prose_chars: 0,
     };
   }
   return {
@@ -635,6 +642,7 @@ export function nextState(
     en_markers: classification.en_markers,
     session_id,
     tool_calls_since_pin: 0,
+    owner_prose_chars: classification.owner_prose_chars ?? 0,
   };
 }
 

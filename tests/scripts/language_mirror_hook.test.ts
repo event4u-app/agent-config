@@ -1797,6 +1797,23 @@ describe("owner prose only", () => {
     expect(pinFrom(prompt)).toBe(expected);
   });
 
+  it("owner_prose_chars records the typed line's length, not prompt_chars", () => {
+    const [, prompt] = OWNER_PROSE_ROWS[0]!;
+    run(envelope(prompt), { consumer_root: tmp, env: {} });
+    const state = readState();
+    expect(state.language).toBe("de");
+    expect(state.source).toBe("prompt");
+    expect(state.owner_prose_chars).toBe("Warum ist das rot?".length);
+    expect(state.prompt_chars).toBe(prompt.length);
+  });
+
+  it("owner_prose_chars is 0 on a locale pin", () => {
+    run(envelope("ok"), { consumer_root: tmp, env: { LANG: "de_DE.UTF-8" } });
+    const state = readState();
+    expect(state.source).toBe("system-locale");
+    expect(state.owner_prose_chars).toBe(0);
+  });
+
   // D5 caveat: a host turn reaching `UserPromptSubmit` must leave an existing
   // owner pin in place, not merely classify as `und` in isolation.
   it("a host turn between owner turns keeps the German pin", () => {
