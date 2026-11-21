@@ -24,6 +24,7 @@ import * as fs from 'node:fs';
 import * as path from 'node:path';
 
 import { deriveLiveSurfaces, type LiveSurface } from './live_surfaces.js';
+import { commandSegments } from './verification_command.js';
 import { RECORDED_SUFFIX, type RefusalDetectorId } from './turn_end_refusals.js';
 
 /**
@@ -179,10 +180,9 @@ function playwrightConfig(command: string): string | null {
     return m ? (m[1] as string).replace(/^["']|["']$/g, '') : null;
 }
 
-/** `start` run as a command — at the line's start or after `;`, `&&`, `||`, `|`, `(` — not merely mentioned. */
+/** `start` run as one of the line's commands, not merely mentioned in one. */
 function runsCommand(command: string, start: string): boolean {
-    const escaped = start.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
-    return new RegExp(`(?:^|[;&|(])\\s*${escaped}(?=$|[\\s;&|)])`).test(command);
+    return commandSegments(command).some((x) => x.trim() === start || x.trim().startsWith(`${start} `));
 }
 
 /**
@@ -190,9 +190,16 @@ function runsCommand(command: string, start: string): boolean {
  * run over a web page. A `playwright test` run that names another config does not
  * drive a surface derived from this one.
  */
+/** A segment that runs `playwright test` or `agent-config ui:render`, behind an env prefix or a runner. */
+const PLAYWRIGHT_RUN = /^(?:\w+=\S*\s+)*(?:(?:npx|bunx|pnpm(?:\s+exec)?|yarn)\s+)?playwright\s+test\b/;
+const RENDER_RUN = /^(?:\w+=\S*\s+)*(?:(?:npx|bunx|pnpm(?:\s+exec)?|yarn)\s+)?(?:\S*\/)?agent-config\s+ui:render\b/;
+
 function drives(command: string, surface: LiveSurface, root: string): boolean {
-    const browser = /\bui:render\b|\bplaywright\s+test\b/.test(command);
-    if (surface.kind === 'playwright' && /\bplaywright\s+test\b/.test(command)) {
+    const segs = commandSegments(command).map((x) => x.trim());
+    const playwrightRun = segs.find((x) => PLAYWRIGHT_RUN.test(x));
+    const browser = playwrightRun !== undefined || segs.some((x) => RENDER_RUN.test(x));
+    if (surface.kind === 'playwright' && playwrightRun !== undefined) {
+        command = playwrightRun;
         const named = playwrightConfig(command);
         if (named === null) return true;
         const rel = path.relative(root, path.resolve(root, named)).split(path.sep).join('/');

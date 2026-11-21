@@ -2331,6 +2331,12 @@ describe('detector G — an edited surface nothing drove and nothing lists', () 
         expect(detectCoverageGap('Fertig.', calls, dir)?.code).toBe('unlisted_surface');
     });
 
+    it('a command that only mentions a browser run does not drive the page', () => {
+        const dir = appWorkspace();
+        const calls: ToolCall[] = [edit(dir), { name: 'Bash', command: 'echo "playwright test"' }];
+        expect(detectCoverageGap('Fertig.', calls, dir)?.code).toBe('unlisted_surface');
+    });
+
     it('a command that runs the start command drives the surface', () => {
         const dir = appWorkspace();
         const calls: ToolCall[] = [edit(dir), { name: 'Bash', command: 'cd app && npm run dev' }];
