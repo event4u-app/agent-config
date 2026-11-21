@@ -1687,3 +1687,109 @@ describe("inline terminal-pane regions (#2950)", () => {
     expect(readState().language).toBe("de");
   });
 });
+
+// ---------------------------------------------------------------------------
+// Owner prose only — road-to-a-language-pin-from-owner-prose 2.1.
+//
+// What the hook pins from a prompt, row by row: the owner's language, or `und`
+// where the owner typed fewer than `MIN_MARKERS` markers (an `und` keeps the
+// previous pin, D1). `[context]` rows are the roadmap's § Context shapes and
+// their variants; `[1.2 synthetic-turn]` rows are the class
+// `agents/evidence/analysis/language-split-baseline.md` found (140 of 148
+// replayed fires), paraphrased, no session text; `[regression]` rows were
+// already right before the fix and must stay so.
+// ---------------------------------------------------------------------------
+
+/** The hook's own order: a host-generated turn never reaches `classify`. */
+function pinFrom(prompt: string): string {
+  return isSyntheticPrompt(prompt) ? "und" : classify(prompt).language;
+}
+
+const OWNER_PROSE_ROWS: ReadonlyArray<readonly [string, string, string]> = [
+  [
+    "[context] terminal block above one typed German line",
+    "The command failed with these errors and the build should be checked:\nError: Cannot find module './x.js'\n    at Module._resolveFilename (node:internal/modules/cjs/loader:1145:15)\n\nWarum ist das rot?",
+    "de",
+  ],
+  [
+    "[context] terminal block glued to the typed German line, no blank line",
+    "Error: Cannot find module './x.js'\n    at Module._resolveFilename (node:internal/modules/cjs/loader:1145:15)\nWarum ist das rot und was fehlt hier?",
+    "de",
+  ],
+  [
+    "[context] short German lead over an unmarked English paragraph",
+    "Behebe das bitte.\n\nThe parser drops the last line when the input has no trailing newline, and the tests should cover that case.",
+    "de",
+  ],
+  [
+    "[context] short English lead over an unmarked German paragraph",
+    "Fix this file.\n\nDer Parser verwirft die letzte Zeile, wenn die Eingabe keinen Zeilenumbruch hat, und die Tests sollten das auch abdecken.",
+    "und",
+  ],
+  [
+    "[context] short English lead over a German paragraph under a heading",
+    "Fix this file.\n\n## Überschrift\n\nDer Parser verwirft die letzte Zeile, wenn die Eingabe keinen Zeilenumbruch hat, und die Tests sollten das auch abdecken.",
+    "und",
+  ],
+  [
+    "[1.2 synthetic-turn] stop-hook feedback",
+    "Stop hook feedback:\nThe reply should state what was verified and which tests were run before the turn ends, because the gate could not find it.",
+    "und",
+  ],
+  [
+    "[1.2 synthetic-turn] compaction continuation summary",
+    "This session is being continued from a previous conversation that ran out of context. The summary below covers the earlier portion of the conversation and what was done there.",
+    "und",
+  ],
+  [
+    "[1.2 synthetic-turn] usage-limit note",
+    "[Usage limit reached; a short grace allowance remains, then this turn is cut off without warning. Judge what's left and wrap up what you can.]",
+    "und",
+  ],
+  [
+    "[1.2 synthetic-turn] expanded command body",
+    "# analyze-inbox\n\nTurn a file someone dropped in the inbox into either a roadmap this repo can execute, or a written reason why it should not be.",
+    "und",
+  ],
+  [
+    "[regression] task notification",
+    "<task-notification>\nThe background task has finished and the output is ready to be read by the agent.\n</task-notification>",
+    "und",
+  ],
+  [
+    "[regression] agent-message hand-back",
+    '<agent-message from="a1">\nThe subagent has finished and these are the results that were found.\n</agent-message>',
+    "und",
+  ],
+  [
+    "[regression] framed cross-session message",
+    'Another Claude session sent a message:\n<cross-session-message from="lane-3">\nThe defect is confirmed and there is one correction that should be made.\n</cross-session-message>',
+    "und",
+  ],
+  [
+    "[regression] usage-limit resume sentence",
+    "Your claude.ai usage limit has reset. Continue the task you were working on when the limit was reached; do not repeat work that is already complete.",
+    "und",
+  ],
+  [
+    "[regression] terminal-pane echo",
+    "<bash-input>ls</bash-input><bash-stdout>[No output was captured. The command ran in the terminal pane; if it should have printed something, use read_terminal.]</bash-stdout><bash-stderr></bash-stderr>",
+    "und",
+  ],
+  [
+    "[regression] German instruction over a fenced English stack trace",
+    "Warum bricht das hier ab? Bitte prüfe das.\n\n```\nTypeError: Cannot read properties of undefined (reading 'map')\n    at render (src/app.tsx:12:5)\nThe above error occurred in the component and should be handled there.\n```",
+    "de",
+  ],
+  [
+    "[regression] paste ending in an English prose line under a German lead",
+    "Kannst du bitte schauen, warum das hier fehlschlägt?\n\nError: build failed\n    at run (build.js:3:1)\nThe job was cancelled because the runner lost its connection to the server.",
+    "de",
+  ],
+];
+
+describe("owner prose only", () => {
+  it.each(OWNER_PROSE_ROWS)("%s", (_name, prompt, expected) => {
+    expect(pinFrom(prompt)).toBe(expected);
+  });
+});
