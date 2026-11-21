@@ -40,6 +40,7 @@ and keep the full search — this file only adds candidates to it.
 | road-to-state-and-pins-across-compaction | active | ready | After an automatic compaction the session gets back what it cannot afford to lose — its task position and the … |
 | road-to-stop-hooks-that-count-own-edits | active | ready | A session that wrote nothing is never told to review lines; a session that wrote N lines is charged N, … |
 | road-to-ui-fixes-that-measure-first | active | ready | A visual bug is fixed only after a measurement of the rendered state, the second fix attempt on the same … |
+| road-to-unlisted-surface-in-a-claim-chunk | active | ready | The turn-end gate records `unlisted_surface` on the live path again, from a chunk that only a turn with a completion … |
 | road-to-verified-stale-lock-reclaim | active | ready | No file lock in `src/scripts` lets two callers hold it at once because of a stale-lock break or a release, … |
 | domain-pack-extraction-when-triggered | later | later | Domain-Pack Extraction (when triggered) |
 | road-to-17-0-follow-ups | later | later | Every FOLLOW-UP finding of the 17.0.0 self-review is either fixed with a test or recorded decision that shows the council's … |

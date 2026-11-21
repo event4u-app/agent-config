@@ -52,6 +52,14 @@ pays the parse.
 
 - [ ] AC-1: A claimed turn that edited a derived surface and drove nothing after the edit records `unlisted_surface` on the live path, and the dispatch bundle does not grow by the reader.
 
+## Risk Register
+<!-- risk-review: v1 | reviewed: 2026-11-21 | reviewer: claude/host -->
+
+| Rank | Item | Risk type | Description | Mitigation | Anchored under |
+|------|------|-----------|-------------|------------|----------------|
+| 1 | A chunk ceiling that does not ratify | implementation | The chunk's ceiling is a new entry in a ratification-gated file, and the source roadmap's raise for this same code did not converge in 23 rounds. | The chunk carries only `unlistedSurfaceIn` and the reader, whose round findings are already fixed with tests; the ratification prompt names that scope alone. | Phase 1 — the chunk |
+| 2 | The chunk loads on every turn anyway | implementation | A loader keyed to a broad trigger would put the parse back on most Stop events. | 1.1 pins that a turn without a completion claim does not load the chunk. | Phase 1 — the chunk |
+
 ## Notes
 
 - The ratification rounds of the source roadmap found most defects in this half
