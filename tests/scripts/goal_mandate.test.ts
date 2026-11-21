@@ -199,53 +199,62 @@ describe('observe_prompt — goal sentences', () => {
         expect(read_goal(root, 's1')?.revoked_at).toBe(T3.toISOString());
     });
 
-    // Round 7: a stop that can be saved nowhere is said on that turn.
-    // Round 7, narrowed in round 9: said on the turn only when the store AND the
-    // temp-dir fallback both refuse it.
+    // Rounds 7, 9 and 10: said on the turn only when the store AND the user-level
+    // fallback both refuse it, and the message says later readers may disagree.
     it.skipIf(process.getuid?.() === 0)('says so on the turn when a stop could be saved nowhere', () => {
         observe_prompt(root, 's1', 'until merged', T0);
         const dir = path.join(root, '.git', 'agent-session-mandates');
-        const tmp = fs.mkdtempSync(path.join(os.tmpdir(), 'goal-tmp-ro-'));
-        const saved = process.env['TMPDIR'];
+        const home = fs.mkdtempSync(path.join(os.tmpdir(), 'goal-home-ro-'));
+        const saved = process.env['EVENT4U_CONFIG_HOME'];
         for (const n of fs.readdirSync(dir)) fs.chmodSync(path.join(dir, n), 0o444);
         fs.chmodSync(dir, 0o555);
-        fs.chmodSync(tmp, 0o555);
-        process.env['TMPDIR'] = tmp;
+        fs.chmodSync(home, 0o555);
+        process.env['EVENT4U_CONFIG_HOME'] = home;
         try {
             const block = goal_mandate_block(root, 's1', 'stop', T1);
             expect(block).toContain('could not be saved');
+            expect(block).toContain('later turns and subagents may still show');
             expect(block).not.toContain('Owner goal');
         } finally {
-            process.env['TMPDIR'] = saved;
-            fs.chmodSync(tmp, 0o755);
-            fs.rmSync(tmp, { recursive: true, force: true });
+            if (saved === undefined) delete process.env['EVENT4U_CONFIG_HOME'];
+            else process.env['EVENT4U_CONFIG_HOME'] = saved;
+            fs.chmodSync(home, 0o755);
+            fs.rmSync(home, { recursive: true, force: true });
             fs.chmodSync(dir, 0o755);
             for (const n of fs.readdirSync(dir)) fs.chmodSync(path.join(dir, n), 0o644);
         }
     });
 
-    // Round 9: a stop the store refuses entirely still holds on the next turn and
-    // for a fresh subagent, through the temp-dir fallback both renderers read.
-    it.skipIf(process.getuid?.() === 0)('a stop the store refuses entirely holds on later turns and for subagents', () => {
+    // Rounds 9 and 10: a stop the store refuses entirely still holds on the next
+    // turn and for a fresh subagent — through a user-level fallback, so a reader
+    // whose temp root differs from the writer's still finds it.
+    it.skipIf(process.getuid?.() === 0)('a stop the store refuses entirely holds on later turns and for subagents, whatever their temp root', () => {
         const T2 = new Date('2026-11-21T11:00:00Z');
         observe_prompt(root, 's1', 'until merged', T0);
         const dir = path.join(root, '.git', 'agent-session-mandates');
-        const tmp = fs.mkdtempSync(path.join(os.tmpdir(), 'goal-tmp-rw-'));
-        const saved = process.env['TMPDIR'];
+        const home = fs.mkdtempSync(path.join(os.tmpdir(), 'goal-home-rw-'));
+        const otherTmp = fs.mkdtempSync(path.join(os.tmpdir(), 'goal-tmp-other-'));
+        const saved = { home: process.env['EVENT4U_CONFIG_HOME'], tmp: process.env['TMPDIR'] };
         for (const n of fs.readdirSync(dir)) fs.chmodSync(path.join(dir, n), 0o444);
         fs.chmodSync(dir, 0o555);
-        process.env['TMPDIR'] = tmp;
+        process.env['EVENT4U_CONFIG_HOME'] = home;
         try {
             expect(goal_mandate_block(root, 's1', 'stop', T1)).toBeNull();
+            process.env['TMPDIR'] = otherTmp;
             expect(goal_mandate_block(root, 's1', 'und die tests', T2)).toBeNull();
             expect(goal_mandate_for_subagent(root, 's1')).toBeNull();
         } finally {
-            process.env['TMPDIR'] = saved;
-            fs.rmSync(tmp, { recursive: true, force: true });
+            if (saved.home === undefined) delete process.env['EVENT4U_CONFIG_HOME'];
+            else process.env['EVENT4U_CONFIG_HOME'] = saved.home;
+            if (saved.tmp === undefined) delete process.env['TMPDIR'];
+            else process.env['TMPDIR'] = saved.tmp;
+            fs.rmSync(home, { recursive: true, force: true });
+            fs.rmSync(otherTmp, { recursive: true, force: true });
             fs.chmodSync(dir, 0o755);
             for (const n of fs.readdirSync(dir)) fs.chmodSync(path.join(dir, n), 0o644);
         }
     });
+
 
     // Round 6: only a direct request — a line opening with the goal phrase or a
     // request word — records; a mention opening with its subject does not.

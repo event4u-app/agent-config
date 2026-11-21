@@ -43,7 +43,7 @@ function write_goal(root: string, session_id: string, record: GoalRecord): void 
  * no goal write can overwrite it and concurrent stops keep the latest; lower
  * stops are then pruned. A store that refuses the new file takes the stop in the
  * slot `<record>.stop`, one appended line per stop; no goal write touches either.
- * A store that refuses the slot too appends to the temp-dir fallback both
+ * A store that refuses the slot too appends to the user-level fallback both
  * readers consult. Throws when none can be written.
  */
 export function write_stop(file: string, revoke: string, now: Date): void {
@@ -125,7 +125,7 @@ export function goal_mandate_block(root: string, session_id: string, prompt: str
     const record = observe_prompt(root, session_id, prompt, now);
     if (record?.unsaved === true) {
         const said = JSON.stringify(record.revoked_by).replace(/</g, '\\u003c');
-        return `<session-goal>\nThe owner's stop ${said} could not be saved to the goal store: treat the earlier goal as revoked for the rest of this session.\n</session-goal>`;
+        return `<session-goal>\nThe owner's stop ${said} could not be saved anywhere, so later turns and subagents may still show the earlier goal: treat it as revoked for the rest of this session, and tell subagents so.\n</session-goal>`;
     }
     const line = goal_mandate_line(record);
     return line === null ? null : `<session-goal>\n${line}\n</session-goal>`;

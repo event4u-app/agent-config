@@ -10,10 +10,10 @@
 
 import { createHash } from 'node:crypto';
 import * as fs from 'node:fs';
-import * as os from 'node:os';
 import * as path from 'node:path';
 
 import { git_common_dir } from './git_common_dir.js';
+import { event4u_root } from './user_global_paths.js';
 
 export interface GoalRecord {
     /** The owner's prose line carrying the goal phrase, verbatim. */
@@ -44,9 +44,13 @@ export function goal_store_file(root: string, session_id: string): string | null
     return common === null ? null : path.join(common, 'agent-session-mandates', `${stem(session_id)}.json`);
 }
 
-/** Where a stop goes when the repository store refuses it entirely: the temp dir, keyed by the record path. */
+/**
+ * Where a stop goes when the repository store refuses it entirely: the package's
+ * user-level state root, keyed by the record path. Not the temp dir, whose root
+ * can differ between the hook that writes and the one that reads.
+ */
 export function stop_fallback_file(file: string): string {
-    return path.join(os.tmpdir(), 'agent-session-mandates', `${createHash('sha256').update(file).digest('hex').slice(0, 32)}.stop`);
+    return path.join(event4u_root(), 'session-mandates', `${createHash('sha256').update(file).digest('hex').slice(0, 32)}.stop`);
 }
 
 /**
@@ -64,7 +68,7 @@ export function latest_stop(file: string): { at: number; by: string } | null {
     let found = best === null ? null : { at: Number(best.slice(prefix.length)), by: fs.readFileSync(path.join(dir, best), 'utf-8') };
     // The stop slot `<record>.stop`: created empty with the first goal; a stop appends one
     // line to it when the store refuses a new file. No goal write touches it. Last,
-    // the temp-dir fallback for a store that refuses the slot too.
+    // the user-level fallback for a store that refuses the slot too.
     for (const lines of [`${file}.stop`, stop_fallback_file(file)]) {
         let text = '';
         try {
