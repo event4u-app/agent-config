@@ -162,6 +162,14 @@ export interface OwnerSpans {
   lead: string;
   /** The paragraph after the last output paste, when one follows it. */
   trailing: string;
+  /**
+   * The last paragraph, whoever wrote it, when it follows a blank line and no
+   * paste marker stands anywhere above it — never scored, only a veto: an
+   * unmarked paragraph pasted above a typed one looks exactly like a typed
+   * paragraph above a pasted one, so when the two disagree the scorer cannot
+   * tell which is the owner's.
+   */
+  tail: string;
 }
 
 /**
@@ -233,6 +241,7 @@ export function ownerSpans(text: string): OwnerSpans {
   return {
     lead: lead.join("\n"),
     trailing: trailing.join("\n"),
+    tail: separated && !before.some(isPaste) ? lines.slice(start + 1, end + 1).join("\n") : "",
   };
 }
 
@@ -265,7 +274,7 @@ const HOST_TURN_HEAD =
  */
 export function ownerProse(prompt: string): OwnerSpans {
   if (isSyntheticPrompt(prompt) || HOST_TURN_HEAD.test(prompt.trimStart())) {
-    return { lead: "", trailing: "" };
+    return { lead: "", trailing: "", tail: "" };
   }
   return ownerSpans(stripInjectedRegions(prompt));
 }

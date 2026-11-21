@@ -1753,8 +1753,20 @@ const OWNER_PROSE_ROWS: ReadonlyArray<readonly [string, string, string]> = [
     "de",
   ],
   [
+    // The paragraph may be the owner's own or a paste; with no paste marker,
+    // the mirrored shape below is indistinguishable, so neither may decide.
     "[context] short German lead over an unmarked English paragraph",
     "Behebe das bitte.\n\nThe parser drops the last line when the input has no trailing newline, and the tests should cover that case.",
+    "und",
+  ],
+  [
+    "[ratification r3] unmarked English paragraph pasted above a typed German question",
+    "The parser drops the last line when the input has no trailing newline, and the tests should cover that case.\n\nWarum ist das so und was machen wir jetzt?",
+    "und",
+  ],
+  [
+    "[ratification r3] German lead over a German paragraph still pins German",
+    "Behebe das bitte.\n\nDer Parser verwirft die letzte Zeile, wenn die Eingabe keinen Zeilenumbruch hat.",
     "de",
   ],
   [

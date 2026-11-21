@@ -317,7 +317,10 @@ export function instructionText(prompt: string): string {
  * confident and disagree, the verdict is `und`: one of them may be a paste the
  * span reader could not see — an unmarked paragraph glued under a typed line,
  * a paste's edge line beside a typed question — and no position rule tells
- * them apart (ratification rounds 1 and 2). Otherwise the text is scored whole.
+ * them apart (ratification rounds 1 and 2). The prompt's last paragraph takes
+ * part in that check even when it is not owner text, because a paste ABOVE a
+ * typed paragraph has the same shape as a typed paragraph above a paste.
+ * Otherwise the owner text is scored whole.
  *
  * `owner_prose_chars` is the length of the text that was scored, so a pin can
  * say how much owner prose stood behind it.
@@ -326,10 +329,10 @@ export function instructionText(prompt: string): string {
  * notion of an owner and keeps its whole-text fallback.
  */
 export function classify(prompt: string): Classification {
-  const { lead, trailing } = ownerProse(prompt);
+  const { lead, trailing, tail } = ownerProse(prompt);
   const owner = [lead, trailing].filter((s) => s.trim() !== "").join("\n\n");
   const verdict = _score(owner);
-  const lines = new Set(owner.split("\n").map((l) => _score(l).language));
+  const lines = new Set(`${owner}\n${tail}`.split("\n").map((l) => _score(l).language));
   const language = lines.has("de") && lines.has("en") ? "und" : verdict.language;
   return { ...verdict, language, owner_prose_chars: owner.length };
 }
