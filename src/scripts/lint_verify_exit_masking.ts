@@ -32,7 +32,7 @@ import { fileURLToPath } from 'node:url';
 import { units } from './closure_scan.js';
 import { parse_exec_pointer } from './_lib/exec_evidence.js';
 import { DeadScopeError, reportScanned } from './_lib/scan_scope.js';
-import { exitMasking, type ExitMasking } from './_lib/verification_command.js';
+import { exitMasking, type ExitMasking } from './_lib/exit_masking.js';
 import { parseVerifyClause } from './_lib/verify_clause.js';
 
 const _HERE = fileURLToPath(import.meta.url);

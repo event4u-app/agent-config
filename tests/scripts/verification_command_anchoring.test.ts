@@ -1,6 +1,7 @@
 import { describe, expect, it } from 'vitest';
 
-import { commandSegments, exitMasking, isVerificationCommand } from '../../src/scripts/_lib/verification_command.js';
+import { commandSegments, exitMasking } from '../../src/scripts/_lib/exit_masking.js';
+import { isVerificationCommand } from '../../src/scripts/_lib/verification_command.js';
 
 /**
  * G1 and G2 — the two directions the tree's two classifiers disagreed in.
@@ -240,15 +241,5 @@ describe('exitMasking — whose exit code does the record carry', () => {
 
     it('a pipefail set AFTER the pipe does not cover it', () => {
         expect(exitMasking('task ci | tail -5; set -o pipefail')).toBe('pipe');
-    });
-});
-
-describe('rtk-wrapped verification is classified on the wrapped command', () => {
-    it.each(['rtk vitest run', 'rtk proxy npx vitest run', 'rtk tsc --noEmit'])('recognises: %s', (command) => {
-        expect(isVerificationCommand(command)).toBe(true);
-    });
-
-    it('does not recognise `rtk gain`', () => {
-        expect(isVerificationCommand('rtk gain')).toBe(false);
     });
 });

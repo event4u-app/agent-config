@@ -48,11 +48,8 @@ import { fileURLToPath, pathToFileURL } from 'node:url';
 import { parse as parseYaml } from 'yaml';
 
 import { assertScanned } from './_lib/scan_scope.js';
-import {
-    classifyRun,
-    isInstrumentGap,
-    type VerificationVerdict,
-} from './_lib/verification_evidence.js';
+import { classifyRunWithMasking, type MaskedVerdict } from './_lib/exit_masking.js';
+import { isInstrumentGap } from './_lib/verification_evidence.js';
 
 const _HERE = fileURLToPath(import.meta.url);
 const REPO_ROOT = path.resolve(path.dirname(_HERE), '..', '..');
@@ -95,7 +92,7 @@ export interface CoverageReport {
     unobserved: string[];
 }
 
-function _verdictKey(v: VerificationVerdict): string {
+function _verdictKey(v: MaskedVerdict): string {
     return v.kind === 'INVALID_RUN' ? `INVALID_RUN:${v.reason}` : v.kind;
 }
 
@@ -174,11 +171,16 @@ export function computeCoverage(
             h.records += 1;
             const code = (rec as Record<string, unknown> | null)?.['exit_code'];
             if (typeof code === 'number') h.exit_code_available += 1;
-            const verdict = classifyRun(rec);
+            const verdict = classifyRunWithMasking(rec);
             const key = _verdictKey(verdict);
             h.verdicts[key] = (h.verdicts[key] ?? 0) + 1;
-            if (isInstrumentGap(verdict)) h.instrument_gaps += 1;
-            if (verdict.kind === 'INVALID_RUN' && verdict.reason === 'exit_masked') h.exit_masked += 1;
+            // A masked exit code is a gap in what the record can prove, like a missing one.
+            if (verdict.kind === 'INVALID_RUN' && verdict.reason === 'exit_masked') {
+                h.exit_masked += 1;
+                h.instrument_gaps += 1;
+            } else if (isInstrumentGap(verdict)) {
+                h.instrument_gaps += 1;
+            }
         }
     }
 

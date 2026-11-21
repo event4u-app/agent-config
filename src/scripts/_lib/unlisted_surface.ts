@@ -12,7 +12,7 @@ import * as path from 'node:path';
 
 import { completionClaimAt, notVerifiedSpans, partialRatioIn, type CoverageFinding } from './coverage_claim.js';
 import { deriveLiveSurfaces, type LiveSurface } from './live_surfaces.js';
-import { commandSegments } from './verification_command.js';
+import { commandSegments } from './exit_masking.js';
 
 /** The structural slice of a transcript tool call this detector reads. */
 export interface CallLike {

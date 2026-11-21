@@ -33,7 +33,7 @@
  * overrides it too).
  */
 
-import { exitMasking, isVerificationCommand, undiscardedSegments } from './verification_command.js';
+import { isVerificationCommand, undiscardedSegments } from './verification_command.js';
 
 
 export type InvalidRunReason =
@@ -43,8 +43,7 @@ export type InvalidRunReason =
     | 'unreadable_record'
     | 'not_a_verification_command'
     | 'exit_code_unavailable'
-    | 'timeout_or_killed'
-    | 'exit_masked';
+    | 'timeout_or_killed';
 
 export type VerificationVerdict =
     | { readonly kind: 'PASS_EVIDENCE_OK' }
@@ -83,10 +82,6 @@ export interface RunRecord {
 export const INSTRUMENT_GAP_REASONS: ReadonlySet<InvalidRunReason> = new Set<InvalidRunReason>([
     'exit_code_unavailable',
     'unreadable_record',
-    // A masked exit code is a gap in what the record can prove, and a
-    // `pipefail` set in an rc file is invisible on the command line. It
-    // records until road-to-done-claims-with-read-exit-codes Phase 5 arms it.
-    'exit_masked',
 ]);
 
 /** Whether this verdict leaves the turn unrefusable — a pass, or a gap in the instrument. */
@@ -120,21 +115,17 @@ const NON_VERIFYING_EXECUTABLES: ReadonlySet<string> = new Set([
 
 /** Wrappers that prefix a real command without being one. */
 const COMMAND_PREFIXES: ReadonlySet<string> = new Set([
-    'bunx', 'command', 'env', 'exec', 'nice', 'nohup', 'npx', 'rtk', 'sudo', 'time',
+    'bunx', 'command', 'env', 'exec', 'nice', 'nohup', 'npx', 'sudo', 'time',
 ]);
 
 /** The executable a single command segment actually runs, lower-cased and unpathed. */
 function leadingExecutable(segment: string): string | null {
-    let previous = '';
     for (const raw of segment.trim().split(/\s+/)) {
         if (raw === '') continue;
         if (/^[A-Za-z_][A-Za-z0-9_]*=/.test(raw)) continue; // FOO=bar prefix
         const base = (raw.split('/').pop() ?? raw).replace(/\.exe$/i, '').toLowerCase();
         if (base === '') continue;
-        if (COMMAND_PREFIXES.has(base) || (previous === 'rtk' && base === 'proxy')) {
-            previous = base;
-            continue;
-        }
+        if (COMMAND_PREFIXES.has(base)) continue;
         return base;
     }
     return null;
@@ -366,23 +357,6 @@ export function classifyRun(record: unknown): VerificationVerdict {
         return { kind: 'INVALID_RUN', reason: 'exit_code_unavailable' };
     }
 
-    // A MASKED EXIT CODE belongs to `tail` or `echo`, not to the verifier, so
-    // it is not read — but only where the exit code would decide. A printed
-    // failure, a load failure and an empty suite are read off the output and
-    // keep their verdicts. No `exit=N` line in the output is read in its place
-    // (D8): where a status echo's output went cannot be established from the
-    // command text. And only a recorded 0 is replaced (D9): a nonzero code keeps
-    // the verdict it always had, so masking can turn a pass into a gap but never
-    // demote a refusal, whatever the shell actually ran.
-    const command = r.command;
-    const exitVerdict = (code: number): VerificationVerdict => {
-        // Parsed only on the one path that can use it: a recorded 0.
-        if (code === 0 && exitMasking(command) !== null) return { kind: 'INVALID_RUN', reason: 'exit_masked' };
-        return code === 0
-            ? { kind: 'PASS_EVIDENCE_OK' }
-            : { kind: 'INVALID_RUN', reason: 'nonzero_exit_without_test_failure' };
-    };
-
     // A LOAD FAILURE, and only where it is not contradicted by a clean summary.
     // The patterns are broad on purpose — `fatal error`, `cannot find module` —
     // and a passing run that merely PRINTS one is common: vitest echoes a
@@ -407,10 +381,16 @@ export function classifyRun(record: unknown): VerificationVerdict {
         if (summary.total !== null && summary.total > 0 && summary.passed === 0) {
             return { kind: 'INVALID_RUN', reason: 'zero_tests_discovered' };
         }
-        return exitVerdict(r.exit_code);
+        if (r.exit_code !== 0) {
+            return { kind: 'INVALID_RUN', reason: 'nonzero_exit_without_test_failure' };
+        }
+        return { kind: 'PASS_EVIDENCE_OK' };
     }
 
-    return exitVerdict(r.exit_code);
+    if (r.exit_code !== 0) {
+        return { kind: 'INVALID_RUN', reason: 'nonzero_exit_without_test_failure' };
+    }
+    return { kind: 'PASS_EVIDENCE_OK' };
 }
 
 /**
@@ -653,16 +633,9 @@ export function describeRecordFinding(
             + 'the last edit' + tail
         );
     }
-    const masked = reasons.includes('exit_masked')
-        ? ' — a masked exit code is the exit code of `tail` or `echo`, not of the '
-          + 'verifier: behind a pipe, re-run with `set -o pipefail;` in front or use the '
-          + "runner's own filter flag; behind `;` or `||`, make the verifier the last "
-          + 'command of the line'
-        : '';
     return (
         'this turn changed a file and no recorded run after the last edit proves '
         + `anything — the runs seen classify as ${[...new Set(reasons)].join(', ')}`
-        + masked
         + tail
     );
 }
