@@ -8,7 +8,7 @@ import * as os from 'node:os';
 import * as path from 'node:path';
 import { pathToFileURL } from 'node:url';
 
-import { afterEach, beforeEach, describe, expect, it } from 'vitest';
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
 import { release, tryAcquire } from '../../src/scripts/_lib/generation_lock.js';
 import { beat_time, goal_mandate_block, observe_prompt, write_stop } from '../../src/scripts/_lib/goal_mandate.js';
@@ -494,10 +494,16 @@ describe('session-register user_prompt_submit beat — the hook carries the goal
         expect(next.additional_context).toContain('"mach weiter bis zum merge"');
     }, 120_000);
 
-    it('beat_time is the process start for a fresh process and the current time for an old one', () => {
+    // Round 17: no age cutoff — a beat that stalls past any threshold keeps the
+    // process start as its stamp.
+    it('beat_time is the process start however long the process has run', () => {
         const origin = Math.trunc(performance.timeOrigin);
-        expect(beat_time(origin + 1_000).getTime()).toBe(origin);
-        expect(beat_time(origin + 120_000).getTime()).toBe(origin + 120_000);
+        const now = vi.spyOn(Date, 'now').mockReturnValue(origin + 120_000);
+        try {
+            expect(beat_time().getTime()).toBe(origin);
+        } finally {
+            now.mockRestore();
+        }
     });
 
     // Ratification round 16: the stamp is when the hook process started, not when
@@ -506,23 +512,35 @@ describe('session-register user_prompt_submit beat — the hook carries the goal
     it('a goal hook that stalls after starting loses to a later stop that finishes first', async () => {
         const stall = path.join(root, 'stall.mjs');
         fs.writeFileSync(stall, 'const end = Date.now() + 4000; while (Date.now() < end) {}\n');
-        const envelope = (prompt: string) =>
-            JSON.stringify({ event: 'user_prompt_submit', workspace_root: root, session_id: 'hook-goal-race', platform: 'claude', payload: { cwd: root, prompt } });
-        const goalDone = new Promise<void>((resolve) => {
-            // One node process (no tsx launcher child), so the stall runs after the
-            // process started and before the hook code reaches the recorder.
-            const loader = pathToFileURL(path.join(repo, 'node_modules', 'tsx', 'dist', 'loader.mjs')).href;
-            const child = spawn(process.execPath, ['--import', loader, '--import', pathToFileURL(stall).href, hook], {
-                env,
-                stdio: ['pipe', 'ignore', 'ignore'],
+        const loader = pathToFileURL(path.join(repo, 'node_modules', 'tsx', 'dist', 'loader.mjs')).href;
+        const envelope = (session: string, prompt: string) =>
+            JSON.stringify({ event: 'user_prompt_submit', workspace_root: root, session_id: session, platform: 'claude', payload: { cwd: root, prompt } });
+        // One node process (no tsx launcher child), so the stall runs after the
+        // process started and before the hook code reaches the recorder.
+        const stalledGoal = (session: string) =>
+            new Promise<number | null>((resolve) => {
+                const child = spawn(process.execPath, ['--import', loader, '--import', pathToFileURL(stall).href, hook], {
+                    env,
+                    stdio: ['pipe', 'ignore', 'ignore'],
+                });
+                child.on('exit', (code) => resolve(code));
+                child.stdin.end(envelope(session, 'mach weiter bis zum merge'));
             });
-            child.on('exit', () => resolve());
-            child.stdin.end(envelope('mach weiter bis zum merge'));
-        });
+        // Control: the stalled hook runs to the recorder and records the goal (exit 2
+        // = it emitted the goal block), so the race below is not a hook that failed early.
+        const control = stalledGoal('hook-goal-control');
+        const raced = stalledGoal('hook-goal-race');
         await new Promise((r) => setTimeout(r, 500));
-        const stop = spawnSync(tsx, [hook], { input: envelope('stop'), encoding: 'utf8', env, timeout: 60_000 });
-        expect(stop.status).not.toBeNull();
-        await goalDone;
-        expect(goal_mandate_line(read_goal(root, 'hook-goal-race'))).toBeNull();
+        const stop = spawnSync(tsx, [hook], { input: envelope('hook-goal-race', 'stop'), encoding: 'utf8', env, timeout: 60_000 });
+        expect(stop.status === 0 || stop.status === 2).toBe(true);
+        expect(await control).toBe(2);
+        expect(read_goal(root, 'hook-goal-control')?.sentence).toBe('mach weiter bis zum merge');
+        // The raced goal ran the same path and was dropped as older than the stop:
+        // it emitted no goal block, and the store holds the stop, no live goal.
+        expect(await raced).toBe(0);
+        const rec = read_goal(root, 'hook-goal-race');
+        expect(rec?.revoked_by).toBe('stop');
+        expect(goal_mandate_line(rec)).toBeNull();
+        expect(goal_mandate_for_subagent(root, 'hook-goal-race')).toBeNull();
     }, 120_000);
 });

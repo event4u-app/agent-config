@@ -78,13 +78,12 @@ export function write_stop(file: string, revoke: string, now: Date): void {
 
 /**
  * The beat's stamp: when this hook process started — the host spawns one per
- * submitted prompt — not when its code reached the recorder, so a beat that
- * stalls after starting keeps its place in the owner's order. A process older
- * than a minute is not a per-beat process, and the current time is used.
+ * submitted prompt and the dispatcher runs `session-register` in-process — not
+ * when its code reached the recorder, so a beat that stalls after starting, for
+ * however long, keeps its place in the owner's order.
  */
-export function beat_time(now: number = Date.now()): Date {
-    const origin = performance.timeOrigin;
-    return now - origin >= 0 && now - origin < 60_000 ? new Date(origin) : new Date(now);
+export function beat_time(): Date {
+    return new Date(performance.timeOrigin);
 }
 
 /** Record a goal or a revocation from one owner prompt; return the record after it. Never throws. */
