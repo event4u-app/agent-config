@@ -313,16 +313,16 @@ export function instructionText(prompt: string): string {
  * typed lead was short, which is the owner's most common prompt shape
  * (`Behebe das bitte.` over an English paragraph pinned `en`, de=2 / en=9).
  *
- * Then a veto that no span boundary can get around: every contiguous run of
- * the prompt's lines (injected regions removed, NOTHING else — code, output and
- * documents included) is scored, and when one run is confidently the other
- * language from the spans' verdict, or two runs disagree, the verdict is
- * `und`. Wherever the owner typed a confident line, some run holds only that
- * line, so pasted text can never outvote it; ratification rounds 1-8 found a
- * missed shape for every narrower unit (lines, paragraphs, a fence or span
- * reader). A prompt over `VETO_MAX_LINES` lines is `und` outright. The cost is
- * recall: an instruction over a paste in the other language — a document, a
- * log, code with comments — keeps the previous pin rather than setting one.
+ * Then a veto that no boundary reading can get around: when the whole prompt
+ * (injected regions removed, NOTHING else — code, output and documents
+ * included) carries `MIN_MARKERS` markers of BOTH languages, the verdict is
+ * `und`. So a pin in one language is written only when the prompt holds fewer
+ * than `MIN_MARKERS` markers of the other anywhere; owner text that reaches the
+ * floor can never be outvoted, however the span reader draws its boundaries.
+ * Ratification rounds 1-9 found a missed shape for every narrower unit (spans,
+ * lines, paragraphs, runs of lines, a fence reader). The cost is recall: an
+ * instruction over a paste in the other language — a document, a log, code
+ * with comments — keeps the previous pin rather than setting one.
  *
  * `owner_prose_chars` is the length of the text that was scored, so a pin can
  * say how much owner prose stood behind it.
@@ -334,40 +334,9 @@ export function classify(prompt: string): Classification {
   const { lead, trailing, text } = ownerProse(prompt);
   const owner = [lead, trailing].filter((s) => s.trim() !== "").join("\n\n");
   const verdict = _score(owner);
-  const seen = runLanguages(text);
-  seen.add(verdict.language);
-  const language = seen.has("de") && seen.has("en") ? "und" : verdict.language;
-  return { ...verdict, language, owner_prose_chars: owner.length };
-}
-
-/** Above this many lines a prompt is not searched for a veto; it never pins. */
-export const VETO_MAX_LINES = 400;
-
-/**
- * The confident languages of every contiguous run of lines, by prefix sums
- * and `_score`'s own rule (`_verdictOf`) — O(n²) in the line count, bounded by
- * `VETO_MAX_LINES` (80,200 runs at most). Both languages are also reported when
- * the whole text carries `MIN_MARKERS` of each, however they are interleaved:
- * owner fragments separated by a paste reach the floor only together, and no
- * contiguous run shows them (ratification round 9). Past `VETO_MAX_LINES` both
- * languages are reported, so the caller's verdict is `und`.
- */
-function runLanguages(text: string): Set<Verdict> {
-  const lines = text.split(/\r\n?|\n/);
-  const seen = new Set<Verdict>();
-  if (lines.length > VETO_MAX_LINES) return new Set<Verdict>(["de", "en"]);
-  const de = [0];
-  const en = [0];
-  for (const line of lines) {
-    de.push(de[de.length - 1]! + (line.match(DE_MARKERS) ?? []).length);
-    en.push(en[en.length - 1]! + (line.match(EN_MARKERS) ?? []).length);
-  }
-  const n = lines.length;
-  if (de[n]! >= MIN_MARKERS && en[n]! >= MIN_MARKERS) return new Set<Verdict>(["de", "en"]);
-  for (let i = 0; i < n && seen.size < 2; i++) {
-    for (let j = i + 1; j <= n; j++) seen.add(_verdictOf(de[j]! - de[i]!, en[j]! - en[i]!));
-  }
-  return seen;
+  const all = _score(text);
+  const mixed = all.de_markers >= MIN_MARKERS && all.en_markers >= MIN_MARKERS;
+  return { ...verdict, language: mixed ? "und" : verdict.language, owner_prose_chars: owner.length };
 }
 
 /**
@@ -416,13 +385,10 @@ export function scoreText(text: string): Classification {
 function _score(text: string): Classification {
   const de = (text.match(DE_MARKERS) ?? []).length;
   const en = (text.match(EN_MARKERS) ?? []).length;
-  return { language: _verdictOf(de, en), de_markers: de, en_markers: en };
-}
-
-/** The one marker rule: the floor, then German on a tie. Shared with the run veto. */
-function _verdictOf(de: number, en: number): Verdict {
-  if (de < MIN_MARKERS && en < MIN_MARKERS) return "und";
-  return de >= en ? "de" : "en";
+  if (de < MIN_MARKERS && en < MIN_MARKERS) {
+    return { language: "und", de_markers: de, en_markers: en };
+  }
+  return { language: de >= en ? "de" : "en", de_markers: de, en_markers: en };
 }
 
 const LANGUAGE_NAME: Record<Exclude<Verdict, "und">, string> = {

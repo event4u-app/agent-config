@@ -44,7 +44,6 @@ import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import {
   classify,
   classifyText,
-  VETO_MAX_LINES,
   instructionText,
   isSyntheticPrompt,
   nextState,
@@ -2012,10 +2011,14 @@ describe("owner prose only", () => {
     expect(readState().language).toBe("de");
   });
 
-  it("a prompt of VETO_MAX_LINES lines can pin; one line more never does", () => {
-    const at = ["Bitte prüfe das und mach dann weiter.", ...Array(VETO_MAX_LINES - 1).fill("x")].join("\n");
-    expect(classify(at).language).toBe("de");
-    expect(classify(`${at}\nx`).language).toBe("und");
+  it("a long prompt in one language still pins", () => {
+    const long = ["Bitte prüfe das und mach dann weiter.", ...Array(2000).fill("x = 1")].join("\n");
+    expect(classify(long).language).toBe("de");
+  });
+
+  it("one marker of the other language anywhere does not veto; two do", () => {
+    expect(classify("Bitte prüfe das und mach dann weiter.\n\n```\nconst the = 1;\n```").language).toBe("de");
+    expect(classify("Bitte prüfe das und mach dann weiter.\n\n```\nconst the = this;\n```").language).toBe("und");
   });
 
   it("a no-break-space fence closer cannot let pasted English replace a German pin", () => {
