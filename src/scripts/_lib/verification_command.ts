@@ -435,7 +435,8 @@ function argsOf(p: Pipeline | undefined): string {
  * Both `exitMasking` and `commandSegments` read this one walk, so "which commands
  * can run" and "whose status is recorded" follow the same reachability rules:
  * `;` always runs the next pipeline, `&&` only on 0, `||` only on nonzero; a lone
- * `exit`/`return` ends the shell (inside a pipeline it ends only its subshell).
+ * `exit` ends the shell (inside a pipeline it ends only its subshell); a top-level
+ * `return` in a Bash call errors and the line goes on, so it is an ordinary command.
  */
 type Verdict = 'none' | 'pass' | 'fail';
 interface FlowState {
@@ -467,7 +468,7 @@ function uniq(states: readonly FlowState[]): FlowState[] {
 function step(s: FlowState, p: Pipeline): FlowState[] {
     const h = head(p);
     const lone = p.segs.length === 1;
-    if (lone && (h === 'exit' || h === 'return')) {
+    if (lone && h === 'exit') {
         const arg = argsOf(p).replace(/^["']|["']$/g, '');
         if (arg === '' || arg === '$?') return [{ ...s, ended: true }];
         if (/^\d+$/.test(arg)) return [{ ...s, zero: Number(arg) % 256 === 0, ended: true }];

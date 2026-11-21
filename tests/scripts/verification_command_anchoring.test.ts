@@ -155,6 +155,9 @@ describe('exitMasking — whose exit code does the record carry', () => {
         ['set -o pipefail; set +o errexit +o pipefail; task ci | tail -5', 'pipe'],
         ["set -o pipefail; eval 'set +o pipefail'; task ci | tail -5", 'pipe'],
         ['set -o pipefail; shopt -uo pipefail; task ci | tail -5', 'pipe'],
+        // A top-level `return` in a Bash call errors and the line goes on.
+        ['task ci; return 1; true', 'trailing'],
+        ['task ci || return 1; echo ready', 'trailing'],
     ])('`%s` masks via %s', (command, kind) => {
         expect(exitMasking(command)).toBe(kind);
     });
