@@ -2482,15 +2482,26 @@ describe('detector G — an edited surface nothing drove and nothing lists', () 
             'echo http://localhost:3000',
             'true http://localhost:3000',
             "curl 'https://example.invalid/?next=http://localhost:3000'",
+            // The URL as an option's value is not the request target.
+            "curl --referer 'http://localhost:3000' https://example.invalid",
+            'curl -e http://localhost:3000 https://example.invalid',
+            'curl -x http://localhost:3000 https://example.invalid',
+            "curl -H 'Referer: http://localhost:3000' https://example.invalid",
         ]) {
             const calls: ToolCall[] = [{ name: 'Edit', path: path.join(dir, 'server.ts') }, { name: 'Bash', command }];
             expect(detectCoverageGap('Fertig.', calls, dir)?.code, command).toBe('unlisted_surface');
         }
-        const driven: ToolCall[] = [
-            { name: 'Edit', path: path.join(dir, 'server.ts') },
-            { name: 'Bash', command: 'curl -s http://localhost:3000/health' },
-        ];
-        expect(detectCoverageGap('Fertig.', driven, dir)).toBeNull();
+        for (const command of [
+            'curl -s http://localhost:3000/health',
+            'curl -sSf http://localhost:3000/health',
+            'curl -X GET http://localhost:3000/health',
+            'curl --fail --silent "http://localhost:3000/health"',
+            "curl -H 'Accept: text/html' http://localhost:3000/",
+            'curl -- http://localhost:3000/health',
+        ]) {
+            const driven: ToolCall[] = [{ name: 'Edit', path: path.join(dir, 'server.ts') }, { name: 'Bash', command }];
+            expect(detectCoverageGap('Fertig.', driven, dir), command).toBeNull();
+        }
     });
 
     it('a Not verified entry in inline code still lists the surface', () => {

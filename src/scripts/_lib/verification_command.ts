@@ -456,18 +456,15 @@ function uniq(states: readonly FlowState[]): FlowState[] {
 }
 
 /** The states running pipeline `p` can leave behind, from state `s`. */
-function step(s: FlowState, p: Pipeline, prev: Pipeline | undefined): FlowState[] {
+function step(s: FlowState, p: Pipeline): FlowState[] {
     const h = head(p);
     const lone = p.segs.length === 1;
     if (lone && (h === 'exit' || h === 'return')) {
         const arg = argsOf(p).replace(/^["']|["']$/g, '');
         if (arg === '' || arg === '$?') return [{ ...s, ended: true }];
         if (/^\d+$/.test(arg)) return [{ ...s, zero: Number(arg) % 256 === 0, ended: true }];
-        // `exit "${PIPESTATUS[k]}"` right after the verifier's own filtered pipeline.
-        const k = prev === undefined ? -1 : verifierIndex(prev);
-        if (k !== -1 && new RegExp(`^\\$\\{?PIPESTATUS\\[${String(k)}\\]\\}?$`).test(arg) && s.last !== 'none') {
-            return [{ ...s, zero: s.last === 'pass', filtered: false, ended: true }];
-        }
+        // Any other argument, `${PIPESTATUS[k]}` included (D10): the text cannot say which
+        // pipeline ran last, so the status it hands on is unknown.
         return [
             { ...s, zero: true, ended: true },
             { ...s, zero: false, ended: true },
@@ -518,7 +515,7 @@ function flowOf(ps: readonly Pipeline[]): Flow {
                 continue;
             }
             ran = true;
-            next.push(...step(s, p, ps[i - 1]));
+            next.push(...step(s, p));
         }
         runs.push(ran);
         states = uniq(next);
@@ -549,10 +546,9 @@ export function commandSegments(command: string): string[] {
  * not pass (or none ran)? If so, a recorded 0 proves nothing about the verifier.
  *
  * - `pipe`: that 0 can come from a filter after the verifier — no earlier
- *   unconditional `set -o pipefail` covers the pipeline, and no
- *   `exit "${PIPESTATUS[k]}"` hands the verifier's status on. Printing
- *   `PIPESTATUS` does not count. A pipefail from an rc file is invisible here,
- *   which is why the reason is an instrument gap.
+ *   unconditional `set -o pipefail` covers the pipeline. `PIPESTATUS`, printed
+ *   or passed to `exit`, carries nothing (D10). A pipefail from an rc file is
+ *   invisible here, which is why the reason is an instrument gap.
  * - `trailing`: that 0 can come from a later command — `cmd; echo`, `cmd || echo`,
  *   `cmd || false; echo ready`, `cmd || exit 0`, or a verifier that `||` skips.
  *   `cmd && echo ok`, `cmd || exit 1`, `cmd; exit $?` and `task sync; task ci`

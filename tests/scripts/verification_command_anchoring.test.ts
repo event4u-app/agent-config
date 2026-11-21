@@ -143,6 +143,11 @@ describe('exitMasking — whose exit code does the record carry', () => {
         ['task ci | tail -5; exit 0; npx tsc --noEmit', 'pipe'],
         // `tail`'s 0 skips the `||` fallback, so the recorded code is the filter's.
         ['task ci | tail -5 || npx tsc --noEmit', 'pipe'],
+        // D10: an `exit` of PIPESTATUS hands nothing on. The command text cannot say which
+        // pipeline ran last (a skipped fallback leaves PIPESTATUS to the filter's pipeline).
+        ['task ci | tail -5; exit "${PIPESTATUS[0]}"', 'pipe'],
+        ['task ci | tail -5 || printf x | npx tsc --noEmit; exit "${PIPESTATUS[1]}"', 'pipe'],
+        ['set -o pipefail; task ci | tail -5; exit "${PIPESTATUS[0]}"', 'trailing'],
     ])('`%s` masks via %s', (command, kind) => {
         expect(exitMasking(command)).toBe(kind);
     });
@@ -151,7 +156,6 @@ describe('exitMasking — whose exit code does the record carry', () => {
         'task ci',
         'set -o pipefail; task ci | tail -5',
         'set -euo pipefail; task ci | tail -5',
-        'task ci | tail -5; exit "${PIPESTATUS[0]}"',
         'task ci && echo ok',
         'npx vitest run || exit 1',
         'npx vitest run; exit $?',
@@ -161,8 +165,6 @@ describe('exitMasking — whose exit code does the record carry', () => {
         'cat x | npx vitest run',
         // The record's code is the final verifier's.
         'task ci | tail -5; npx tsc --noEmit',
-        // pipefail plus an explicit exit of the verifier's status: the code is the verifier's.
-        'set -o pipefail; task ci | tail -5; exit "${PIPESTATUS[0]}"',
         // `;` makes the final `tsc` unconditional, whatever the `||` before it did.
         'task ci | tail -5 || echo fallback; npx tsc --noEmit',
     ])('`%s` masks nothing', (command) => {

@@ -268,9 +268,40 @@ function drives(segs: readonly string[], surface: LiveSurface, root: string): bo
     // Only a request actually made — an HTTP client or a render — whose target argument IS the
     // URL, not one that merely contains it (`?next=http://localhost:3000`).
     const url = new RegExp(`^${escaped}(?![\\w])`);
-    return segs.some(
-        (x) => (HTTP_CLIENT.test(x) || RENDER_RUN.test(x)) && x.split(/\s+/).some((w) => url.test(w.replace(/^["']/, ''))),
-    );
+    return segs.some((x) => (HTTP_CLIENT.test(x) || RENDER_RUN.test(x)) && targets(x).some((w) => url.test(w)));
+}
+
+/** Short and long options of the HTTP clients that take no value; any other option may own the next word. */
+const FLAG_CLUSTER = /^-[sSfLkviIGNq46]+$/;
+const LONG_FLAGS = new Set([
+    '--silent', '--show-error', '--fail', '--fail-with-body', '--location', '--insecure', '--verbose',
+    '--include', '--head', '--get', '--no-buffer', '--compressed', '--ipv4', '--ipv6', '--http1.1',
+    '--http2', '--http3', '--quiet', '--spider', '--server-response',
+]);
+
+/**
+ * The words of `segment` that can be a request target: quote-aware, and never the
+ * word after an option that may take a value (`-e URL`, `--referer URL`, `-x URL`).
+ * An unknown option counts as one that takes a value, so a doubtful word is not credited.
+ */
+function targets(segment: string): string[] {
+    const tokens = segment.match(/'[^']*'|"[^"]*"|\S+/g) ?? [];
+    const out: string[] = [];
+    let positional = false;
+    for (let i = 1; i < tokens.length; i += 1) {
+        const raw = tokens[i] as string;
+        const word = raw.replace(/^(['"])(.*)\1$/, '$2');
+        if (!positional && raw === '--') {
+            positional = true;
+            continue;
+        }
+        const prev = tokens[i - 1] as string;
+        const ownedByOption =
+            !positional && i > 1 && prev.startsWith('-') && !prev.includes('=') && prev !== '--' &&
+            !FLAG_CLUSTER.test(prev) && !LONG_FLAGS.has(prev);
+        if (!ownedByOption) out.push(word);
+    }
+    return out;
 }
 
 /**
