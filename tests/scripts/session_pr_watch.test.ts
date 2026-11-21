@@ -6,7 +6,6 @@ import * as path from 'node:path';
 import { afterEach, beforeEach, describe, expect, it } from 'vitest';
 
 import {
-    default_pr_target,
     gh_probe,
     PROBE_INTERVAL_MS,
     pr_watch_block,
@@ -93,35 +92,6 @@ describe('pr_watch_block', () => {
         expect(read_store(root, 's1').prs).toEqual([]);
         record_pr(root, 's1', 'https://github.com/O/R/pull/2534');
         expect(read_store(root, 's1').prs.map((p) => p.number)).toEqual([2534]);
-    });
-});
-
-describe('default_pr_target — the session PR a PR command takes without a URL', () => {
-    const pr = (number: number, state: PrState) => ({ number, url: `https://github.com/o/r/pull/${number}`, state });
-
-    it('takes the one OPEN PR', () => {
-        expect(default_pr_target({ prs: [pr(7, 'MERGED'), pr(8, 'OPEN')] })).toEqual(pr(8, 'OPEN'));
-    });
-
-    it('takes none when two are OPEN — the command must not guess between them', () => {
-        expect(default_pr_target({ prs: [pr(7, 'OPEN'), pr(8, 'OPEN')] })).toBeNull();
-    });
-
-    it('takes none when only MERGED or CLOSED PRs are tracked', () => {
-        expect(default_pr_target({ prs: [pr(7, 'MERGED'), pr(8, 'CLOSED')] })).toBeNull();
-    });
-
-    it('takes none from an empty store', () => {
-        expect(default_pr_target({ prs: [] })).toBeNull();
-    });
-
-    // The block carries no default line (owner decision, 2026-11-21: no hook
-    // bundle growth); a PR command reads its OPEN rows, and a failed read says so.
-    it('lists the one OPEN PR a command takes, and flags a failed read', () => {
-        record_pr(root, 's1', URL);
-        expect(pr_watch_block(root, 's1', T0, probeOf({ 2534: 'OPEN' }))).toContain('- #2534 OPEN');
-        record_pr(root, 's2', URL);
-        expect(pr_watch_block(root, 's2', T0, () => null)).toMatch(/FAILED — state unverified/);
     });
 });
 

@@ -149,18 +149,6 @@ export const gh_probe: PrProbe = (cwd, numbers) => {
     }
 };
 
-/**
- * The PR a PR command takes when it was given no URL: the session's one OPEN
- * PR. Two open PRs, or none, yield null — choosing between them is a guess the
- * command must not make, and a merged PR is no longer a target. Not rendered by
- * `pr_watch_block`: the hook bundle has no room for that line (owner decision,
- * 2026-11-21), so a PR command reads the OPEN rows of the block itself.
- */
-export function default_pr_target(store: PrStore): TrackedPr | null {
-    const open = store.prs.filter((p) => p.state === 'OPEN');
-    return open.length === 1 ? (open[0] as TrackedPr) : null;
-}
-
 function hhmm(iso: string): string {
     return iso.slice(11, 16);
 }
