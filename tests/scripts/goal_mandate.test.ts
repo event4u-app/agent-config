@@ -59,6 +59,19 @@ describe('observe_prompt — goal sentences', () => {
 
     // Ratification round 2: a revoke against an empty store keeps a marker, so a
     // goal write from an earlier prompt that lands after it cannot arm a record.
+    // Ratification round 12: a direct cancellation of the work in words ends the
+    // goal on its turn, on a later neutral turn and for a fresh subagent.
+    it.each(['Stop working on this PR.', 'Hör auf, daran weiterzuarbeiten.', 'bitte abbrechen', 'cancel that'])(
+        '%j ends the goal everywhere',
+        (cancel) => {
+            const T2 = new Date('2026-11-21T11:00:00Z');
+            observe_prompt(root, 's1', 'mach weiter bis zum merge', T0);
+            expect(goal_mandate_block(root, 's1', cancel, T1)).toBeNull();
+            expect(goal_mandate_block(root, 's1', 'und die tests', T2)).toBeNull();
+            expect(goal_mandate_for_subagent(root, 's1')).toBeNull();
+        },
+    );
+
     it('a revoke with no record stores a marker that renders nothing', () => {
         observe_prompt(root, 's1', 'stop', T0);
         expect(read_goal(root, 's1')?.revoked_by).toBe('stop');

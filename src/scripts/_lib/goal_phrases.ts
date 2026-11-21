@@ -31,7 +31,9 @@ const REQUEST_OPENER =
 
 /** Owner sentences that end a recorded goal. */
 export const REVOKE_PATTERNS: readonly RegExp[] = [
-    /^\s*(?:stop|stopp|halt)\s*(?:[.!,;:]|$)/i,
+    // Broad on purpose: an over-matching revocation costs one re-ask.
+    /^\s*(?:stop|stopp|halt|cancel|abort|pause)\b/i,
+    /\bh(?:ö|oe)r\s+auf\b|\baufh(?:ö|oe)ren\b|\babbrechen\b/i,
     /\bnicht\s+mergen\b/i,
     /\bkein(?:en)?\s+merge\b/i,
     /\b(?:don'?t|do\s+not)\s+merge\b/i,
