@@ -1733,6 +1733,14 @@ describe("inline terminal-pane regions (#2950)", () => {
     expect(classify(p).language).toBe("und");
   });
 
+  it("removing a marker-free inline region never glues a marker the owner did not type", () => {
+    // Ratification round 17: with no English in the region the opposing-language
+    // veto has nothing to see, so the strip itself must keep the word boundary.
+    const p = "un<bash-stdout>x</bash-stdout>d die tests laufen";
+    expect(stripInjectedRegions(p)).not.toMatch(/\bund\b/);
+    expect(classify(p).language).toBe("und");
+  });
+
   it("the reported three-turn sequence keeps the German pin", () => {
     run(envelope("Die Freigabe ist drin, mach bitte weiter mit den Tickets"), {
       consumer_root: tmp,
@@ -2128,6 +2136,13 @@ describe("owner prose only", () => {
     // would expose it as a document head and empty the trailing span.
     const spans = ownerSpans("~~~\nx\n\t~~~\n# pasted heading\n~~~\n\nBehebe das bitte.");
     expect(spans.trailing).toBe("Behebe das bitte.");
+  });
+
+  it("two back-to-back fenced blocks count as the output run above a glued span", () => {
+    // Stated, round 17: a collapsed fence is a paste boundary, and a line glued
+    // under two closed fences is read as typed; one fence alone is not enough.
+    expect(ownerSpans("```\na\n```\n```\nb\n```\nBehebe das bitte.").trailing).toBe("Behebe das bitte.");
+    expect(ownerSpans("```\na\n```\nBehebe das bitte.").trailing).toBe("");
   });
 
   it("a glued span needs two output lines directly above it, not anywhere above", () => {

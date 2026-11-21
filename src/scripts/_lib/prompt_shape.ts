@@ -408,7 +408,9 @@ const TERMINAL_PANE_REGION = /<(bash-input|bash-stdout|bash-stderr)>[\s\S]*?<\/\
  * scanning past the wrong close would.
  */
 export function stripInjectedRegions(text: string): string {
-  const lines = text.replace(TERMINAL_PANE_REGION, "").split("\n");
+  // A space, not nothing: `un<bash-stdout>…</bash-stdout>d` must not become
+  // `und`, a marker the owner never typed (ratification round 17).
+  const lines = text.replace(TERMINAL_PANE_REGION, " ").split("\n");
   const kept: string[] = [];
   for (let i = 0; i < lines.length; i++) {
     const line = lines[i] ?? "";
