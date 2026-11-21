@@ -140,7 +140,8 @@ hunks. The detector reads the same records as before.
       **Done 2026-11-21:** Ten cases added across the four masked shapes, the
       three controls, the echoed `exit=1` case, the gap pin and the finding
       text; seen red before the fix (31 red across this file and the 1.2 file,
-      10 of them in this file).
+      10 of them in this file). Amended by D8: the two echoed-code controls now
+      expect `exit_masked`.
 - [x] **1.2 Add `exitMasking(command)` to `src/scripts/_lib/verification_command.ts`, built on `splitSegments`.** <!-- receipt: class=R2 · shadow · would-skip=revalidation · bound=production code touched: src/scripts/_lib/verification_command.ts -->
       It returns `'pipe' | 'trailing' | null`:
       - `pipe`: a verifying segment's `nextSep` is `|`, and the same line does
@@ -170,7 +171,9 @@ hunks. The detector reads the same records as before.
       verify: `npx vitest run tests/scripts/verification_evidence.test.ts` -> 0
       **Done 2026-11-21:** `exit_masked` is in `InvalidRunReason` and
       `INSTRUMENT_GAP_REASONS`; an echoed `exit=N` / `exit code: N` replaces the
-      masked code. The pinned gap-set test now names three reasons.
+      masked code. The pinned gap-set test now names three reasons. Amended by
+      D8: the echoed-code reading is gone; a masked run classifies
+      `exit_masked`, and masking is consulted only where the exit code decides.
 - [x] **1.4 Name the repair in the finding.** `describeRecordFinding` <!-- receipt: class=R2 · shadow · would-skip=revalidation · bound=production code touched: src/scripts/_lib/verification_evidence.ts -->
       (`verification_evidence.ts:617`) gets an `exit_masked` branch naming both
       repairs: `set -o pipefail`, or the runner's own filter flag instead of a
@@ -449,13 +452,14 @@ the verdict's revert is one constant (`INSTRUMENT_GAP_REASONS`) and one switch
 | D5 | reversible-technical | council:2026-11-21 | `exit_masked` stays record-only: it remains in `INSTRUMENT_GAP_REASONS` and refuses nothing. | 5.1: 3 fires in 42 witness records, one host, a 2-day window, 0 on a `pipefail` line, no labelled ground truth (`agents/evidence/analysis/done-claims-arming-2026-11-21.md`); council analysis round of 2026-11-21, openai seat present, anthropic seat failed (exit 1), quorum 1 of 2 met but degraded: keep record-only, discovery first | ≥ 100 `exit_masked` findings over ≥ 50 sessions and ≥ 30 days, with the candidates labelled against the verifier's real exit status and effective shell settings, including an rc-file `pipefail` |
 | D6 | reversible-technical | council:2026-11-21 | `partial_ratio` stays record-only: detector `coverage` keeps its refusal off. | 5.1: 0 fires over the 5 closings the completion trigger matched in 1,504 turns over 24 days; same council round and seats as D5: keep record-only, a zero over five opportunities says nothing about precision | ≥ 100 `partial_ratio` findings over ≥ 50 sessions and ≥ 30 days, each labelled for whether the ratio is unfinished work the claim covers, plus a sample of non-firing closings for misses |
 | D7 | reversible-technical | council:2026-11-21 | `unlisted_surface` stays record-only: detector `coverage` keeps its refusal off. | 5.1: 1 fire over the same 5 closings, measured on today's surface map rather than the turn's; same council round and seats as D5: keep record-only, and the replay needs a turn-time surface map before its count can be trusted | the surface map is captured at turn time, and ≥ 100 `unlisted_surface` findings over ≥ 50 sessions and ≥ 30 days are labelled for whether the edit touched the surface and the turn drove it |
+| D8 | reversible-technical | council:2026-11-21 | A masked exit code is never replaced by an `exit=N` line from the output: a masked run classifies `exit_masked`, and masking is consulted only where the exit code would decide (after printed failures, load failures and empty suites). This reverses the echoed-code reading of step 1.3. | The bundle-raise ratification rounds 1-6 of 2026-11-21 (anthropic + openai seats): every round the openai seat refused on a new way the echoed line could belong to another command (a filter's `PIPESTATUS`, a later echo, a constant `printf`, a skipped `|| echo`, a redirected echo), each able to pass a failed run or refuse a clean one; the command text cannot establish where the echo's output went. Dropping the reading costs nothing against origin/main, where those lines read the echo's own 0 | shell-backed run records carry the verifier's own status (a wrapper that captures it), so provenance no longer has to be inferred from the command text |
 
 ## Risk Register
 <!-- risk-review: v1 | reviewed: 2026-11-21 | reviewer: claude/host -->
 
 | Rank | Item | Risk type | Description | Mitigation | Anchored under |
 |------|------|-----------|-------------|------------|----------------|
-| 1 | Masking check refuses honest work | implementation | A `pipefail` set in a sourced script or an rc file is invisible on the command line, so `cmd \| tail` could read as masked when it is not. | Reason starts as an instrument gap (D2); 5.1 counts fires on `pipefail` lines; an echoed real code overrides the verdict (1.3). | Phase 5: Arming by measurement and council |
+| 1 | Masking check refuses honest work | implementation | A `pipefail` set in a sourced script or an rc file is invisible on the command line, so `cmd \| tail` could read as masked when it is not. | Reason starts as an instrument gap (D2); 5.1 counts fires on `pipefail` lines; masking never overrides a printed failure, load failure or empty suite (D8). | Phase 5: Arming by measurement and council |
 | 2 | Ratio detector fires on prose that is not a claim | implementation | "2 of 3 options" in a reply that also says "fertig" is a ratio and a claim with no link between them. | Same-trigger discipline as D (`_COMPLETION_RE` + negation); records only; 5.1 measures the false share before any arming. | Phase 3: Partial completion reported as complete |
 | 3 | Reachability map misses a real surface | product | A repo whose app starts through a script the deriver does not know reads as having no surface, so the reply owes no live check. | The not-verified list still applies to every changed surface the map names; misses show up as `none` in 4.2's output and get a fixture when found. | Phase 4: Verified and not verified, with a generated reachability map |
 | 4 | Overlap with measure 6's verify-command roadmap | implementation | Both touch `verification_command.ts`; parallel edits to `DELEGATING_HEADS` collide. | Scope stated in Context: only the `rtk` prefix here; `roadmap:context` reruns before 1.5. | Phase 1: Exit masking in the run classifier |
