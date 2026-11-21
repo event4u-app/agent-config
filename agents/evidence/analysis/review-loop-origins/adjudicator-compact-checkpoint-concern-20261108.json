@@ -1,0 +1,240 @@
+{
+  "subject": "compact-checkpoint-concern-20261108",
+  "round1_findings": 5,
+  "rounds": [
+    {
+      "round": 4,
+      "visible": true,
+      "findings": [
+        {
+          "id": "4.1",
+          "summary": "Round-3 preflight left task-state readers' reads unguarded",
+          "severity": "unknown",
+          "class": "fix-introduced"
+        }
+      ]
+    },
+    {
+      "round": 5,
+      "visible": true,
+      "findings": [
+        {
+          "id": "5.1",
+          "summary": "Log append open lacks nofollow/nonblock and regular-file check",
+          "severity": "unknown",
+          "class": "other"
+        },
+        {
+          "id": "5.2",
+          "summary": "Log bounded by line count, not bytes",
+          "severity": "unknown",
+          "class": "other"
+        },
+        {
+          "id": "5.3",
+          "summary": "Malformed marker not removed on observation",
+          "severity": "unknown",
+          "class": "other"
+        },
+        {
+          "id": "5.4",
+          "summary": "Repository root symlink policy unstated",
+          "severity": "unknown",
+          "class": "other"
+        }
+      ]
+    },
+    {
+      "round": 6,
+      "visible": true,
+      "findings": [
+        {
+          "id": "6.1",
+          "summary": "Checkpoint storage inside repository-controlled tree",
+          "severity": "unknown",
+          "class": "other"
+        },
+        {
+          "id": "6.2",
+          "summary": "Byte bound used string length, not UTF-8 bytes",
+          "severity": "unknown",
+          "class": "fix-introduced"
+        },
+        {
+          "id": "6.3",
+          "summary": "Append accepts hard-linked log file",
+          "severity": "unknown",
+          "class": "other"
+        },
+        {
+          "id": "6.4",
+          "summary": "Manifest comment stale versus keys-only marker",
+          "severity": "low",
+          "class": "fix-introduced"
+        }
+      ]
+    },
+    {
+      "round": 7,
+      "visible": true,
+      "findings": [
+        {
+          "id": "7.1",
+          "summary": "No retention for markers in user-global directory",
+          "severity": "unknown",
+          "class": "fix-introduced"
+        },
+        {
+          "id": "7.2",
+          "summary": "Version read from any package.json",
+          "severity": "unknown",
+          "class": "other"
+        },
+        {
+          "id": "7.3",
+          "summary": "Tally counts non-own or non-string event keys",
+          "severity": "unknown",
+          "class": "other"
+        },
+        {
+          "id": "7.4",
+          "summary": "Log bound approximate under concurrent appends, undocumented",
+          "severity": "low",
+          "class": "re-raised"
+        },
+        {
+          "id": "7.5",
+          "summary": "Tally counts only retained window, undocumented",
+          "severity": "low",
+          "class": "other"
+        }
+      ]
+    },
+    {
+      "round": 10,
+      "visible": true,
+      "findings": [
+        {
+          "id": "10.1",
+          "summary": "Capacity check reserves no room for the write",
+          "severity": "high",
+          "class": "fix-introduced"
+        },
+        {
+          "id": "10.2",
+          "summary": "Refused write leaves predecessor marker eligible",
+          "severity": "high",
+          "class": "fix-introduced"
+        },
+        {
+          "id": "10.3",
+          "summary": "Failed atomic write leaves temp file",
+          "severity": "low",
+          "class": "other"
+        },
+        {
+          "id": "10.4",
+          "summary": "Stale temp files occupy directory capacity",
+          "severity": "low",
+          "class": "fix-introduced"
+        },
+        {
+          "id": "10.5",
+          "summary": "Observation consumes marker before class reaches log",
+          "severity": "low",
+          "class": "other"
+        }
+      ]
+    },
+    {
+      "round": 11,
+      "visible": true,
+      "findings": [
+        {
+          "id": "11.1",
+          "summary": "Exact directory ceiling exceeded by log and racing writers",
+          "severity": "high",
+          "class": "fix-introduced"
+        },
+        {
+          "id": "11.2",
+          "summary": "Append may write partial line",
+          "severity": "unknown",
+          "class": "other"
+        },
+        {
+          "id": "11.3",
+          "summary": "Version read before event and source checks",
+          "severity": "unknown",
+          "class": "other"
+        },
+        {
+          "id": "11.4",
+          "summary": "Missing hook-entry tests for silent no-op paths",
+          "severity": "unknown",
+          "class": "other"
+        },
+        {
+          "id": "11.5",
+          "summary": "Observe and record interleave within one session",
+          "severity": "unknown",
+          "class": "other"
+        },
+        {
+          "id": "11.6",
+          "summary": "lstat-then-open race on append path",
+          "severity": "unknown",
+          "class": "re-raised"
+        }
+      ]
+    },
+    {
+      "round": 13,
+      "visible": true,
+      "findings": [
+        {
+          "id": "13.1",
+          "summary": "Marker consumption race within one session",
+          "severity": "unknown",
+          "class": "re-raised"
+        },
+        {
+          "id": "13.2",
+          "summary": "Unknown version on both sides compares equal",
+          "severity": "unknown",
+          "class": "other"
+        },
+        {
+          "id": "13.3",
+          "summary": "No test for uncreatable runtime directory",
+          "severity": "low",
+          "class": "other"
+        },
+        {
+          "id": "13.4",
+          "summary": "Sweep test names claim guaranteed cleanup",
+          "severity": "low",
+          "class": "fix-introduced"
+        }
+      ]
+    },
+    {
+      "round": 18,
+      "visible": true,
+      "findings": [
+        {
+          "id": "18.1",
+          "summary": "Missing O_NOFOLLOW/O_NONBLOCK silently fall back to zero",
+          "severity": "high",
+          "class": "other"
+        },
+        {
+          "id": "18.2",
+          "summary": "WRITE_LIMIT comment does not explain 32-entry gap",
+          "severity": "low",
+          "class": "other"
+        }
+      ]
+    }
+  ]
+}

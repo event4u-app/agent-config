@@ -1,0 +1,1032 @@
+{
+  "subject": "behavior-vocabulary-close",
+  "round1_findings": 0,
+  "rounds": [
+    {
+      "round": 2,
+      "visible": true,
+      "findings": [
+        {
+          "id": "R2.1",
+          "summary": "Polyglot root runners across ecosystems wrongly refused as conflict",
+          "severity": "high",
+          "class": "other"
+        },
+        {
+          "id": "R2.2",
+          "summary": "Cache mtime probe now thousands of stats, scopes computed twice",
+          "severity": "medium",
+          "class": "single-seat"
+        },
+        {
+          "id": "R2.3",
+          "summary": "Bare .NET project file yields HIGH confidence",
+          "severity": "medium",
+          "class": "single-seat"
+        },
+        {
+          "id": "R2.4",
+          "summary": "Behaviour terms claimed to route but description untouched",
+          "severity": "medium",
+          "class": "single-seat"
+        },
+        {
+          "id": "R2.5",
+          "summary": "Recorded size budget figures wrong",
+          "severity": "medium",
+          "class": "single-seat"
+        },
+        {
+          "id": "R2.6",
+          "summary": "Basis names Gemfile when signal came from gems.rb",
+          "severity": "low",
+          "class": "single-seat"
+        },
+        {
+          "id": "R2.7",
+          "summary": "Bare rspec/cucumber word matches yield false HIGH rows",
+          "severity": "low",
+          "class": "single-seat"
+        },
+        {
+          "id": "R2.8",
+          "summary": "pnpm workspace parser drops valid YAML shapes",
+          "severity": "low",
+          "class": "single-seat"
+        },
+        {
+          "id": "R2.9",
+          "summary": "Scope cap applied after expansion, truncation silent",
+          "severity": "low",
+          "class": "single-seat"
+        },
+        {
+          "id": "R2.10",
+          "summary": ".NET scan misses projects under src subdirectories",
+          "severity": "low",
+          "class": "single-seat"
+        },
+        {
+          "id": "R2.11",
+          "summary": "New toolchain.json key without schema or consumer",
+          "severity": "low",
+          "class": "single-seat"
+        },
+        {
+          "id": "R2.12",
+          "summary": "Stray extra blank line added",
+          "severity": "low",
+          "class": "single-seat"
+        }
+      ]
+    },
+    {
+      "round": 3,
+      "visible": true,
+      "findings": [
+        {
+          "id": "R3.1",
+          "summary": "Conflict-fixture evidence contradicts per-ecosystem grouping test",
+          "severity": "high",
+          "class": "fix-introduced"
+        },
+        {
+          "id": "R3.2",
+          "summary": "Contract says two runners refuse, lacks ecosystem qualifier",
+          "severity": "medium",
+          "class": "fix-introduced"
+        },
+        {
+          "id": "R3.3",
+          "summary": ".NET depth-2 descent reads package projects into root",
+          "severity": "medium",
+          "class": "fix-introduced"
+        },
+        {
+          "id": "R3.4",
+          "summary": ".NET descent unbounded by project cap in non-.NET repos",
+          "severity": "medium",
+          "class": "fix-introduced"
+        },
+        {
+          "id": "R3.5",
+          "summary": "mtime probe expands workspaces, thousands of stats",
+          "severity": "medium",
+          "class": "re-raised"
+        },
+        {
+          "id": "R3.6",
+          "summary": "Residual cache gap list both over- and under-inclusive",
+          "severity": "medium",
+          "class": "fix-introduced"
+        },
+        {
+          "id": "R3.7",
+          "summary": "Step 3.3 file:line anchors do not resolve",
+          "severity": "medium",
+          "class": "single-seat"
+        },
+        {
+          "id": "R3.8",
+          "summary": "Recorded test count 70 wrong, file has 82",
+          "severity": "medium",
+          "class": "single-seat"
+        },
+        {
+          "id": "R3.9",
+          "summary": "Evidence lists eight terms, sentence names six",
+          "severity": "low",
+          "class": "single-seat"
+        },
+        {
+          "id": "R3.10",
+          "summary": "Recorded word count does not reproduce",
+          "severity": "low",
+          "class": "single-seat"
+        },
+        {
+          "id": "R3.11",
+          "summary": "Marker-list comment claims nonexistent scope distinction",
+          "severity": "low",
+          "class": "fix-introduced"
+        },
+        {
+          "id": "R3.12",
+          "summary": "Literal workspace entries pushed without existence check",
+          "severity": "low",
+          "class": "fix-introduced"
+        },
+        {
+          "id": "R3.13",
+          "summary": "Gem anchor misses rspec-rails and cucumber-rails",
+          "severity": "low",
+          "class": "fix-introduced"
+        },
+        {
+          "id": "R3.14",
+          "summary": "Empty or absent build.gradle yields no junit row",
+          "severity": "low",
+          "class": "single-seat"
+        },
+        {
+          "id": "R3.15",
+          "summary": "Root detectors computed twice per resolve",
+          "severity": "low",
+          "class": "fix-introduced"
+        }
+      ]
+    },
+    {
+      "round": 4,
+      "visible": true,
+      "findings": [
+        {
+          "id": "R4.1",
+          "summary": "MEDIUM .NET row still selected; guard ignores confidence",
+          "severity": "high",
+          "class": "fix-introduced"
+        },
+        {
+          "id": "R4.2",
+          "summary": ".slnx counted as project, blocks descent",
+          "severity": "medium",
+          "class": "fix-introduced"
+        },
+        {
+          "id": "R4.3",
+          "summary": "settings.gradle absent from cache key lists",
+          "severity": "medium",
+          "class": "fix-introduced"
+        },
+        {
+          "id": "R4.4",
+          "summary": "Step 7 still says run in PHP container",
+          "severity": "medium",
+          "class": "single-seat"
+        },
+        {
+          "id": "R4.5",
+          "summary": "Contract bullets misstate .NET HIGH and junit signals",
+          "severity": "medium",
+          "class": "fix-introduced"
+        },
+        {
+          "id": "R4.6",
+          "summary": "Mixed Reqnroll/SpecFlow solution silently picks one",
+          "severity": "medium",
+          "class": "re-raised"
+        },
+        {
+          "id": "R4.7",
+          "summary": "Claimed stack-skill load mechanism not implemented",
+          "severity": "low",
+          "class": "single-seat"
+        },
+        {
+          "id": "R4.8",
+          "summary": "Root scope detection still re-derived twice",
+          "severity": "low",
+          "class": "re-raised"
+        },
+        {
+          "id": "R4.9",
+          "summary": "Cache probe still expensive, doc says cheap",
+          "severity": "low",
+          "class": "re-raised"
+        },
+        {
+          "id": "R4.10",
+          "summary": ".rspec in behaviour markers but never read there",
+          "severity": "low",
+          "class": "single-seat"
+        },
+        {
+          "id": "R4.11",
+          "summary": "Test count parenthetical does not reconcile",
+          "severity": "low",
+          "class": "re-raised"
+        },
+        {
+          "id": "R4.12",
+          "summary": "Claims verification it says was impossible",
+          "severity": "low",
+          "class": "single-seat"
+        },
+        {
+          "id": "R4.13",
+          "summary": ".NET row and command bodies list incomplete ecosystems",
+          "severity": "low",
+          "class": "single-seat"
+        }
+      ]
+    },
+    {
+      "round": 5,
+      "visible": true,
+      "findings": [
+        {
+          "id": "R5.1",
+          "summary": "Recorded token passport delta understates committed figures",
+          "severity": "medium",
+          "class": "single-seat"
+        },
+        {
+          "id": "R5.2",
+          "summary": "Resolver doc still claims filesystem-cheap resolution",
+          "severity": "medium",
+          "class": "re-raised"
+        },
+        {
+          "id": "R5.3",
+          "summary": "Redundant directory listing in .NET project scan",
+          "severity": "low",
+          "class": "single-seat"
+        },
+        {
+          "id": "R5.4",
+          "summary": "Cache-gap note misreasons mvnw/gradlew, omits pytest.ini",
+          "severity": "low",
+          "class": "re-raised"
+        },
+        {
+          "id": "R5.5",
+          "summary": "acceptance scenario claimed pinned but in no query",
+          "severity": "low",
+          "class": "fix-introduced"
+        },
+        {
+          "id": "R5.6",
+          "summary": "Shipped bodies carry review-provenance prose",
+          "severity": "low",
+          "class": "fix-introduced"
+        }
+      ]
+    },
+    {
+      "round": 6,
+      "visible": true,
+      "findings": [
+        {
+          "id": "R6.1",
+          "summary": "Bare pytest-bdd match causes false conflict refusal",
+          "severity": "medium",
+          "class": "single-seat"
+        },
+        {
+          "id": "R6.2",
+          "summary": "Dropping pest-testing leaves no conditional stack guidance",
+          "severity": "medium",
+          "class": "single-seat"
+        },
+        {
+          "id": "R6.3",
+          "summary": "7,500 budget leaves four chars headroom, shrink-only",
+          "severity": "medium",
+          "class": "fix-introduced"
+        },
+        {
+          "id": "R6.4",
+          "summary": "New should-trigger exemplars cannot route; eval suppressed",
+          "severity": "medium",
+          "class": "re-raised"
+        },
+        {
+          "id": "R6.5",
+          "summary": "Root-scope detection performed twice per resolve",
+          "severity": "low",
+          "class": "re-raised"
+        },
+        {
+          "id": "R6.6",
+          "summary": "Solution text matched as package references",
+          "severity": "low",
+          "class": "single-seat"
+        },
+        {
+          "id": "R6.7",
+          "summary": "Task-runner wrapper preference not applied to new ecosystems",
+          "severity": "low",
+          "class": "single-seat"
+        },
+        {
+          "id": "R6.8",
+          "summary": "One-arg mtime probe costs ~11,600 stats",
+          "severity": "low",
+          "class": "re-raised"
+        }
+      ]
+    },
+    {
+      "round": 7,
+      "visible": true,
+      "findings": [
+        {
+          "id": "R7.1",
+          "summary": "Corrected passport figures still not committed values",
+          "severity": "medium",
+          "class": "fix-introduced"
+        },
+        {
+          "id": "R7.2",
+          "summary": "Roadmap says 7,500 budget, artefact now 8,500",
+          "severity": "medium",
+          "class": "fix-introduced"
+        },
+        {
+          "id": "R7.3",
+          "summary": "German exemplar claim false for given-when-then",
+          "severity": "medium",
+          "class": "fix-introduced"
+        },
+        {
+          "id": "R7.4",
+          "summary": "Re-measured word count still wrong",
+          "severity": "medium",
+          "class": "re-raised"
+        },
+        {
+          "id": "R7.5",
+          "summary": "Replacement cost sentence understates per-scope listings",
+          "severity": "medium",
+          "class": "fix-introduced"
+        },
+        {
+          "id": "R7.6",
+          "summary": "AC-5 grep count belongs to different file scope",
+          "severity": "low",
+          "class": "single-seat"
+        },
+        {
+          "id": "R7.7",
+          "summary": "Maven gated on content while Gradle on presence",
+          "severity": "low",
+          "class": "fix-introduced"
+        },
+        {
+          "id": "R7.8",
+          "summary": "Header claims Python twin parity despite TS-only API",
+          "severity": "low",
+          "class": "single-seat"
+        }
+      ]
+    },
+    {
+      "round": 8,
+      "visible": true,
+      "findings": [
+        {
+          "id": "R8.1",
+          "summary": "Root solution descent double-attributes packages, false refusal",
+          "severity": "medium",
+          "class": "re-raised"
+        },
+        {
+          "id": "R8.2",
+          "summary": "setup.cfg/pytest.ini missing from cache key",
+          "severity": "medium",
+          "class": "re-raised"
+        },
+        {
+          "id": "R8.3",
+          "summary": "Cache-gap note still misattributes mvnw/gradlew",
+          "severity": "low",
+          "class": "re-raised"
+        },
+        {
+          "id": "R8.4",
+          "summary": "conflict doc describes pre-grouping behaviour",
+          "severity": "low",
+          "class": "fix-introduced"
+        },
+        {
+          "id": "R8.5",
+          "summary": "Root-scope filesystem work still done twice",
+          "severity": "low",
+          "class": "re-raised"
+        },
+        {
+          "id": "R8.6",
+          "summary": "Scope cap does not bound non-resolving globs",
+          "severity": "low",
+          "class": "single-seat"
+        },
+        {
+          "id": "R8.7",
+          "summary": "Line-anchored Python regexes miss inline forms",
+          "severity": "low",
+          "class": "fix-introduced"
+        }
+      ]
+    },
+    {
+      "round": 9,
+      "visible": true,
+      "findings": [
+        {
+          "id": "R9.1",
+          "summary": "Root .NET descent still manufactures false refusal",
+          "severity": "medium",
+          "class": "re-raised"
+        },
+        {
+          "id": "R9.2",
+          "summary": "cucumber-jvm unreachable in Gradle multi-project layout",
+          "severity": "medium",
+          "class": "single-seat"
+        },
+        {
+          "id": "R9.3",
+          "summary": "Step 1.2 evidence misquotes German phrasings claim",
+          "severity": "medium",
+          "class": "re-raised"
+        },
+        {
+          "id": "R9.4",
+          "summary": "Word budget one word of headroom",
+          "severity": "low",
+          "class": "re-raised"
+        },
+        {
+          "id": "R9.5",
+          "summary": "Unrewrapped orphan line in added paragraph",
+          "severity": "low",
+          "class": "fix-introduced"
+        }
+      ]
+    },
+    {
+      "round": 10,
+      "visible": true,
+      "findings": [
+        {
+          "id": "R10.1",
+          "summary": "Solution text still matched by package regexes",
+          "severity": "medium",
+          "class": "re-raised"
+        },
+        {
+          "id": "R10.2",
+          "summary": "latest_manifest_mtime change has zero test coverage",
+          "severity": "medium",
+          "class": "single-seat"
+        },
+        {
+          "id": "R10.3",
+          "summary": "Conditional skill instruction rests on flawed grep",
+          "severity": "medium",
+          "class": "fix-introduced"
+        },
+        {
+          "id": "R10.4",
+          "summary": "Pure root detectors recomputed every resolve",
+          "severity": "low",
+          "class": "re-raised"
+        },
+        {
+          "id": "R10.5",
+          "summary": "Glob scopes admit node_modules and dot-directories",
+          "severity": "low",
+          "class": "single-seat"
+        },
+        {
+          "id": "R10.6",
+          "summary": "Cache-gap note still omits setup.cfg/pytest.ini",
+          "severity": "low",
+          "class": "re-raised"
+        },
+        {
+          "id": "R10.7",
+          "summary": "Cache probe costlier than resolution it guards",
+          "severity": "low",
+          "class": "re-raised"
+        }
+      ]
+    },
+    {
+      "round": 11,
+      "visible": true,
+      "findings": [
+        {
+          "id": "R11.1",
+          "summary": "MEDIUM marker-only .NET row still in selected",
+          "severity": "medium",
+          "class": "re-raised"
+        },
+        {
+          "id": "R11.2",
+          "summary": "Root .NET descent unpruned at package boundaries",
+          "severity": "medium",
+          "class": "re-raised"
+        },
+        {
+          "id": "R11.3",
+          "summary": "Test count 97 wrong, actually 106",
+          "severity": "medium",
+          "class": "re-raised"
+        },
+        {
+          "id": "R11.4",
+          "summary": "Residue lists already-fixed solution-text defect",
+          "severity": "medium",
+          "class": "fix-introduced"
+        },
+        {
+          "id": "R11.5",
+          "summary": "8,500 budget reproduces 12-char headroom trap",
+          "severity": "medium",
+          "class": "fix-introduced"
+        },
+        {
+          "id": "R11.6",
+          "summary": "Stat cost uses 29 names, actually 28",
+          "severity": "low",
+          "class": "fix-introduced"
+        },
+        {
+          "id": "R11.7",
+          "summary": "Marker-list sourcing rule describes neither list",
+          "severity": "low",
+          "class": "single-seat"
+        },
+        {
+          "id": "R11.8",
+          "summary": "Multi-line pnpm flow sequence silently dropped",
+          "severity": "low",
+          "class": "fix-introduced"
+        },
+        {
+          "id": "R11.9",
+          "summary": ".NET HIGH unreachable without solution file",
+          "severity": "low",
+          "class": "single-seat"
+        },
+        {
+          "id": "R11.10",
+          "summary": "Label count understates behaviour axis",
+          "severity": "low",
+          "class": "fix-introduced"
+        }
+      ]
+    },
+    {
+      "round": 12,
+      "visible": true,
+      "findings": [
+        {
+          "id": "R12.1",
+          "summary": "Unguarded statSync race can throw from resolver",
+          "severity": "medium",
+          "class": "single-seat"
+        },
+        {
+          "id": "R12.2",
+          "summary": "Module docstring still says filesystem-cheap",
+          "severity": "medium",
+          "class": "fix-introduced"
+        },
+        {
+          "id": "R12.3",
+          "summary": "Contract table says markers yield row; code emits none",
+          "severity": "medium",
+          "class": "fix-introduced"
+        },
+        {
+          "id": "R12.4",
+          "summary": "Docstring stack list stale after new runners",
+          "severity": "low",
+          "class": "single-seat"
+        },
+        {
+          "id": "R12.5",
+          "summary": "Docblock falsely says settings.gradle selects nothing",
+          "severity": "low",
+          "class": "fix-introduced"
+        },
+        {
+          "id": "R12.6",
+          "summary": "No bound on directories listed in .NET walk",
+          "severity": "low",
+          "class": "re-raised"
+        },
+        {
+          "id": "R12.7",
+          "summary": "mtime stats duplicate existing directory listings",
+          "severity": "low",
+          "class": "re-raised"
+        },
+        {
+          "id": "R12.8",
+          "summary": "Peer/optional cucumber deps reported as owned suite",
+          "severity": "low",
+          "class": "single-seat"
+        },
+        {
+          "id": "R12.9",
+          "summary": "Gate comment overstates avoided listings",
+          "severity": "low",
+          "class": "single-seat"
+        }
+      ]
+    },
+    {
+      "round": 13,
+      "visible": true,
+      "findings": [
+        {
+          "id": "R13.1",
+          "summary": "Forced descent emits root dotnet test that fails",
+          "severity": "high",
+          "class": "fix-introduced"
+        },
+        {
+          "id": "R13.2",
+          "summary": "Marker-only rspec emits bundle exec without Gemfile",
+          "severity": "medium",
+          "class": "fix-introduced"
+        },
+        {
+          "id": "R13.3",
+          "summary": "Measurement artefacts re-run on grown corpus unexplained",
+          "severity": "medium",
+          "class": "single-seat"
+        },
+        {
+          "id": "R13.4",
+          "summary": "Solution-only scope skips reachable-project check",
+          "severity": "low",
+          "class": "single-seat"
+        },
+        {
+          "id": "R13.5",
+          "summary": "CRLF pnpm-workspace.yaml yields no packages",
+          "severity": "low",
+          "class": "single-seat"
+        },
+        {
+          "id": "R13.6",
+          "summary": "Command bodies cite package-internal grep as evidence",
+          "severity": "low",
+          "class": "fix-introduced"
+        },
+        {
+          "id": "R13.7",
+          "summary": "Bold says skills names none, frontmatter lists skills",
+          "severity": "low",
+          "class": "single-seat"
+        },
+        {
+          "id": "R13.8",
+          "summary": "Inconsistent literals and dead template fallbacks",
+          "severity": "low",
+          "class": "single-seat"
+        }
+      ]
+    },
+    {
+      "round": 14,
+      "visible": true,
+      "findings": [
+        {
+          "id": "R14.1",
+          "summary": "Behaviour cucumber emits bundle exec without Gemfile",
+          "severity": "medium",
+          "class": "fix-introduced"
+        },
+        {
+          "id": "R14.2",
+          "summary": "Marker-only basis branches untested",
+          "severity": "low",
+          "class": "single-seat"
+        },
+        {
+          "id": "R14.3",
+          "summary": "Residue cites 1,500 lines, file is 1,498",
+          "severity": "low",
+          "class": "single-seat"
+        },
+        {
+          "id": "R14.4",
+          "summary": "Evidence still quotes removed German phrasings wording",
+          "severity": "low",
+          "class": "re-raised"
+        },
+        {
+          "id": "R14.5",
+          "summary": "AC-3 test count 97 unreproducible",
+          "severity": "low",
+          "class": "re-raised"
+        },
+        {
+          "id": "R14.6",
+          "summary": "Python regex terminator omits inline comment",
+          "severity": "low",
+          "class": "re-raised"
+        }
+      ]
+    },
+    {
+      "round": 15,
+      "visible": true,
+      "findings": [
+        {
+          "id": "R15.1",
+          "summary": "Roadmap breaches lightweight 600-line cap, CI red",
+          "severity": "high",
+          "class": "other"
+        },
+        {
+          "id": "R15.2",
+          "summary": "AC-3 count stale; gate justification refuted",
+          "severity": "medium",
+          "class": "re-raised"
+        },
+        {
+          "id": "R15.3",
+          "summary": "Literal workspace entries skip exclusion check",
+          "severity": "low",
+          "class": "fix-introduced"
+        },
+        {
+          "id": "R15.4",
+          "summary": "bundle exec guard keys on content not presence",
+          "severity": "low",
+          "class": "fix-introduced"
+        },
+        {
+          "id": "R15.5",
+          "summary": "runner.ts at exactly per-file line cap",
+          "severity": "low",
+          "class": "single-seat"
+        }
+      ]
+    },
+    {
+      "round": 16,
+      "visible": true,
+      "findings": [
+        {
+          "id": "R16.1",
+          "summary": "Glob parent not checked for exclusion",
+          "severity": "low",
+          "class": "fix-introduced"
+        },
+        {
+          "id": "R16.2",
+          "summary": "execute body still says skills names none",
+          "severity": "low",
+          "class": "re-raised"
+        },
+        {
+          "id": "R16.3",
+          "summary": "Root cost statement undercounts listings",
+          "severity": "low",
+          "class": "fix-introduced"
+        },
+        {
+          "id": "R16.4",
+          "summary": "AC-1 and Fact 1 suite denominators disagree",
+          "severity": "low",
+          "class": "single-seat"
+        },
+        {
+          "id": "R16.5",
+          "summary": "AC-3 97 tests vs 121 actual",
+          "severity": "low",
+          "class": "re-raised"
+        }
+      ]
+    },
+    {
+      "round": 17,
+      "visible": true,
+      "findings": [
+        {
+          "id": "R17.1",
+          "summary": "Behaviour commands scope-relative, undocumented",
+          "severity": "medium",
+          "class": "single-seat"
+        },
+        {
+          "id": "R17.2",
+          "summary": "npx cucumber-js on undeclared package may install",
+          "severity": "low",
+          "class": "single-seat"
+        },
+        {
+          "id": "R17.3",
+          "summary": "_PY_BEHAVE docblock understates its coverage",
+          "severity": "low",
+          "class": "single-seat"
+        },
+        {
+          "id": "R17.4",
+          "summary": "Corpus description still claims acceptance scenario",
+          "severity": "low",
+          "class": "re-raised"
+        },
+        {
+          "id": "R17.5",
+          "summary": "Optional scopes make cache key argument-dependent",
+          "severity": "low",
+          "class": "single-seat"
+        },
+        {
+          "id": "R17.6",
+          "summary": "Glob and literal branches disagree on symlinks",
+          "severity": "low",
+          "class": "single-seat"
+        },
+        {
+          "id": "R17.7",
+          "summary": "Moderate hono advisory cannot fail high audit",
+          "severity": "low",
+          "class": "single-seat"
+        },
+        {
+          "id": "R17.8",
+          "summary": "Re-measured metrics file carries no date",
+          "severity": "low",
+          "class": "re-raised"
+        }
+      ]
+    },
+    {
+      "round": 18,
+      "visible": true,
+      "findings": [
+        {
+          "id": "R18.1",
+          "summary": "Step 3.1 evidence says marker-only .NET is MEDIUM",
+          "severity": "medium",
+          "class": "single-seat"
+        },
+        {
+          "id": "R18.2",
+          "summary": "Metrics file lacks measured_at unlike sibling",
+          "severity": "low",
+          "class": "re-raised"
+        },
+        {
+          "id": "R18.3",
+          "summary": "Re-pin forbids quoting hash, then quotes it",
+          "severity": "low",
+          "class": "fix-introduced"
+        },
+        {
+          "id": "R18.4",
+          "summary": "97 tests framed both stale and sign-off value",
+          "severity": "low",
+          "class": "re-raised"
+        },
+        {
+          "id": "R18.5",
+          "summary": "Three-listing root cost wrong with .NET target",
+          "severity": "low",
+          "class": "fix-introduced"
+        },
+        {
+          "id": "R18.6",
+          "summary": "Native JS axis still merges peer/optional deps",
+          "severity": "low",
+          "class": "fix-introduced"
+        },
+        {
+          "id": "R18.7",
+          "summary": "Goal's exception closure path unreachable",
+          "severity": "low",
+          "class": "single-seat"
+        }
+      ]
+    },
+    {
+      "round": 19,
+      "visible": true,
+      "findings": [
+        {
+          "id": "R19.1",
+          "summary": "Published corpus pins stale; pin test red",
+          "severity": "medium",
+          "class": "fix-introduced"
+        },
+        {
+          "id": "R19.2",
+          "summary": "Run branching lacks Ruby, JVM, .NET",
+          "severity": "medium",
+          "class": "single-seat"
+        },
+        {
+          "id": "R19.3",
+          "summary": "JVM presence claim false for Maven",
+          "severity": "low",
+          "class": "re-raised"
+        },
+        {
+          "id": "R19.4",
+          "summary": "Fact 1 line citation shifted by own insertion",
+          "severity": "low",
+          "class": "single-seat"
+        },
+        {
+          "id": "R19.5",
+          "summary": "Directories named like .NET files accepted",
+          "severity": "low",
+          "class": "single-seat"
+        },
+        {
+          "id": "R19.6",
+          "summary": "Cache key misses marker removal",
+          "severity": "low",
+          "class": "single-seat"
+        }
+      ]
+    },
+    {
+      "round": 20,
+      "visible": true,
+      "findings": [
+        {
+          "id": "R20.1",
+          "summary": "File names two different live set hashes",
+          "severity": "medium",
+          "class": "fix-introduced"
+        },
+        {
+          "id": "R20.2",
+          "summary": "New ecosystems lack quality commands, suppress LOW fallback",
+          "severity": "medium",
+          "class": "single-seat"
+        },
+        {
+          "id": "R20.3",
+          "summary": "Root .NET and JVM detection still run twice",
+          "severity": "low",
+          "class": "re-raised"
+        },
+        {
+          "id": "R20.4",
+          "summary": "AC-3 still quotes 97; register claim false",
+          "severity": "low",
+          "class": "re-raised"
+        }
+      ]
+    },
+    {
+      "round": 21,
+      "visible": true,
+      "findings": [
+        {
+          "id": "R21.1",
+          "summary": "Never-run claim false; behaviour commands equal native ones",
+          "severity": "low",
+          "class": "single-seat"
+        },
+        {
+          "id": "R21.2",
+          "summary": "scope_root run rule contradicts detection-only section",
+          "severity": "low",
+          "class": "fix-introduced"
+        }
+      ]
+    }
+  ]
+}

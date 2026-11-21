@@ -11,7 +11,7 @@
         "agent-security-review": 6120,
         "agents-md-thin-root": 13319,
         "ai-code-blindspots": 14468,
-        "ai-council": 21705,
+        "ai-council": 22271,
         "alerting-doctrine": 8755,
         "analysis-autonomous-mode": 7380,
         "analysis-skill-router": 4139,
@@ -1265,6 +1265,12 @@
             "old": 10675,
             "new": 10743,
             "reason": "Step 3 names the wrapper-masks-exit-code trap (`task ci; echo $?` read as green) after an agent reported a red task ci as passing."
+        },
+        {
+            "skill": "ai-council",
+            "old": 21705,
+            "new": 22271,
+            "reason": "§ Before the next ratification round: run review_convergence before round N+1, owner rung on stalled/diverging (road-to-review-loops-that-converge D6; the always-loaded context had no headroom)."
         }
     ]
 }

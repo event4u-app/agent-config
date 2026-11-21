@@ -1,0 +1,329 @@
+{
+  "subject": "design-consistency-default-ratification",
+  "round1_findings": 4,
+  "rounds": [
+    {
+      "round": 2,
+      "visible": true,
+      "findings": [
+        {
+          "id": "2.1",
+          "summary": "raise_log size figures inconsistent, +1,882 B vs +1,886 B",
+          "severity": "unknown",
+          "class": "fix-introduced"
+        },
+        {
+          "id": "2.2",
+          "summary": "Toolchain note added in round 1 left unbounded",
+          "severity": "unknown",
+          "class": "fix-introduced"
+        },
+        {
+          "id": "2.3",
+          "summary": "Packet lacked cumulative diff",
+          "severity": "unknown",
+          "class": "single-seat"
+        }
+      ]
+    },
+    {
+      "round": 3,
+      "visible": true,
+      "findings": [
+        {
+          "id": "3.1",
+          "summary": "Policy reverse trigger asserted, not operated",
+          "severity": "unknown",
+          "class": "other"
+        },
+        {
+          "id": "3.2",
+          "summary": "Missing-chunk test only injected a null loader",
+          "severity": "unknown",
+          "class": "fix-introduced"
+        }
+      ]
+    },
+    {
+      "round": 4,
+      "visible": true,
+      "findings": [
+        {
+          "id": "4.1",
+          "summary": "Rollback enabled:false also stops recording",
+          "severity": "unknown",
+          "class": "fix-introduced"
+        }
+      ]
+    },
+    {
+      "round": 5,
+      "visible": true,
+      "findings": [
+        {
+          "id": "5.1",
+          "summary": "Role-map cache keyed on HEAD misses uncommitted primitives",
+          "severity": "unknown",
+          "class": "other"
+        }
+      ]
+    },
+    {
+      "round": 6,
+      "visible": true,
+      "findings": [
+        {
+          "id": "6.1",
+          "summary": "File losing last primitive drops from stamp",
+          "severity": "unknown",
+          "class": "fix-introduced"
+        }
+      ]
+    },
+    {
+      "round": 7,
+      "visible": true,
+      "findings": [
+        {
+          "id": "7.1",
+          "summary": "Chunk derivation still reads stale 39,360 B",
+          "severity": "unknown",
+          "class": "fix-introduced"
+        }
+      ]
+    },
+    {
+      "round": 8,
+      "visible": true,
+      "findings": [
+        {
+          "id": "8.1",
+          "summary": "Shadow row not classifiable later; report folds repeats",
+          "severity": "unknown",
+          "class": "single-seat"
+        }
+      ]
+    },
+    {
+      "round": 9,
+      "visible": true,
+      "findings": [
+        {
+          "id": "9.1",
+          "summary": "Condition 3 friction and benefit asserted, not measured",
+          "severity": "unknown",
+          "class": "other"
+        },
+        {
+          "id": "9.2",
+          "summary": "Advisory severity contradicts P1 priority",
+          "severity": "unknown",
+          "class": "other"
+        }
+      ]
+    },
+    {
+      "round": 10,
+      "visible": true,
+      "findings": [
+        {
+          "id": "10.1",
+          "summary": "Consistency-only path runs on any slot but stop",
+          "severity": "unknown",
+          "class": "single-seat"
+        },
+        {
+          "id": "10.2",
+          "summary": "Benefit side of condition 3 not quantified",
+          "severity": "unknown",
+          "class": "re-raised"
+        }
+      ]
+    },
+    {
+      "round": 11,
+      "visible": true,
+      "findings": [
+        {
+          "id": "11.1",
+          "summary": "shadow-report exits 0 on missing or malformed file",
+          "severity": "high",
+          "class": "other"
+        },
+        {
+          "id": "11.2",
+          "summary": "Recorded source line truncation misses late controls",
+          "severity": "unknown",
+          "class": "other"
+        },
+        {
+          "id": "11.3",
+          "summary": "p95 covered cache hits only",
+          "severity": "unknown",
+          "class": "other"
+        },
+        {
+          "id": "11.4",
+          "summary": "Advisory ceiling asserted, not shown",
+          "severity": "unknown",
+          "class": "re-raised"
+        }
+      ]
+    },
+    {
+      "round": 12,
+      "visible": true,
+      "findings": [
+        {
+          "id": "12.1",
+          "summary": "Report validates rows only syntactically",
+          "severity": "unknown",
+          "class": "fix-introduced"
+        },
+        {
+          "id": "12.2",
+          "summary": "Two same-tag controls share first context window",
+          "severity": "unknown",
+          "class": "fix-introduced"
+        },
+        {
+          "id": "12.3",
+          "summary": "Whole-event latency not measured",
+          "severity": "unknown",
+          "class": "re-raised"
+        }
+      ]
+    },
+    {
+      "round": 13,
+      "visible": true,
+      "findings": [
+        {
+          "id": "13.1",
+          "summary": "Relative file_path escapes project root",
+          "severity": "high",
+          "class": "other"
+        },
+        {
+          "id": "13.2",
+          "summary": "Empty window reported as complete",
+          "severity": "unknown",
+          "class": "fix-introduced"
+        },
+        {
+          "id": "13.3",
+          "summary": "Raise entry overstates lockfile role",
+          "severity": "unknown",
+          "class": "other"
+        }
+      ]
+    },
+    {
+      "round": 14,
+      "visible": true,
+      "findings": [
+        {
+          "id": "14.1",
+          "summary": "canRender infers renderability from extension alone",
+          "severity": "high",
+          "class": "other"
+        },
+        {
+          "id": "14.2",
+          "summary": "Unknown rule names, non-positive lines accepted in rows",
+          "severity": "unknown",
+          "class": "fix-introduced"
+        },
+        {
+          "id": "14.3",
+          "summary": "Wording on headroom and owner-accepted latency",
+          "severity": "unknown",
+          "class": "other"
+        }
+      ]
+    },
+    {
+      "round": 15,
+      "visible": true,
+      "findings": [
+        {
+          "id": "15.1",
+          "summary": "Families derived from uses as well as definitions",
+          "severity": "unknown",
+          "class": "fix-introduced"
+        },
+        {
+          "id": "15.2",
+          "summary": "Families can go stale in cache",
+          "severity": "unknown",
+          "class": "fix-introduced"
+        }
+      ]
+    },
+    {
+      "round": 16,
+      "visible": true,
+      "findings": [
+        {
+          "id": "16.1",
+          "summary": "Re-exports and imported names counted as definitions",
+          "severity": "high",
+          "class": "fix-introduced"
+        }
+      ]
+    },
+    {
+      "round": 17,
+      "visible": true,
+      "findings": [
+        {
+          "id": "17.1",
+          "summary": "Declaration check matches comments, strings, nested declarations",
+          "severity": "high",
+          "class": "fix-introduced"
+        }
+      ]
+    },
+    {
+      "round": 18,
+      "visible": true,
+      "findings": [
+        {
+          "id": "18.1",
+          "summary": "Export inside namespace/declare module matches module level",
+          "severity": "low",
+          "class": "fix-introduced"
+        },
+        {
+          "id": "18.2",
+          "summary": "Declaration inside regex literal treated as definition",
+          "severity": "unknown",
+          "class": "fix-introduced"
+        }
+      ]
+    },
+    {
+      "round": 19,
+      "visible": true,
+      "findings": [
+        {
+          "id": "19.1",
+          "summary": "Recording avoids no review round; benefit prospective",
+          "severity": "unknown",
+          "class": "re-raised"
+        },
+        {
+          "id": "19.2",
+          "summary": "Stale DELIVERED header after shadow default change",
+          "severity": "low",
+          "class": "fix-introduced"
+        }
+      ]
+    },
+    {
+      "round": 20,
+      "visible": false,
+      "findings": []
+    }
+  ]
+}

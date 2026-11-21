@@ -1,0 +1,222 @@
+{
+  "subject": "verified-stale-lock-reclaim-ratification",
+  "round1_findings": 6,
+  "rounds": [
+    {
+      "round": 2,
+      "visible": true,
+      "findings": [
+        {
+          "id": "2.1",
+          "summary": "Allocation can exceed the generation range recognized by listing",
+          "severity": "unknown",
+          "class": "fix-introduced"
+        }
+      ]
+    },
+    {
+      "round": 3,
+      "visible": true,
+      "findings": [
+        {
+          "id": "3.1",
+          "summary": "Atomic text writes still publish without holding a lock",
+          "severity": "unknown",
+          "class": "re-raised"
+        },
+        {
+          "id": "3.2",
+          "summary": "Integration claims overstate coverage across lock sites",
+          "severity": "unknown",
+          "class": "other"
+        },
+        {
+          "id": "3.3",
+          "summary": "Strict tests pass even if the lock admits nobody",
+          "severity": "unknown",
+          "class": "other"
+        }
+      ]
+    },
+    {
+      "round": 4,
+      "visible": true,
+      "findings": [
+        {
+          "id": "4.1",
+          "summary": "Packet references budget and integration evidence without showing it",
+          "severity": "unknown",
+          "class": "other"
+        },
+        {
+          "id": "4.2",
+          "summary": "Helper header still claims coverage at every site",
+          "severity": "unknown",
+          "class": "re-raised"
+        },
+        {
+          "id": "4.3",
+          "summary": "Blind-write note omits the unguarded false return case",
+          "severity": "unknown",
+          "class": "fix-introduced"
+        }
+      ]
+    },
+    {
+      "round": 5,
+      "visible": true,
+      "findings": [
+        {
+          "id": "5.1",
+          "summary": "State update helpers proceed unguarded when acquisition returns false",
+          "severity": "unknown",
+          "class": "other"
+        }
+      ]
+    },
+    {
+      "round": 6,
+      "visible": true,
+      "findings": []
+    },
+    {
+      "round": 7,
+      "visible": true,
+      "findings": []
+    },
+    {
+      "round": 8,
+      "visible": true,
+      "findings": [
+        {
+          "id": "8.1",
+          "summary": "Pruning restarts generation numbering and permits concurrent holders",
+          "severity": "unknown",
+          "class": "fix-introduced"
+        }
+      ]
+    },
+    {
+      "round": 9,
+      "visible": true,
+      "findings": [
+        {
+          "id": "9.1",
+          "summary": "A pruner can remove a fresh generation after checking stale age",
+          "severity": "unknown",
+          "class": "other"
+        },
+        {
+          "id": "9.2",
+          "summary": "Deleting an entire lock family still restarts generation numbering",
+          "severity": "unknown",
+          "class": "re-raised"
+        },
+        {
+          "id": "9.3",
+          "summary": "Explorer lacks separate filesystem steps, concurrent pruners, and schedule coverage",
+          "severity": "unknown",
+          "class": "fix-introduced"
+        }
+      ]
+    },
+    {
+      "round": 10,
+      "visible": true,
+      "findings": [
+        {
+          "id": "10.1",
+          "summary": "Backoff can remove the highest generation and permit concurrent holders",
+          "severity": "unknown",
+          "class": "fix-introduced"
+        }
+      ]
+    },
+    {
+      "round": 11,
+      "visible": true,
+      "findings": [
+        {
+          "id": "11.1",
+          "summary": "Wording of the residual lock behavior needs correction",
+          "severity": "unknown",
+          "class": "other"
+        }
+      ]
+    },
+    {
+      "round": 12,
+      "visible": true,
+      "findings": [
+        {
+          "id": "12.1",
+          "summary": "Packet refers readers elsewhere for state integration and budget evidence",
+          "severity": "unknown",
+          "class": "re-raised"
+        },
+        {
+          "id": "12.2",
+          "summary": "Strict-only test counts options without matching them to individual calls",
+          "severity": "unknown",
+          "class": "other"
+        },
+        {
+          "id": "12.3",
+          "summary": "Guard files drop the 0o600 mode used at two sites",
+          "severity": "unknown",
+          "class": "other"
+        },
+        {
+          "id": "12.4",
+          "summary": "Recheck comment describes obsolete pruner behavior",
+          "severity": "unknown",
+          "class": "other"
+        }
+      ]
+    },
+    {
+      "round": 13,
+      "visible": true,
+      "findings": [
+        {
+          "id": "13.1",
+          "summary": "Recheck comment overlooks concurrent pruning of the predecessor",
+          "severity": "unknown",
+          "class": "fix-introduced"
+        }
+      ]
+    },
+    {
+      "round": 14,
+      "visible": false,
+      "findings": []
+    },
+    {
+      "round": 15,
+      "visible": true,
+      "findings": []
+    },
+    {
+      "round": 16,
+      "visible": true,
+      "findings": [
+        {
+          "id": "16.1",
+          "summary": "Acquisition retries after a sleep crosses the deadline",
+          "severity": "unknown",
+          "class": "fix-introduced"
+        }
+      ]
+    },
+    {
+      "round": 17,
+      "visible": false,
+      "findings": []
+    },
+    {
+      "round": 18,
+      "visible": false,
+      "findings": []
+    }
+  ]
+}

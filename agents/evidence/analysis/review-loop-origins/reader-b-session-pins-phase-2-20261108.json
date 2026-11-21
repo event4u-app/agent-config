@@ -1,0 +1,1739 @@
+{
+  "subject": "session-pins-phase-2-20261108",
+  "round1_findings": 7,
+  "rounds": [
+    {
+      "round": 2,
+      "visible": true,
+      "findings": [
+        {
+          "id": "2.1",
+          "summary": "Invalid entries silently disappeared from otherwise readable pin files",
+          "severity": "unknown",
+          "class": "fix-introduced"
+        },
+        {
+          "id": "2.2",
+          "summary": "Retention missed activity in sessions without a language pin",
+          "severity": "unknown",
+          "class": "fix-introduced"
+        },
+        {
+          "id": "2.3",
+          "summary": "Restore failures stayed silent after the marker was consumed",
+          "severity": "unknown",
+          "class": "other"
+        },
+        {
+          "id": "2.4",
+          "summary": "Packet budget numbers disagreed with the diff",
+          "severity": "unknown",
+          "class": "other"
+        },
+        {
+          "id": "2.5",
+          "summary": "The kill switch allowed unnecessary chunk loads",
+          "severity": "unknown",
+          "class": "other"
+        },
+        {
+          "id": "2.6",
+          "summary": "Worst-case pins plus digest lacked a subagent budget test",
+          "severity": "unknown",
+          "class": "other"
+        },
+        {
+          "id": "2.7",
+          "summary": "A reviewer questioned rejecting backticks in fence info strings",
+          "severity": "unknown",
+          "class": "other"
+        }
+      ]
+    },
+    {
+      "round": 3,
+      "visible": true,
+      "findings": [
+        {
+          "id": "3.1",
+          "summary": "A budget-dropped restore was lost after marker consumption",
+          "severity": "unknown",
+          "class": "re-raised"
+        },
+        {
+          "id": "3.2",
+          "summary": "Nested pastes exposed directives inside the outer paste",
+          "severity": "unknown",
+          "class": "other"
+        },
+        {
+          "id": "3.3",
+          "summary": "Subagents received no warning when parent pins were unreadable",
+          "severity": "unknown",
+          "class": "other"
+        },
+        {
+          "id": "3.4",
+          "summary": "A reviewer questioned case-insensitive directive matching",
+          "severity": "unknown",
+          "class": "other"
+        },
+        {
+          "id": "3.5",
+          "summary": "Invalid pin state lacked a reason code",
+          "severity": "unknown",
+          "class": "other"
+        }
+      ]
+    },
+    {
+      "round": 4,
+      "visible": true,
+      "findings": [
+        {
+          "id": "4.1",
+          "summary": "Transcript delivery detection relied on string matching",
+          "severity": "unknown",
+          "class": "fix-introduced"
+        },
+        {
+          "id": "4.2",
+          "summary": "Transcript delivery detection read an unvalidated path",
+          "severity": "unknown",
+          "class": "fix-introduced"
+        },
+        {
+          "id": "4.3",
+          "summary": "Restatement could resurrect pins removed by the same prompt",
+          "severity": "unknown",
+          "class": "fix-introduced"
+        },
+        {
+          "id": "4.4",
+          "summary": "Restatement failures and pending-marker write failures could go unreported",
+          "severity": "unknown",
+          "class": "fix-introduced"
+        },
+        {
+          "id": "4.5",
+          "summary": "Combined capture and restatement lacked a verified byte bound",
+          "severity": "unknown",
+          "class": "fix-introduced"
+        },
+        {
+          "id": "4.6",
+          "summary": "The subagent digest could receive a nonpositive budget",
+          "severity": "unknown",
+          "class": "other"
+        },
+        {
+          "id": "4.7",
+          "summary": "A reviewer questioned touching pin state on every substantive prompt",
+          "severity": "unknown",
+          "class": "other"
+        },
+        {
+          "id": "4.8",
+          "summary": "Invalid pin state still lacked a reason code",
+          "severity": "unknown",
+          "class": "re-raised"
+        }
+      ]
+    },
+    {
+      "round": 5,
+      "visible": true,
+      "findings": [
+        {
+          "id": "5.1",
+          "summary": "A prompt before the first tool call received no pins",
+          "severity": "unknown",
+          "class": "fix-introduced"
+        },
+        {
+          "id": "5.2",
+          "summary": "A stuck restore marker could cause indefinite repetition",
+          "severity": "unknown",
+          "class": "fix-introduced"
+        },
+        {
+          "id": "5.3",
+          "summary": "The shortened combined notice omitted refused pin text",
+          "severity": "unknown",
+          "class": "fix-introduced"
+        },
+        {
+          "id": "5.4",
+          "summary": "Skipping the subagent digest could go unreported",
+          "severity": "unknown",
+          "class": "fix-introduced"
+        },
+        {
+          "id": "5.5",
+          "summary": "Activity-touch and retention-prune failures could go unreported",
+          "severity": "unknown",
+          "class": "other"
+        },
+        {
+          "id": "5.6",
+          "summary": "The purpose of the savePins test seam was undocumented",
+          "severity": "unknown",
+          "class": "other"
+        }
+      ]
+    },
+    {
+      "round": 6,
+      "visible": true,
+      "findings": [
+        {
+          "id": "6.1",
+          "summary": "A stale restated marker suppressed the next compaction's restore",
+          "severity": "unknown",
+          "class": "fix-introduced"
+        },
+        {
+          "id": "6.2",
+          "summary": "Every prompt before the first tool call restated pins",
+          "severity": "unknown",
+          "class": "fix-introduced"
+        },
+        {
+          "id": "6.3",
+          "summary": "Each capture could trigger a retention directory walk",
+          "severity": "unknown",
+          "class": "other"
+        },
+        {
+          "id": "6.4",
+          "summary": "The savePins test seam bypassed the pin-file lock",
+          "severity": "unknown",
+          "class": "other"
+        },
+        {
+          "id": "6.5",
+          "summary": "The guide omitted wildcard unpin and case-insensitive matching behavior",
+          "severity": "unknown",
+          "class": "other"
+        },
+        {
+          "id": "6.6",
+          "summary": "Budget tests lacked coverage through the dispatcher entry point",
+          "severity": "unknown",
+          "class": "other"
+        },
+        {
+          "id": "6.7",
+          "summary": "Activity-touch failure diagnostics were invisible to the user",
+          "severity": "unknown",
+          "class": "fix-introduced"
+        }
+      ]
+    },
+    {
+      "round": 7,
+      "visible": true,
+      "findings": [
+        {
+          "id": "7.1",
+          "summary": "Replacing pasted text with a newline could create a fence closer",
+          "severity": "unknown",
+          "class": "other"
+        },
+        {
+          "id": "7.2",
+          "summary": "Prompt and tool paths could both claim the same delivery",
+          "severity": "unknown",
+          "class": "fix-introduced"
+        },
+        {
+          "id": "7.3",
+          "summary": "Pending-marker write failures were absent from the restore line",
+          "severity": "unknown",
+          "class": "re-raised"
+        },
+        {
+          "id": "7.4",
+          "summary": "Verbatim pin text could contain a session-pins closing tag",
+          "severity": "unknown",
+          "class": "other"
+        }
+      ]
+    },
+    {
+      "round": 8,
+      "visible": true,
+      "findings": [
+        {
+          "id": "8.1",
+          "summary": "Replacing a stale delivered marker could race",
+          "severity": "unknown",
+          "class": "fix-introduced"
+        },
+        {
+          "id": "8.2",
+          "summary": "Pending markers ignored the compaction generation",
+          "severity": "unknown",
+          "class": "fix-introduced"
+        },
+        {
+          "id": "8.3",
+          "summary": "Prompts could arrive between delivered and pending marker writes",
+          "severity": "unknown",
+          "class": "fix-introduced"
+        },
+        {
+          "id": "8.4",
+          "summary": "Delivery claim failures were silent",
+          "severity": "unknown",
+          "class": "fix-introduced"
+        }
+      ]
+    },
+    {
+      "round": 9,
+      "visible": true,
+      "findings": [
+        {
+          "id": "9.1",
+          "summary": "A stale event could erase a newer generation's pending delivery",
+          "severity": "unknown",
+          "class": "fix-introduced"
+        },
+        {
+          "id": "9.2",
+          "summary": "A settled record still activated the prompt restore path",
+          "severity": "unknown",
+          "class": "fix-introduced"
+        },
+        {
+          "id": "9.3",
+          "summary": "The lock-failure note exceeded the verified combined byte bound",
+          "severity": "unknown",
+          "class": "fix-introduced"
+        }
+      ]
+    },
+    {
+      "round": 10,
+      "visible": true,
+      "findings": [
+        {
+          "id": "10.1",
+          "summary": "Timestamp-plus-UUID ordering failed within one millisecond or after clock rollback",
+          "severity": "unknown",
+          "class": "fix-introduced"
+        },
+        {
+          "id": "10.2",
+          "summary": "Lock failure during an owed prompt restatement was silent",
+          "severity": "unknown",
+          "class": "re-raised"
+        }
+      ]
+    },
+    {
+      "round": 11,
+      "visible": true,
+      "findings": [
+        {
+          "id": "11.1",
+          "summary": "Unlocked record deletion raced with a lock holder's write",
+          "severity": "unknown",
+          "class": "fix-introduced"
+        },
+        {
+          "id": "11.2",
+          "summary": "A missing chunk at pre_compact prevented opening the compaction",
+          "severity": "unknown",
+          "class": "fix-introduced"
+        },
+        {
+          "id": "11.3",
+          "summary": "An empty restore record made the first prompt skip delivery",
+          "severity": "unknown",
+          "class": "fix-introduced"
+        },
+        {
+          "id": "11.4",
+          "summary": "Delivery events never checked the generation counter",
+          "severity": "unknown",
+          "class": "fix-introduced"
+        }
+      ]
+    },
+    {
+      "round": 12,
+      "visible": true,
+      "findings": [
+        {
+          "id": "12.1",
+          "summary": "A crash between boundary unlink and record write lost the compaction",
+          "severity": "unknown",
+          "class": "fix-introduced"
+        },
+        {
+          "id": "12.2",
+          "summary": "Restore state read failures were treated as absence",
+          "severity": "unknown",
+          "class": "fix-introduced"
+        },
+        {
+          "id": "12.3",
+          "summary": "Restore records lacked session ownership validation",
+          "severity": "unknown",
+          "class": "other"
+        },
+        {
+          "id": "12.4",
+          "summary": "Stray paste closers discarded preceding text",
+          "severity": "unknown",
+          "class": "other"
+        }
+      ]
+    },
+    {
+      "round": 13,
+      "visible": true,
+      "findings": [
+        {
+          "id": "13.1",
+          "summary": "Boundary cleanup could unlink a newer compaction's boundary",
+          "severity": "unknown",
+          "class": "fix-introduced"
+        },
+        {
+          "id": "13.2",
+          "summary": "Prompt delivery settled before successfully reading pins",
+          "severity": "unknown",
+          "class": "other"
+        },
+        {
+          "id": "13.3",
+          "summary": "Unreadable boundaries collapsed into one acknowledgeable value",
+          "severity": "unknown",
+          "class": "fix-introduced"
+        },
+        {
+          "id": "13.4",
+          "summary": "The kill switch still allowed bundle-side pin-state work",
+          "severity": "unknown",
+          "class": "re-raised"
+        },
+        {
+          "id": "13.5",
+          "summary": "Prompt-first delivery lacked evidence under the runtime turn ceiling",
+          "severity": "unknown",
+          "class": "other"
+        }
+      ]
+    },
+    {
+      "round": 14,
+      "visible": true,
+      "findings": [
+        {
+          "id": "14.1",
+          "summary": "A failed boundary write could suppress the next restore",
+          "severity": "unknown",
+          "class": "fix-introduced"
+        },
+        {
+          "id": "14.2",
+          "summary": "Bundle and module disagreed about empty boundaries",
+          "severity": "unknown",
+          "class": "fix-introduced"
+        },
+        {
+          "id": "14.3",
+          "summary": "An unreadable boundary could cause repeated delivery",
+          "severity": "unknown",
+          "class": "fix-introduced"
+        },
+        {
+          "id": "14.4",
+          "summary": "Reading pins outside the restore transaction weakened snapshot consistency",
+          "severity": "unknown",
+          "class": "fix-introduced"
+        },
+        {
+          "id": "14.5",
+          "summary": "The module retained the unused loadPins entry point",
+          "severity": "unknown",
+          "class": "other"
+        }
+      ]
+    },
+    {
+      "round": 15,
+      "visible": true,
+      "findings": [
+        {
+          "id": "15.1",
+          "summary": "Tool-seen tracking missed a failed boundary after prompt-first delivery",
+          "severity": "unknown",
+          "class": "fix-introduced"
+        },
+        {
+          "id": "15.2",
+          "summary": "The unreadable-boundary delivery flag was never cleared",
+          "severity": "unknown",
+          "class": "fix-introduced"
+        },
+        {
+          "id": "15.3",
+          "summary": "The concurrency test did not prove the in-lock marker recheck",
+          "severity": "unknown",
+          "class": "fix-introduced"
+        },
+        {
+          "id": "15.4",
+          "summary": "Missing-module wording incorrectly blamed pin storage",
+          "severity": "unknown",
+          "class": "other"
+        }
+      ]
+    },
+    {
+      "round": 16,
+      "visible": true,
+      "findings": [
+        {
+          "id": "16.1",
+          "summary": "An older stamp could replace a newer acknowledgement",
+          "severity": "unknown",
+          "class": "fix-introduced"
+        },
+        {
+          "id": "16.2",
+          "summary": "Comments overstated atomicity of the two pre_compact writes",
+          "severity": "unknown",
+          "class": "fix-introduced"
+        }
+      ]
+    },
+    {
+      "round": 17,
+      "visible": true,
+      "findings": [
+        {
+          "id": "17.1",
+          "summary": "Fence closers accepted Unicode whitespace beyond spaces and tabs",
+          "severity": "unknown",
+          "class": "other"
+        },
+        {
+          "id": "17.2",
+          "summary": "The acknowledgement guarantee omitted its finite stamp window",
+          "severity": "unknown",
+          "class": "fix-introduced"
+        },
+        {
+          "id": "17.3",
+          "summary": "A pin-lost marker write failure prevented the boundary write",
+          "severity": "unknown",
+          "class": "other"
+        },
+        {
+          "id": "17.4",
+          "summary": "Prompt-first delivery needed evidence against the per-turn ceiling",
+          "severity": "unknown",
+          "class": "re-raised"
+        }
+      ]
+    },
+    {
+      "round": 18,
+      "visible": true,
+      "findings": [
+        {
+          "id": "18.1",
+          "summary": "Retention missed tool-only activity without a language pin",
+          "severity": "unknown",
+          "class": "re-raised"
+        },
+        {
+          "id": "18.2",
+          "summary": "Unreadable boundaries lacked diagnostics on both read paths",
+          "severity": "unknown",
+          "class": "other"
+        },
+        {
+          "id": "18.3",
+          "summary": "The lock-contention result and fallback were insufficiently evidenced",
+          "severity": "unknown",
+          "class": "other"
+        },
+        {
+          "id": "18.4",
+          "summary": "Dispatcher tests lacked restore failure injection",
+          "severity": "unknown",
+          "class": "other"
+        },
+        {
+          "id": "18.5",
+          "summary": "Verbatim wording omitted the normalization applied to stored pins",
+          "severity": "unknown",
+          "class": "re-raised"
+        },
+        {
+          "id": "18.6",
+          "summary": "The budget record omitted the acknowledgement window",
+          "severity": "unknown",
+          "class": "fix-introduced"
+        },
+        {
+          "id": "18.7",
+          "summary": "The bundle did not filter non-string acknowledgements",
+          "severity": "unknown",
+          "class": "other"
+        }
+      ]
+    },
+    {
+      "round": 19,
+      "visible": true,
+      "findings": [
+        {
+          "id": "19.1",
+          "summary": "The review packet omitted source, shared helpers, and test evidence",
+          "severity": "unknown",
+          "class": "other"
+        },
+        {
+          "id": "19.2",
+          "summary": "Tool-call activity touch failures were silent",
+          "severity": "unknown",
+          "class": "fix-introduced"
+        },
+        {
+          "id": "19.3",
+          "summary": "Pin-lost stamp read failures lacked diagnostics",
+          "severity": "unknown",
+          "class": "other"
+        },
+        {
+          "id": "19.4",
+          "summary": "An unreadable prune stamp could trigger a prune",
+          "severity": "unknown",
+          "class": "other"
+        },
+        {
+          "id": "19.5",
+          "summary": "Replay capture could emit a misleading storage-failure notice",
+          "severity": "unknown",
+          "class": "other"
+        },
+        {
+          "id": "19.6",
+          "summary": "Throwing chunk loaders could crash the hook",
+          "severity": "unknown",
+          "class": "other"
+        },
+        {
+          "id": "19.7",
+          "summary": "Prompt-first budget behavior lacked dispatcher-level evidence",
+          "severity": "unknown",
+          "class": "re-raised"
+        }
+      ]
+    },
+    {
+      "round": 20,
+      "visible": true,
+      "findings": [
+        {
+          "id": "20.1",
+          "summary": "Capture could overwrite an unreadable existing pin file",
+          "severity": "unknown",
+          "class": "other"
+        },
+        {
+          "id": "20.2",
+          "summary": "Nested same-name injected regions exposed enclosed directives",
+          "severity": "unknown",
+          "class": "other"
+        },
+        {
+          "id": "20.3",
+          "summary": "Negative dispatcher assertions could pass when the process crashed",
+          "severity": "unknown",
+          "class": "other"
+        },
+        {
+          "id": "20.4",
+          "summary": "A broken restore record could trigger unsolicited injection",
+          "severity": "unknown",
+          "class": "other"
+        },
+        {
+          "id": "20.5",
+          "summary": "Shared locking could proceed without a companion guard",
+          "severity": "unknown",
+          "class": "other"
+        },
+        {
+          "id": "20.6",
+          "summary": "The role of per-slot budgets versus runtime limits needed clarification",
+          "severity": "unknown",
+          "class": "re-raised"
+        }
+      ]
+    },
+    {
+      "round": 21,
+      "visible": true,
+      "findings": [
+        {
+          "id": "21.1",
+          "summary": "Removing wrappers before fence scanning could expose fenced directives",
+          "severity": "unknown",
+          "class": "fix-introduced"
+        },
+        {
+          "id": "21.2",
+          "summary": "Lone surrogates invalidated the assumed serialization bound",
+          "severity": "unknown",
+          "class": "other"
+        },
+        {
+          "id": "21.3",
+          "summary": "Pin writers could lose exclusion when guard creation failed",
+          "severity": "unknown",
+          "class": "re-raised"
+        }
+      ]
+    },
+    {
+      "round": 22,
+      "visible": true,
+      "findings": [
+        {
+          "id": "22.1",
+          "summary": "Sequential wrapper filtering mishandled overlapping pastes, fences, and regions",
+          "severity": "unknown",
+          "class": "fix-introduced"
+        },
+        {
+          "id": "22.2",
+          "summary": "Tool restore failure could lose retry after a failed boundary write",
+          "severity": "unknown",
+          "class": "other"
+        },
+        {
+          "id": "22.3",
+          "summary": "Tests did not exercise the shipped chunk through its loader",
+          "severity": "unknown",
+          "class": "other"
+        }
+      ]
+    },
+    {
+      "round": 23,
+      "visible": true,
+      "findings": [
+        {
+          "id": "23.1",
+          "summary": "Attributed host envelopes exposed enclosed directives",
+          "severity": "unknown",
+          "class": "fix-introduced"
+        },
+        {
+          "id": "23.2",
+          "summary": "Region recognition mishandled overlapping and unclosed envelopes",
+          "severity": "unknown",
+          "class": "fix-introduced"
+        },
+        {
+          "id": "23.3",
+          "summary": "Wrapper overlap detection could require superlinear work",
+          "severity": "unknown",
+          "class": "fix-introduced"
+        },
+        {
+          "id": "23.4",
+          "summary": "Existence checks confused inaccessible pin paths with absent pins",
+          "severity": "unknown",
+          "class": "other"
+        },
+        {
+          "id": "23.5",
+          "summary": "Stray paste closers still discarded preceding text",
+          "severity": "unknown",
+          "class": "re-raised"
+        },
+        {
+          "id": "23.6",
+          "summary": "A reviewer questioned documentation of the opt-in strict lock",
+          "severity": "unknown",
+          "class": "other"
+        },
+        {
+          "id": "23.7",
+          "summary": "A reviewer questioned the subagent digest's remaining byte allowance",
+          "severity": "unknown",
+          "class": "re-raised"
+        }
+      ]
+    },
+    {
+      "round": 24,
+      "visible": true,
+      "findings": [
+        {
+          "id": "24.1",
+          "summary": "Quoted tag delimiters could defeat attributed-envelope recognition",
+          "severity": "unknown",
+          "class": "fix-introduced"
+        },
+        {
+          "id": "24.2",
+          "summary": "Lock or write failures bypassed the new restore retry mechanism",
+          "severity": "unknown",
+          "class": "other"
+        },
+        {
+          "id": "24.3",
+          "summary": "Paste scanning repeatedly searched for a distant closing angle bracket",
+          "severity": "unknown",
+          "class": "other"
+        }
+      ]
+    },
+    {
+      "round": 25,
+      "visible": true,
+      "findings": [
+        {
+          "id": "25.1",
+          "summary": "Multiline or malformed openers could expose directives",
+          "severity": "unknown",
+          "class": "fix-introduced"
+        },
+        {
+          "id": "25.2",
+          "summary": "Reading then deleting the pin-lost marker could erase its successor",
+          "severity": "unknown",
+          "class": "other"
+        },
+        {
+          "id": "25.3",
+          "summary": "Incompatible or throwing chunk methods could escape error handling",
+          "severity": "unknown",
+          "class": "fix-introduced"
+        },
+        {
+          "id": "25.4",
+          "summary": "Bundle and module disagreed on nonboolean delivery state",
+          "severity": "unknown",
+          "class": "other"
+        }
+      ]
+    },
+    {
+      "round": 26,
+      "visible": true,
+      "findings": [
+        {
+          "id": "26.1",
+          "summary": "Mid-line tag openers bypassed the new capture cutoff",
+          "severity": "unknown",
+          "class": "fix-introduced"
+        },
+        {
+          "id": "26.2",
+          "summary": "Claim-file cleanup errors could abort restoration",
+          "severity": "unknown",
+          "class": "fix-introduced"
+        },
+        {
+          "id": "26.3",
+          "summary": "The dispatch bundle's remaining headroom lacked justification",
+          "severity": "unknown",
+          "class": "other"
+        },
+        {
+          "id": "26.4",
+          "summary": "The guide omitted host-specific capture and restore coverage",
+          "severity": "unknown",
+          "class": "other"
+        }
+      ]
+    },
+    {
+      "round": 27,
+      "visible": true,
+      "findings": [
+        {
+          "id": "27.1",
+          "summary": "Line separators could truncate directives or break unpin matching",
+          "severity": "unknown",
+          "class": "other"
+        },
+        {
+          "id": "27.2",
+          "summary": "The post-tool budget exception lacked a worst-case dispatcher test",
+          "severity": "unknown",
+          "class": "other"
+        },
+        {
+          "id": "27.3",
+          "summary": "Provenance claims overstated what host-framing recognition could authenticate",
+          "severity": "unknown",
+          "class": "other"
+        },
+        {
+          "id": "27.4",
+          "summary": "Restore wording obscured snapshot behavior during concurrent capture",
+          "severity": "unknown",
+          "class": "re-raised"
+        },
+        {
+          "id": "27.5",
+          "summary": "Unreadable pin-file age could lead to retention pruning",
+          "severity": "unknown",
+          "class": "other"
+        }
+      ]
+    },
+    {
+      "round": 28,
+      "visible": true,
+      "findings": [
+        {
+          "id": "28.1",
+          "summary": "Fence opener matching backtracked quadratically before line separators",
+          "severity": "unknown",
+          "class": "other"
+        },
+        {
+          "id": "28.2",
+          "summary": "The new dispatcher fixture did not exercise maximum pin bytes",
+          "severity": "unknown",
+          "class": "fix-introduced"
+        },
+        {
+          "id": "28.3",
+          "summary": "A budget-dropped tool restore had already recorded its delivery",
+          "severity": "unknown",
+          "class": "re-raised"
+        }
+      ]
+    },
+    {
+      "round": 29,
+      "visible": true,
+      "findings": [
+        {
+          "id": "29.1",
+          "summary": "A directive's own markup could silently exclude that directive",
+          "severity": "unknown",
+          "class": "other"
+        },
+        {
+          "id": "29.2",
+          "summary": "Excluded directives were silently ignored",
+          "severity": "unknown",
+          "class": "other"
+        },
+        {
+          "id": "29.3",
+          "summary": "The revised dispatcher fixture still fell short of the exact cap",
+          "severity": "unknown",
+          "class": "fix-introduced"
+        },
+        {
+          "id": "29.4",
+          "summary": "Bundle and chunk maintained separate restore-record readers",
+          "severity": "unknown",
+          "class": "other"
+        },
+        {
+          "id": "29.5",
+          "summary": "Stale claim files accumulated after interrupted restores",
+          "severity": "unknown",
+          "class": "other"
+        }
+      ]
+    },
+    {
+      "round": 30,
+      "visible": true,
+      "findings": [
+        {
+          "id": "30.1",
+          "summary": "Tool claims could disappear before restoration or durable retry",
+          "severity": "unknown",
+          "class": "fix-introduced"
+        },
+        {
+          "id": "30.2",
+          "summary": "Prompt-first delivery could commit and crash without owing a restatement",
+          "severity": "unknown",
+          "class": "other"
+        },
+        {
+          "id": "30.3",
+          "summary": "The capacity comment omitted escaping and multibyte characters",
+          "severity": "unknown",
+          "class": "other"
+        }
+      ]
+    },
+    {
+      "round": 31,
+      "visible": true,
+      "findings": [
+        {
+          "id": "31.1",
+          "summary": "Recovered claims reused stamps that could already be acknowledged",
+          "severity": "unknown",
+          "class": "fix-introduced"
+        },
+        {
+          "id": "31.2",
+          "summary": "Rename preserved old marker timestamps, making live claims look abandoned",
+          "severity": "unknown",
+          "class": "fix-introduced"
+        },
+        {
+          "id": "31.3",
+          "summary": "Finally removed the claim even when emission threw",
+          "severity": "unknown",
+          "class": "fix-introduced"
+        },
+        {
+          "id": "31.4",
+          "summary": "Budget frequency descriptions omitted newly possible restore lines",
+          "severity": "unknown",
+          "class": "fix-introduced"
+        },
+        {
+          "id": "31.5",
+          "summary": "A reviewer questioned whether the restore transaction used strict locking",
+          "severity": "unknown",
+          "class": "re-raised"
+        },
+        {
+          "id": "31.6",
+          "summary": "A reviewer questioned whether the combined budget included lock failures",
+          "severity": "unknown",
+          "class": "re-raised"
+        }
+      ]
+    },
+    {
+      "round": 32,
+      "visible": true,
+      "findings": [
+        {
+          "id": "32.1",
+          "summary": "An unsettled restore released its claim when retry publication failed",
+          "severity": "unknown",
+          "class": "fix-introduced"
+        },
+        {
+          "id": "32.2",
+          "summary": "Abandoned-claim recovery could reopen one compaction indefinitely",
+          "severity": "unknown",
+          "class": "other"
+        },
+        {
+          "id": "32.3",
+          "summary": "Claim-release wording overstated delivery to the host",
+          "severity": "unknown",
+          "class": "fix-introduced"
+        }
+      ]
+    },
+    {
+      "round": 33,
+      "visible": true,
+      "findings": [
+        {
+          "id": "33.1",
+          "summary": "Concurrent recovery could fork the same claim's retry generation",
+          "severity": "unknown",
+          "class": "fix-introduced"
+        },
+        {
+          "id": "33.2",
+          "summary": "In-place claim rewrites could lose the count or mutate published markers",
+          "severity": "unknown",
+          "class": "fix-introduced"
+        },
+        {
+          "id": "33.3",
+          "summary": "A reviewer questioned claim retention when restoreClaimed throws",
+          "severity": "unknown",
+          "class": "re-raised"
+        },
+        {
+          "id": "33.4",
+          "summary": "The shared helper lacked direct tests of strict lock behavior",
+          "severity": "unknown",
+          "class": "other"
+        }
+      ]
+    },
+    {
+      "round": 34,
+      "visible": true,
+      "findings": [
+        {
+          "id": "34.1",
+          "summary": "Undeletable claims could fork retry lineages and exceed the bound",
+          "severity": "unknown",
+          "class": "fix-introduced"
+        },
+        {
+          "id": "34.2",
+          "summary": "A failed link spent a retry without publishing a marker",
+          "severity": "unknown",
+          "class": "fix-introduced"
+        },
+        {
+          "id": "34.3",
+          "summary": "Nonboolean pending state was treated as false",
+          "severity": "unknown",
+          "class": "other"
+        },
+        {
+          "id": "34.4",
+          "summary": "The pre_compact comment overstated recovery when writes failed",
+          "severity": "unknown",
+          "class": "other"
+        },
+        {
+          "id": "34.5",
+          "summary": "The retention comment misstated when pruning runs",
+          "severity": "unknown",
+          "class": "other"
+        },
+        {
+          "id": "34.6",
+          "summary": "A reviewer questioned whether paste span scanning was linear",
+          "severity": "unknown",
+          "class": "re-raised"
+        }
+      ]
+    },
+    {
+      "round": 35,
+      "visible": true,
+      "findings": [
+        {
+          "id": "35.1",
+          "summary": "Ledger eviction reset retry allowances for surviving claims",
+          "severity": "unknown",
+          "class": "fix-introduced"
+        },
+        {
+          "id": "35.2",
+          "summary": "Unsettled prompt restatements repeated on every prompt",
+          "severity": "unknown",
+          "class": "re-raised"
+        },
+        {
+          "id": "35.3",
+          "summary": "Recovery directory listing failures were silent",
+          "severity": "unknown",
+          "class": "other"
+        },
+        {
+          "id": "35.4",
+          "summary": "Retention left old companion files after deleting their pin file",
+          "severity": "unknown",
+          "class": "other"
+        }
+      ]
+    },
+    {
+      "round": 36,
+      "visible": true,
+      "findings": [
+        {
+          "id": "36.1",
+          "summary": "Concurrent prompts could double-spend an unlocked fallback count",
+          "severity": "unknown",
+          "class": "fix-introduced"
+        },
+        {
+          "id": "36.2",
+          "summary": "An old prompt could reset a newer boundary's fallback allowance",
+          "severity": "unknown",
+          "class": "fix-introduced"
+        },
+        {
+          "id": "36.3",
+          "summary": "Settled sessions retained empty recovery ledgers",
+          "severity": "unknown",
+          "class": "fix-introduced"
+        }
+      ]
+    },
+    {
+      "round": 37,
+      "visible": true,
+      "findings": [
+        {
+          "id": "37.1",
+          "summary": "The fallback record accepted malformed counts and stamps",
+          "severity": "unknown",
+          "class": "fix-introduced"
+        },
+        {
+          "id": "37.2",
+          "summary": "Unreadable fallback counters were treated as absent",
+          "severity": "unknown",
+          "class": "fix-introduced"
+        },
+        {
+          "id": "37.3",
+          "summary": "The empty-ledger cleanup missed ledgers already empty",
+          "severity": "unknown",
+          "class": "fix-introduced"
+        },
+        {
+          "id": "37.4",
+          "summary": "The description omitted effects on language-only restoration",
+          "severity": "unknown",
+          "class": "other"
+        },
+        {
+          "id": "37.5",
+          "summary": "An unreadable retention stamp skipped pruning without diagnostics",
+          "severity": "unknown",
+          "class": "other"
+        }
+      ]
+    },
+    {
+      "round": 38,
+      "visible": true,
+      "findings": [
+        {
+          "id": "38.1",
+          "summary": "Fresh retry stamps gave a compaction another fallback allowance",
+          "severity": "unknown",
+          "class": "other"
+        },
+        {
+          "id": "38.2",
+          "summary": "An older unsettled restore could overwrite a newer boundary",
+          "severity": "unknown",
+          "class": "other"
+        },
+        {
+          "id": "38.3",
+          "summary": "A failed language distance reset released the restore claim",
+          "severity": "unknown",
+          "class": "other"
+        }
+      ]
+    },
+    {
+      "round": 39,
+      "visible": true,
+      "findings": [
+        {
+          "id": "39.1",
+          "summary": "Missing or throwing prompt modules bypassed the fallback allowance",
+          "severity": "unknown",
+          "class": "other"
+        },
+        {
+          "id": "39.2",
+          "summary": "Recovery listed the marker directory twice despite its comment",
+          "severity": "unknown",
+          "class": "other"
+        },
+        {
+          "id": "39.3",
+          "summary": "Claim release needed to wait for stdout.write completion",
+          "severity": "unknown",
+          "class": "re-raised"
+        }
+      ]
+    },
+    {
+      "round": 40,
+      "visible": true,
+      "findings": [
+        {
+          "id": "40.1",
+          "summary": "An uncountable fallback injected a notice on every prompt",
+          "severity": "unknown",
+          "class": "fix-introduced"
+        },
+        {
+          "id": "40.2",
+          "summary": "A malformed fallback counter blocked subsequent compactions",
+          "severity": "unknown",
+          "class": "other"
+        },
+        {
+          "id": "40.3",
+          "summary": "Every tool call still listed the shared marker directory",
+          "severity": "unknown",
+          "class": "other"
+        },
+        {
+          "id": "40.4",
+          "summary": "Prompt module runtime errors were reported as load failures",
+          "severity": "unknown",
+          "class": "other"
+        }
+      ]
+    },
+    {
+      "round": 41,
+      "visible": true,
+      "findings": [
+        {
+          "id": "41.1",
+          "summary": "Capture and tool restore still obscured module runtime errors",
+          "severity": "unknown",
+          "class": "re-raised"
+        }
+      ]
+    },
+    {
+      "round": 42,
+      "visible": true,
+      "findings": [
+        {
+          "id": "42.1",
+          "summary": "Chunk resolution, loading, and factory failures lacked diagnostics",
+          "severity": "unknown",
+          "class": "other"
+        },
+        {
+          "id": "42.2",
+          "summary": "Delivery claims overstated guarantees after dispatcher capture",
+          "severity": "unknown",
+          "class": "re-raised"
+        },
+        {
+          "id": "42.3",
+          "summary": "Documentation omitted the combined restore allowance under persistent failure",
+          "severity": "unknown",
+          "class": "other"
+        }
+      ]
+    },
+    {
+      "round": 43,
+      "visible": true,
+      "findings": [
+        {
+          "id": "43.1",
+          "summary": "Inline envelopes inside directive lines could be applied",
+          "severity": "unknown",
+          "class": "other"
+        },
+        {
+          "id": "43.2",
+          "summary": "Directives after host-generated prefixes could be applied",
+          "severity": "unknown",
+          "class": "other"
+        },
+        {
+          "id": "43.3",
+          "summary": "The restore protocol did not enforce its stated emission bound",
+          "severity": "unknown",
+          "class": "re-raised"
+        },
+        {
+          "id": "43.4",
+          "summary": "Retention could prune a live session's restore record",
+          "severity": "unknown",
+          "class": "other"
+        },
+        {
+          "id": "43.5",
+          "summary": "The packet omits the fifth finding's text",
+          "severity": "unknown",
+          "class": "other"
+        }
+      ]
+    },
+    {
+      "round": 44,
+      "visible": true,
+      "findings": [
+        {
+          "id": "44.1",
+          "summary": "Bare openers with later closers bypassed directive-line envelope checks",
+          "severity": "unknown",
+          "class": "fix-introduced"
+        },
+        {
+          "id": "44.2",
+          "summary": "The new attributed-opener regex took quadratic time",
+          "severity": "unknown",
+          "class": "fix-introduced"
+        },
+        {
+          "id": "44.3",
+          "summary": "The simplified restore could inject pin lines during replay",
+          "severity": "unknown",
+          "class": "fix-introduced"
+        },
+        {
+          "id": "44.4",
+          "summary": "Language restoration lacked regression coverage for the simplified protocol",
+          "severity": "unknown",
+          "class": "fix-introduced"
+        },
+        {
+          "id": "44.5",
+          "summary": "Test titles still described removed recovery behavior",
+          "severity": "unknown",
+          "class": "fix-introduced"
+        },
+        {
+          "id": "44.6",
+          "summary": "A reviewer questioned retaining the shared strict lock option",
+          "severity": "unknown",
+          "class": "re-raised"
+        },
+        {
+          "id": "44.7",
+          "summary": "A reviewer questioned backtick restrictions on fence openers",
+          "severity": "unknown",
+          "class": "re-raised"
+        },
+        {
+          "id": "44.8",
+          "summary": "A reviewer questioned treating unstatable files as active",
+          "severity": "unknown",
+          "class": "other"
+        }
+      ]
+    },
+    {
+      "round": 45,
+      "visible": true,
+      "findings": [
+        {
+          "id": "45.1",
+          "summary": "Split or spaced openers bypassed the new later-closer check",
+          "severity": "unknown",
+          "class": "fix-introduced"
+        },
+        {
+          "id": "45.2",
+          "summary": "Synthetic prompts lacked a rejection notice when the chunk was unavailable",
+          "severity": "unknown",
+          "class": "other"
+        },
+        {
+          "id": "45.3",
+          "summary": "Read-then-delete could remove a newer pin-lost marker",
+          "severity": "unknown",
+          "class": "re-raised"
+        }
+      ]
+    },
+    {
+      "round": 46,
+      "visible": true,
+      "findings": [
+        {
+          "id": "46.1",
+          "summary": "An unreadable restore record could be mistaken for an absent record",
+          "severity": "unknown",
+          "class": "other"
+        },
+        {
+          "id": "46.2",
+          "summary": "Restore records accepted malformed or oversized acknowledgement arrays",
+          "severity": "unknown",
+          "class": "other"
+        },
+        {
+          "id": "46.3",
+          "summary": "Throwing or incompatible chunks bypassed synthetic directive notices",
+          "severity": "unknown",
+          "class": "fix-introduced"
+        },
+        {
+          "id": "46.4",
+          "summary": "The restore bound omitted acknowledgement loss after record corruption",
+          "severity": "unknown",
+          "class": "other"
+        },
+        {
+          "id": "46.5",
+          "summary": "A reviewer questioned replacing the taken marker on Windows",
+          "severity": "unknown",
+          "class": "fix-introduced"
+        },
+        {
+          "id": "46.6",
+          "summary": "A concurrent capture could commit after the restore snapshot",
+          "severity": "unknown",
+          "class": "re-raised"
+        },
+        {
+          "id": "46.7",
+          "summary": "A reviewer again questioned the strict lock option",
+          "severity": "unknown",
+          "class": "re-raised"
+        }
+      ]
+    },
+    {
+      "round": 47,
+      "visible": true,
+      "findings": [
+        {
+          "id": "47.1",
+          "summary": "Restore writers could persist stamps the new validator would reject",
+          "severity": "unknown",
+          "class": "fix-introduced"
+        },
+        {
+          "id": "47.2",
+          "summary": "The validator accepted duplicate acknowledgement stamps",
+          "severity": "unknown",
+          "class": "fix-introduced"
+        },
+        {
+          "id": "47.3",
+          "summary": "Pin-chunk headroom fell short of its stated derivation",
+          "severity": "unknown",
+          "class": "fix-introduced"
+        },
+        {
+          "id": "47.4",
+          "summary": "Unreadable-record diagnostics could repeat on every prompt",
+          "severity": "unknown",
+          "class": "fix-introduced"
+        },
+        {
+          "id": "47.5",
+          "summary": "The stamp writer lacked an explicit length check",
+          "severity": "unknown",
+          "class": "fix-introduced"
+        }
+      ]
+    },
+    {
+      "round": 48,
+      "visible": true,
+      "findings": [
+        {
+          "id": "48.1",
+          "summary": "Unreadable records triggered the tool path's unrecorded lock-failure delivery",
+          "severity": "unknown",
+          "class": "other"
+        },
+        {
+          "id": "48.2",
+          "summary": "Hook fallback notices bypassed replay guards inside the chunk",
+          "severity": "unknown",
+          "class": "re-raised"
+        },
+        {
+          "id": "48.3",
+          "summary": "A reviewer wanted the oversized-stamp admission rationale documented",
+          "severity": "unknown",
+          "class": "fix-introduced"
+        }
+      ]
+    },
+    {
+      "round": 49,
+      "visible": true,
+      "findings": [
+        {
+          "id": "49.1",
+          "summary": "Unknown marker stamps could reopen prompt-first delivery and exceed the bound",
+          "severity": "unknown",
+          "class": "other"
+        },
+        {
+          "id": "49.2",
+          "summary": "Transaction failure wording incorrectly implied lock acquisition failure",
+          "severity": "unknown",
+          "class": "fix-introduced"
+        }
+      ]
+    },
+    {
+      "round": 50,
+      "visible": true,
+      "findings": [
+        {
+          "id": "50.1",
+          "summary": "Replay could expose live parent pins through the subagent carrier",
+          "severity": "unknown",
+          "class": "re-raised"
+        },
+        {
+          "id": "50.2",
+          "summary": "Dispatcher assertions inspecting only the last line could miss emissions",
+          "severity": "unknown",
+          "class": "other"
+        },
+        {
+          "id": "50.3",
+          "summary": "The unknown-stamp guard needed a comment explaining its tradeoff",
+          "severity": "unknown",
+          "class": "fix-introduced"
+        }
+      ]
+    },
+    {
+      "round": 51,
+      "visible": true,
+      "findings": [
+        {
+          "id": "51.1",
+          "summary": "Host frames mid-prompt failed to stop directive capture",
+          "severity": "unknown",
+          "class": "other"
+        },
+        {
+          "id": "51.2",
+          "summary": "An unremovable stale guard caused an infinite acquisition loop",
+          "severity": "unknown",
+          "class": "other"
+        },
+        {
+          "id": "51.3",
+          "summary": "An untakeable compaction marker starved language distance re-emission",
+          "severity": "unknown",
+          "class": "other"
+        }
+      ]
+    },
+    {
+      "round": 52,
+      "visible": true,
+      "findings": [
+        {
+          "id": "52.1",
+          "summary": "Persistent guard stat failures bypassed retry pacing and deadlines",
+          "severity": "unknown",
+          "class": "other"
+        },
+        {
+          "id": "52.2",
+          "summary": "The packet quoted an outdated version of the changed helper",
+          "severity": "unknown",
+          "class": "fix-introduced"
+        },
+        {
+          "id": "52.3",
+          "summary": "The record size comment conflated generated and accepted stamps",
+          "severity": "unknown",
+          "class": "other"
+        },
+        {
+          "id": "52.4",
+          "summary": "A reviewer questioned fence scanning past the line end",
+          "severity": "unknown",
+          "class": "other"
+        },
+        {
+          "id": "52.5",
+          "summary": "Pruning could repeat when the prune stamp could not be written",
+          "severity": "unknown",
+          "class": "other"
+        },
+        {
+          "id": "52.6",
+          "summary": "Subagent pin reads were uncached",
+          "severity": "unknown",
+          "class": "other"
+        }
+      ]
+    },
+    {
+      "round": 53,
+      "visible": true,
+      "findings": [
+        {
+          "id": "53.1",
+          "summary": "Restore lock contention could stall hooks for five seconds",
+          "severity": "unknown",
+          "class": "other"
+        },
+        {
+          "id": "53.2",
+          "summary": "Recently paced retry branches ignored nonblocking lock requests",
+          "severity": "unknown",
+          "class": "fix-introduced"
+        },
+        {
+          "id": "53.3",
+          "summary": "Invalid restore bookkeeping could be replaced during reopening",
+          "severity": "unknown",
+          "class": "re-raised"
+        },
+        {
+          "id": "53.4",
+          "summary": "A reviewer questioned whether unrecorded tool delivery could repeat",
+          "severity": "unknown",
+          "class": "re-raised"
+        }
+      ]
+    },
+    {
+      "round": 54,
+      "visible": true,
+      "findings": [
+        {
+          "id": "54.1",
+          "summary": "Stale-lock reclamation could delete another holder's fresh guard",
+          "severity": "high",
+          "class": "other"
+        },
+        {
+          "id": "54.2",
+          "summary": "Language-mirror's tool-write lock had the same stale-reclaim race",
+          "severity": "high",
+          "class": "other"
+        },
+        {
+          "id": "54.3",
+          "summary": "The brief capture notice hid unmatched unpin directives",
+          "severity": "medium",
+          "class": "other"
+        }
+      ]
+    },
+    {
+      "round": 55,
+      "visible": true,
+      "findings": [
+        {
+          "id": "55.1",
+          "summary": "Moving the guard aside let a third contender acquire prematurely",
+          "severity": "unknown",
+          "class": "fix-introduced"
+        },
+        {
+          "id": "55.2",
+          "summary": "A failed link-back could delete a live guard",
+          "severity": "unknown",
+          "class": "fix-introduced"
+        },
+        {
+          "id": "55.3",
+          "summary": "The concurrency test asserted a stricter bound than the protocol",
+          "severity": "unknown",
+          "class": "other"
+        }
+      ]
+    },
+    {
+      "round": 56,
+      "visible": false,
+      "findings": []
+    }
+  ]
+}

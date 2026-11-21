@@ -1,0 +1,216 @@
+{
+  "subject": "verified-stale-lock-reclaim-ratification",
+  "round1_findings": 8,
+  "rounds": [
+    {
+      "round": 2,
+      "visible": true,
+      "findings": [
+        {
+          "id": "2.1",
+          "summary": "Unbounded generation allocation past fifteen-digit listing limit",
+          "severity": "high",
+          "class": "other"
+        }
+      ]
+    },
+    {
+      "round": 3,
+      "visible": true,
+      "findings": [
+        {
+          "id": "3.1",
+          "summary": "Blind write publishes when no lock taken",
+          "severity": "medium",
+          "class": "re-raised"
+        },
+        {
+          "id": "3.2",
+          "summary": "Every-site coverage claim overstated",
+          "severity": "medium",
+          "class": "other"
+        },
+        {
+          "id": "3.3",
+          "summary": "Restored strict tests pass a lock admitting nobody",
+          "severity": "medium",
+          "class": "fix-introduced"
+        }
+      ]
+    },
+    {
+      "round": 4,
+      "visible": true,
+      "findings": [
+        {
+          "id": "4.1",
+          "summary": "Budget entry and integration referenced instead of shown",
+          "severity": "medium",
+          "class": "other"
+        },
+        {
+          "id": "4.2",
+          "summary": "Helper header still says every site",
+          "severity": "low",
+          "class": "re-raised"
+        },
+        {
+          "id": "4.3",
+          "summary": "Blind-write note omits unguarded false case",
+          "severity": "low",
+          "class": "re-raised"
+        }
+      ]
+    },
+    {
+      "round": 5,
+      "visible": true,
+      "findings": [
+        {
+          "id": "5.1",
+          "summary": "update_*_under_lock proceed unguarded on false result",
+          "severity": "high",
+          "class": "other"
+        }
+      ]
+    },
+    {
+      "round": 6,
+      "visible": true,
+      "findings": []
+    },
+    {
+      "round": 7,
+      "visible": true,
+      "findings": []
+    },
+    {
+      "round": 8,
+      "visible": true,
+      "findings": [
+        {
+          "id": "8.1",
+          "summary": "Pruner removing whole family restarts numbering, two holders",
+          "severity": "high",
+          "class": "fix-introduced"
+        }
+      ]
+    },
+    {
+      "round": 9,
+      "visible": true,
+      "findings": [
+        {
+          "id": "9.1",
+          "summary": "Pruner judge-then-remove is stat-then-remove breaker",
+          "severity": "high",
+          "class": "fix-introduced"
+        },
+        {
+          "id": "9.2",
+          "summary": "Explorer should split pruner steps, concurrent pruners, scripted schedule",
+          "severity": "medium",
+          "class": "other"
+        }
+      ]
+    },
+    {
+      "round": 10,
+      "visible": true,
+      "findings": [
+        {
+          "id": "10.1",
+          "summary": "Back-off removes highest generation, family empties, double holder",
+          "severity": "high",
+          "class": "fix-introduced"
+        }
+      ]
+    },
+    {
+      "round": 11,
+      "visible": true,
+      "findings": [
+        {
+          "id": "11.1",
+          "summary": "Wording of the residual claim",
+          "severity": "unknown",
+          "class": "other"
+        }
+      ]
+    },
+    {
+      "round": 12,
+      "visible": true,
+      "findings": [
+        {
+          "id": "12.1",
+          "summary": "Prompt referenced earlier prompt for state_io and budget",
+          "severity": "low",
+          "class": "re-raised"
+        },
+        {
+          "id": "12.2",
+          "summary": "Strict-only test counts calls and options in aggregate",
+          "severity": "medium",
+          "class": "single-seat"
+        },
+        {
+          "id": "12.3",
+          "summary": "Guard files drop 0o600 mode two sites used",
+          "severity": "medium",
+          "class": "single-seat"
+        },
+        {
+          "id": "12.4",
+          "summary": "Recheck comment describes pruner behaviour no longer shipped",
+          "severity": "low",
+          "class": "fix-introduced"
+        }
+      ]
+    },
+    {
+      "round": 13,
+      "visible": true,
+      "findings": [
+        {
+          "id": "13.1",
+          "summary": "Recheck comment wrongly says missing predecessor only external",
+          "severity": "low",
+          "class": "fix-introduced"
+        }
+      ]
+    },
+    {
+      "round": 14,
+      "visible": true,
+      "findings": []
+    },
+    {
+      "round": 15,
+      "visible": true,
+      "findings": []
+    },
+    {
+      "round": 16,
+      "visible": true,
+      "findings": [
+        {
+          "id": "16.1",
+          "summary": "Attempt still runs after sleep crosses the deadline",
+          "severity": "medium",
+          "class": "fix-introduced"
+        }
+      ]
+    },
+    {
+      "round": 17,
+      "visible": false,
+      "findings": []
+    },
+    {
+      "round": 18,
+      "visible": false,
+      "findings": []
+    }
+  ]
+}
