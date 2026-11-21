@@ -43,8 +43,8 @@ EVERY REPLY WITH NUMBERED OPTIONS RUNS THE SELF-CHECK. NO EXCEPTIONS.
 SKIPPING IT IS A RULE VIOLATION, NOT A SLIP.
 ```
 
-Mechanical backstop for Iron Laws 1 and 2 (non-zero exit on either), a safety
-net under the self-scan rather than a replacement for it:
+Backstop for laws 1–2 (non-zero exit on either), a net under the self-scan, not
+a replacement:
 `./scripts-run src/scripts/check_reply_consistency --stdin < draft.md`
 It takes a DRAFT, so it cannot see Iron Law 3, which is about a transcript.
 
@@ -78,15 +78,14 @@ A TRAILING FREE-TEXT OFFER IS AN ASK. A BARE YES/NO IS AN ASK.
 
 The ask too small for a block escapes the format; no gate. Evidence: mechanics.
 
-## Iron Law 4 — A Question Carries Its Own Context
+## Iron Law 4 — A Self-Contained Ask
 
 ```
-THE USER NEVER SAW YOUR TOOL OUTPUT. EVERY ASK STATES WHAT IS DECIDED,
-WHY IT BLOCKS NOW, WHAT EACH OPTION CHANGES. NO BARE FILE/ADR/BRANCH/PR/
-FINDING ID — SAY WHAT IT IS. A NATIVE ASK HIDES THE REPLY ABOVE: STAND ALONE.
+THE USER SAW NO TOOL OUTPUT. EVERY ASK STATES WHAT IS DECIDED, WHY IT
+BLOCKS NOW, WHAT EACH OPTION CHANGES. GLOSS EVERY ID. NATIVE ASK STANDS ALONE.
 ```
 
-Detail: mechanics § Context-carrying asks.
+Detail: `context-carrying-asks` context.
 
 ## Mechanics — rationale, failure modes, format details, examples
 
