@@ -81,6 +81,17 @@ estimate <file>` is free and answers parse-and-cost. Run both before concluding
 the council is not an option — and note the question goes in a **file**, since
 prose passed as an argument overflows the argument limit.
 
+### Before the next ratification round
+
+In a checkout that ships `src/scripts/review_convergence.ts`, run
+`./scripts-run src/scripts/review_convergence --subject <slug>` before writing
+round N+1's ratification packet. On `stalled` or `diverging`, stop
+re-submitting and take ADR-268 § 4's owner rung, attaching the subject's row
+from `agents/evidence/analysis/review-loop-replay-2026-11.md` where it has one.
+Only the owner authorises another round after that. The verdict refuses
+nothing; if the script fails or prints another verdict, the ratification
+procedure continues unchanged.
+
 ## When to use
 
 * The host agent has drafted a roadmap, plan, or design and wants an
