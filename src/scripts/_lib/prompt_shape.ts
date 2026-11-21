@@ -381,7 +381,10 @@ export function ownerProse(prompt: string): OwnerSpans & { text: string } {
   // Hunks are read on the raw lines: stripping a region first could merge rows
   // and run a declared length onto the owner's text (round 21).
   const patchless = collapseHunks(prompt.split(/\r\n?|\n/)).join("\n");
-  return { ...ownerSpans(stripInjectedRegions(patchless, " ")), text: prompt };
+  // Inline terminal regions become a space first, so `un<bash-stdout>…</bash-stdout>d`
+  // cannot become `und` (round 17); the reply scorer keeps deletion (round 18).
+  const spaced = patchless.replace(TERMINAL_PANE_REGION, " ");
+  return { ...ownerSpans(stripInjectedRegions(spaced)), text: prompt };
 }
 
 /** A line that is nothing but an opening tag, with the tag name captured. */
@@ -453,10 +456,8 @@ const TERMINAL_PANE_REGION = /<(bash-input|bash-stdout|bash-stderr)>[\s\S]*?<\/\
  * wrappers do not nest by name, and stopping early keeps more human text than
  * scanning past the wrong close would.
  */
-export function stripInjectedRegions(text: string, separator = ""): string {
-  // `ownerProse` passes a space so `un<bash-stdout>…</bash-stdout>d` cannot
-  // become `und` (round 17); the reply scorer keeps deletion (round 18).
-  const lines = text.replace(TERMINAL_PANE_REGION, separator).split("\n");
+export function stripInjectedRegions(text: string): string {
+  const lines = text.replace(TERMINAL_PANE_REGION, "").split("\n");
   const kept: string[] = [];
   for (let i = 0; i < lines.length; i++) {
     const line = lines[i] ?? "";

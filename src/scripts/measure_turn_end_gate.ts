@@ -94,12 +94,12 @@ import { fileURLToPath, pathToFileURL } from 'node:url';
 import {
     classify,
     isSyntheticPrompt,
-    nextState,
     scoreText,
     type PinState,
     type Verdict,
 } from './language_mirror_hook.js';
 import { ownerSpans, stripInjectedRegions } from './_lib/prompt_shape.js';
+import { classifyOwnerProse, ownerProseNextState } from './_lib/owner_prose_pin.js';
 import { assistantText, scanSession } from './conformance_scan.js';
 import { entryText, isSidechain } from './_lib/transcript_entry.js';
 import { isTestPath } from './_lib/test_path.js';
@@ -1065,8 +1065,10 @@ const SPLIT_SESSION_ID = 'language-split-replay';
  * Replay the pin over a transcript corpus and charge every `language` fire to
  * the shape of the entry that set the pin.
  *
- * The pin is replayed with the hook's own `classify` and `nextState`, and read
- * back through the gate's own `gatePinLanguage`, so the
+ * The pin is replayed with the owner-prose classifier and `nextState`
+ * (`_lib/owner_prose_pin.ts`) and read back through `gatePinLanguage` — the
+ * pin and gate rule road-to-a-language-pin-from-owner-prose-live-wiring puts
+ * on the live hooks, which still run the whole-body `classify` until then. The
  * keep-previous rule and the locale fallback are the shipped ones — the parity
  * `measure` lists as its known residual (R2 finding 8). Turn boundaries are
  * `measure`'s, so a fire here is a fire there. Files are read in NAME order and
@@ -1139,7 +1141,7 @@ export function languageSplit(stores: readonly string[], opts: LanguageSplitOpti
                     scoreTurn();
                     const flagged = !setsPin(entry);
                     if (flagged && !allEntries) continue;
-                    const next = nextState(pin, classify(u), u.length, SPLIT_SESSION_ID, '', opts.locale ?? 'und');
+                    const next = ownerProseNextState(pin, classifyOwnerProse(u), u.length, SPLIT_SESSION_ID, '', opts.locale ?? 'und');
                     if (next !== null) {
                         pin = next;
                         setter = {

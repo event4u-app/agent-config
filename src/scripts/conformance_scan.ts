@@ -51,7 +51,7 @@ import { censusRuleDir } from "./_lib/carrier_divergence.js";
 import { projectStoreSlug } from "./_lib/cc_transcript.js";
 import { entryText, isSidechain } from "./_lib/transcript_entry.js";
 
-import { classify, classifyText } from "./language_mirror_hook.js";
+import { classify } from "./language_mirror_hook.js";
 import { isSyntheticPrompt } from "./_lib/prompt_shape.js";
 import {
   classifyAuthorization,
@@ -502,7 +502,7 @@ export function isInjectedBody(text: string): boolean {
   if (/^(Base directory for this skill|<command-message>|<command-name>|<local-command)/.test(text)) {
     return true;
   }
-  return text.length > 2500 && classifyText(text).language === "en";
+  return text.length > 2500 && classify(text).language === "en";
 }
 
 /**
@@ -791,7 +791,7 @@ export function scanSession(sessionId: string, lines: string[]): SessionReport {
         if (HARNESS_TEXT.test(first.trim())) {
           continue; // harness banner, not the assistant's prose
         }
-        const c = classifyText(first);
+        const c = classify(first);
         if (first.length > 12 && (c.language === "en" || EN_OPENER.test(first.trim()))) {
           report.violations.push({
             check: "language-pin",

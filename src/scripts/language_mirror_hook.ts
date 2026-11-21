@@ -93,7 +93,6 @@ import {
   OUTPUT_HEAD,
   humanAuthoredLead,
   isSyntheticPrompt,
-  ownerProse,
   stripInjectedRegions,
 } from "./_lib/prompt_shape.js";
 import { loadSessionPins } from "./hooks/session_pins_loader.js";
@@ -253,15 +252,10 @@ export const MIN_MARKERS = 2;
 
 export type Verdict = "de" | "en" | "und";
 
-/** A prompt's classification: it always says how much owner prose stood behind it. */
-export type PromptClassification = Classification & { owner_prose_chars: number };
-
 export interface Classification {
   language: Verdict;
   de_markers: number;
   en_markers: number;
-  /** Characters of owner prose scored — set by `classify`, absent from `classifyText`. */
-  owner_prose_chars?: number;
 }
 
 /**
@@ -305,42 +299,19 @@ export function instructionText(prompt: string): string {
 
 
 /**
- * Classify a PROMPT for the pin: only text the owner typed decides it (D1).
- * Candidate: `ownerProse(prompt)` — the lead and the paragraph after the last
- * paste — under `MIN_MARKERS` (D5), with NO whole-body fallback; `und` keeps the
- * previous pin. Veto: the candidate becomes `und` whenever the RAW prompt, with
- * nothing removed (a pasted wrapper tag is byte-identical to the host's own),
- * holds `MIN_MARKERS` of the opposing language — so owner text at the floor is
- * never outvoted. Cost (D7): an instruction beside a paste or host wrapper in
- * the other language keeps the previous pin. Replies use `classifyText`.
- */
-export function classify(prompt: string): PromptClassification {
-  const { lead, trailing, text } = ownerProse(prompt);
-  const owner = [lead, trailing].filter((s) => s.trim() !== "").join("\n\n");
-  const verdict = _score(owner);
-  const all = _score(text);
-  // Checked directly, not via the spans being a subset of the raw text (round 15).
-  const opposing =
-    verdict.language === "de" ? all.en_markers : verdict.language === "en" ? all.de_markers : 0;
-  const language = opposing >= MIN_MARKERS ? "und" : verdict.language;
-  return { ...verdict, language, owner_prose_chars: owner.length };
-}
-
-/**
- * Classify a TEXT the owner did not necessarily type — a reply, an injected
- * body — reading its lead before the whole body.
+ * Classify a prompt, reading the TYPED LEAD before the whole body.
  *
  * `instructionText` removes output-shaped pastes — traces, diffs, `remote:`
  * lines. It does not remove the other paste shape, which looks like prose: a
- * document pasted whole under its own headings below one typed sentence.
+ * document pasted whole under its own headings below one typed sentence. That
+ * gap is not hypothetical; it fired on the session that received the round-6
+ * review, pinning English because an English draft sat under German prose.
  *
  * So the lead is classified first, and only if it is undetermined does the full
- * text decide. That is bidirectional only for leads carrying `MIN_MARKERS` or
- * more: below the floor the whole text decides, and a short lead over a long
- * body in the other language resolves to the body's language in either
- * direction. Prompts no longer go through here for exactly that reason (see
- * `classify`); the turn-end gate and the conformance scanner score replies with
- * it, and their measured rates rest on this surface staying as it is.
+ * text decide. This is bidirectional by construction — it names no language, and
+ * an English instruction over a German paste resolves to English by the same
+ * step. The fallback is what keeps it conservative: a prompt with no document
+ * marker classifies exactly as it did before.
  *
  * `stripInjectedRegions` runs FIRST, and the order is load-bearing rather than
  * tidy. A host wrapper the user never typed — `<launch-selected-element>` — is
@@ -350,7 +321,7 @@ export function classify(prompt: string): PromptClassification {
  * keeps the block's indented lines from arming that filter's paste state, which
  * was deleting the user's own sentence outright.
  */
-export function classifyText(prompt: string): Classification {
+export function classify(prompt: string): Classification {
   const text = instructionText(stripInjectedRegions(prompt));
   const lead = humanAuthoredLead(text);
   const leadVerdict = _score(lead);
@@ -360,7 +331,7 @@ export function classifyText(prompt: string): Classification {
   return _score(text);
 }
 
-/** Score one span with the marker lists and floor only (for `--language-split`). */
+/** Score one span with the marker lists and floor only (owner-prose pin, `--language-split`). */
 export function scoreText(text: string): Classification {
   return _score(text);
 }
@@ -507,7 +478,7 @@ export interface PinState extends JsonObject {
    * every state written before this field existed is still a valid pin.
    */
   tool_calls_since_pin?: number;
-  /** Owner-prose characters behind the pin; 0 on a locale pin. The gate refuses only above 0. */
+  /** Owner-prose characters behind the pin; 0 on a locale pin. Not written by this hook yet (road-to-a-language-pin-from-owner-prose-live-wiring). */
   owner_prose_chars?: number;
 }
 
@@ -576,7 +547,7 @@ export const REEMIT_AFTER_TOOL_CALLS = 150;
  */
 export function nextState(
   previous: Partial<PinState>,
-  classification: PromptClassification,
+  classification: Classification,
   prompt_chars: number,
   session_id: string,
   now: string,
@@ -624,7 +595,6 @@ export function nextState(
       en_markers: classification.en_markers,
       session_id,
       tool_calls_since_pin: 0,
-      owner_prose_chars: 0,
     };
   }
   return {
@@ -636,7 +606,6 @@ export function nextState(
     en_markers: classification.en_markers,
     session_id,
     tool_calls_since_pin: 0,
-    owner_prose_chars: classification.owner_prose_chars,
   };
 }
 
