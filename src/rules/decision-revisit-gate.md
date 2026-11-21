@@ -141,9 +141,10 @@ strengthened by the council and weakened only by the owner.
 | Governance self-amendment — reopening authority, quorum, escalation, this set | What the rules already permit | outside |
 | Cannot be bounded from available evidence | Bounded, with the evidence cited | outside |
 
-`Owner class` names which of the owner's four classes a row is. `outside`
-marks a row a council round mapped outside the four; the row still binds until
-the owner decides to fold, keep or remove it.
+The first column decides routing. `Owner class` names which of the owner's
+four classes a row is. A row marked `outside` is one a council round mapped
+outside the four, and it is still reserved to the owner: a transition on it goes
+to the owner until the owner folds, keeps or removes the row.
 
 Council split, abstention, or no quorum is an **escalation condition**, not a
 class: that transition escalates, the ADR does not become owner-reserved
