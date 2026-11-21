@@ -141,7 +141,12 @@ only. Each one is put to the owner with its price once Phase 1 has read.
 - **Class:** 3 — human-only. Spend above the released budget.
 - **Owner:** the repository owner.
 - **Blocks:** 3.2.
-- **What to do:** after 3.1 states the price, decide whether to fund the run.
+- **Recommendation:** (a), once 3.1's protocol states a price — the corpus
+  comparison alone cannot show whether the result carries over to real tasks.
+- **What to do:** after 3.1 writes its protocol under `agents/evidence/preregistration/`
+  with a price, pick one: (a) fund the run at that price, recorded as an owner
+  directive under `agents/evidence/owner-directives/`; (b) decline, and 3.2 is
+  closed as not run.
 - **Resolved when:** an owner directive names the budget for 3.1's protocol.
 - **If you do nothing:** the only comparison against no rules is the corpus one.
 
