@@ -7,16 +7,20 @@
  * codes (0 fresh+valid, 1 regression(s), 2 bad --today / usage), the
  * stdout/stderr split (the ✅ summary on stdout, every ❌ on stderr),
  * byte-identical finding messages, the same glob (sorted), the same two
- * supported shapes, and the same ISO-date / age logic. No behaviour changes —
- * historical quirks preserved (consumers pin the exact behaviour).
+ * supported shapes, and the same ISO-date / age logic — historical quirks
+ * preserved. Two deliberate changes since the port: the freshness ledger is a
+ * second freshness source, and the stale hint names the rotation import.
  *
  * `triggers.json` files encode each skill's behavioural intent; the surrounding
  * repo context drifts, so trigger sets need regression-locking. This gate is
  * the regression lock.
  *
  * For every `src/skills/*\/evals/triggers.json` it asserts:
- *   1. **Freshness** — a top-level `last_eval` ISO date (`YYYY-MM-DD`) present
- *      and no older than `MAX_AGE_DAYS` (90).
+ *   1. **Freshness** — a measurement no older than `MAX_AGE_DAYS` (90): the
+ *      top-level `last_eval` ISO date (`YYYY-MM-DD`), or a passing live
+ *      rotation run recorded in the freshness ledger
+ *      (`_lib/trigger_eval_freshness.ts`) for this exact corpus content,
+ *      whichever is newer.
  *   2. **Structural smoke** (offline) — `queries` is a non-empty list; every
  *      entry has a non-empty `q` and a boolean `trigger`; both classes are
  *      represented (≥1 should-trigger and ≥1 should-not-trigger).
@@ -29,6 +33,12 @@ import { fileURLToPath, pathToFileURL } from 'node:url';
 
 import { asOf } from './_lib/as_of.js';
 import { assertScanned, DeadScopeError } from './_lib/scan_scope.js';
+import {
+    FRESHNESS_LEDGER_REL,
+    type FreshnessLedger,
+    ledger_date_for,
+    read_freshness_ledger,
+} from './_lib/trigger_eval_freshness.js';
 
 const REPO_ROOT = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..', '..');
 const GLOB = 'src/skills/*/evals/triggers.json';
@@ -128,11 +138,17 @@ function _truthyStr(v: unknown): v is string {
     return typeof v === 'string' && v.length > 0;
 }
 
-function _check_one(p: string, today: PyDate): string[] {
+const _STALE_HINT =
+    're-run skill_trigger_eval and bump it, or import a passing rotation run ' +
+    '(task trigger-evals:import-rotation)';
+
+function _check_one(p: string, today: PyDate, ledger: FreshnessLedger): string[] {
     const rel = _relPosix(REPO_ROOT, p);
     let data: unknown;
+    let bytes: Buffer;
     try {
-        data = JSON.parse(fs.readFileSync(p, 'utf-8'));
+        bytes = fs.readFileSync(p);
+        data = JSON.parse(bytes.toString('utf-8'));
     } catch (exc) {
         const msg = exc instanceof Error ? exc.message : String(exc);
         return [`${rel}: unreadable JSON (${msg})`];
@@ -142,16 +158,22 @@ function _check_one(p: string, today: PyDate): string[] {
     const obj = _asObject(data);
 
     const raw = obj ? obj['last_eval'] : undefined;
-    const when = typeof raw === 'string' ? _parse_iso(raw) : null;
+    const fileWhen = typeof raw === 'string' ? _parse_iso(raw) : null;
+    const skill = path.basename(path.dirname(path.dirname(p)));
+    const ledgerRaw = ledger_date_for(ledger, skill, bytes);
+    const ledgerWhen = ledgerRaw === null ? null : _parse_iso(ledgerRaw);
+    const useLedger =
+        ledgerWhen !== null && (fileWhen === null || _days_between(ledgerWhen, fileWhen) > 0);
+    const when = useLedger ? ledgerWhen : fileWhen;
     if (when === null) {
         errors.push(`${rel}: missing or non-ISO \`last_eval\` (got ${_pyRepr(raw)})`);
     } else {
         const age = _days_between(today, when);
         if (age > MAX_AGE_DAYS) {
-            errors.push(
-                `${rel}: \`last_eval\` ${raw as string} is ${age}d old (> ${MAX_AGE_DAYS}d) ` +
-                    '— re-run skill_trigger_eval and bump it',
-            );
+            const source = useLedger
+                ? `rotation pass ${ledgerRaw as string} (${FRESHNESS_LEDGER_REL})`
+                : `\`last_eval\` ${raw as string}`;
+            errors.push(`${rel}: ${source} is ${age}d old (> ${MAX_AGE_DAYS}d) — ${_STALE_HINT}`);
         }
     }
 
@@ -381,8 +403,14 @@ function main(): number {
 
     const files = _glob_triggers(REPO_ROOT);
     const errors: string[] = [];
+    let ledger: FreshnessLedger = { schema: 1, suites: {} };
+    try {
+        ledger = read_freshness_ledger(REPO_ROOT);
+    } catch (exc) {
+        errors.push(`unreadable freshness ledger (${exc instanceof Error ? exc.message : String(exc)})`);
+    }
     for (const p of files) {
-        errors.push(..._check_one(p, today));
+        errors.push(..._check_one(p, today, ledger));
     }
 
     if (errors.length) {
