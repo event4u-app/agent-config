@@ -1,5 +1,4 @@
 ---
-complexity: lightweight
 status: ready
 ---
 # Road to masked clauses
