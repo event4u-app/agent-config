@@ -3,7 +3,7 @@ complexity: structural
 status: ready
 review_by: 2026-12-21
 tree_pin: 811cea61d6
-estate_growth_exempt: "Owner instruction of 2026-11-21 ('erstelle Roadmaps für die P0-Maßnahmen ... Lass uns alle Learnings einplanen und abarbeiten'), P0 measure 3 of the session retro of the same day. The two roadmaps that own the neighbouring work are parked in later/ and keep their scope; this file carries only the delta neither of them names (see relates). Growth: +1 active roadmap, +1 open blocker (goal-scope-hard-floor-reach, a Hard-Floor reach only the owner can rule on)."
+estate_growth_exempt: "Owner instruction of 2026-11-21 ('erstelle Roadmaps für die P0-Maßnahmen ... Lass uns alle Learnings einplanen und abarbeiten'), P0 measure 3 of the session retro of the same day. The two roadmaps that own the neighbouring work are parked in later/ and keep their scope; this file carries only the delta neither of them names (see relates). Growth: +1 active roadmap, +2 open blockers (goal-scope-hard-floor-reach, a Hard-Floor reach only the owner can rule on; goal-record-ratification, a split ratification verdict only the owner can resolve)."
 estate_offset_exempt: "road-to-mandates-scoped-to-the-goal is added on the owner's order of 2026-11-21 to plan every measure of that day's session retro as its own roadmap. No active roadmap is finished, so none was archived to offset it, and folding it into a parked later/ roadmap would hold asked-for work behind that roadmap's entry condition. Owner record: agents/evidence/owner-directives/2026-11-21-session-retro-roadmaps.md."
 execution:
   mode: autonomous
@@ -369,6 +369,18 @@ test.
 - **Amended 2026-11-21 (step 3.1):** part (c) — is a recorded, unrevoked goal sentence a standing instruction under `commit-policy` exception 2 for commits, PR opens and follow-up fix PRs that serve the goal? The council answered ESCALATE (both seats): `commit-policy` calls exactly that reading ("exception 2 misread as standing") the forbidden inference, so it needs the owner or the kernel text that `later/road-to-typed-grants-that-persist` owns. Until then the goal line names the owner's words and grants nothing (D5).
 - **Resolved when:** an owner-directive record citing `goal-scope-hard-floor-reach` exists under `agents/evidence/owner-directives/`.
 
+### blocker: goal-record-ratification
+- **Status:** open
+- **Owner:** owner
+- **Routed:** council 2026-11-21 ESCALATE — split verdict across 18 ratification rounds, which the decision-revisit gate routes to the owner (split → user).
+- **Evidence:** 18 ratification rounds (anthropic and openai, prompts `agents/evidence/council/mandates-scoped-to-the-goal-ratification-r1-20261121.question.md` to `-r18-`). The goal record and the PR default make the hook bundle grow past both ceilings in `src/config/hook-bundle-budget.json` (dispatch 1,595,300 to 1,606,550 B, subagent chunk 28,500 to 34,000 B, each with a `raise_log` entry), and that file is on the ratification gate's watched set, which needs a passing verdict from two distinct providers (ADR-268 § 4). The anthropic seat returned `confirmed-non-expanding` or `ratified` in 17 of 18 rounds. The openai seat named one new landing blocker in each round from round 7; every one was fixed with a failing-first test (store stem, escaping, mention and negation filters, ordered and locked writes, stop files, stop slot, user-level stop fallback, fresh read after write, broader and longer cancellations, process-start stamps). In round 18 it found the round-17 fix right and asked for an ordering guarantee no hook here can give: that every supported host starts hook processes in the owner's submission order, or a host-supplied submission sequence. Its stance lines: none in rounds 1-10, 12, 14 and 18; `refused` in 11, 13, 15, 16 and 17.
+- **Blocks:** AC-7 (the ratification gate is a blocking step of `task ci` and of the pre-push CI mirror), and so the push, the PR and the merge of this branch.
+- **Question:** Land the goal record with its two ceiling raises on the anthropic seat's `ratified` plus an owner ratification, or hold it until a host-supplied submission order exists? <!-- md-language-check: ignore -->
+- **Recommendation:** Land it. The goal line grants nothing (D5); the residual is a goal resurfacing after a stop only when a host launches an earlier prompt's hook after a later prompt's hook has finished, and the line shows the owner's words on every turn, so such a case is visible and revocable.
+- **If you do nothing:** the branch stays local and unmerged; Phases 0-3, 5 and 6 are done on it but none of it reaches main.
+- **What to do:** say the ruling in one sentence; the agent writes `agents/evidence/owner-directives/<date>-<id>.md` from it and a ratification record under `agents/evidence/ratifications/` naming the owner as the second reviewing party, or drops the goal-record half of the branch.
+- **Resolved when:** a ratification record for this branch's `hook-bundle-budget.json` subject passes `check_kernel_edit_ratified`.
+
 ## Risk Register
 <!-- risk-review: v1 | reviewed: 2026-11-21 | reviewer: claude/host -->
 
@@ -399,4 +411,6 @@ test.
 - [x] AC-6 — `/roadmap:next` no longer says "No merge, ever", links
       process-full's `--merge` section, and § 4 lets the project's own delivery
       rule win over the branch default (6.1 test green).
-- [ ] AC-7 — `task ci` exits 0 on the roadmap branch.
+- [ ] AC-7 — `task ci` exits 0 on the roadmap branch. <!-- blocked-by: goal-record-ratification | asked: no — the execution run was a non-interactive workflow subagent that may not ask the owner -->
+      Open 2026-11-21: every other mirror step was green or fixed; the
+      ratification gate stays red until `goal-record-ratification` is resolved.
