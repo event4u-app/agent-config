@@ -74,13 +74,13 @@ actually loads.
 
 ## Phase 1 — The ceiling stops being a ratchet
 
-- [x] **1.1 Package allowlist replaces the YAML cap.** The composition gate
+- [x] **1.1 Package allowlist replaces the YAML cap.** The composition gate <!-- receipt: class=R3 · shadow · would-skip=none · bound=override-list path: .github/workflows/consistency.yml -->
       fails when an npm package contributes bytes to the bundle that is not on
       a committed allowlist; the closed `YAML_PACKAGES` list and
       `max_yaml_packages` go.
       verify: tests where an unlisted package fails, a listed one passes, and a second YAML package (`js-yaml`) fails as before.
       Done 2026-11-20: `allowed_packages: ["yaml"]`; `tests/scripts/hook_bundle_composition.test.ts` (21 green) and the gate's self-test (4/4).
-- [x] **1.2 One wide backstop.** One absolute bundle ceiling at the post-fix
+- [x] **1.2 One wide backstop.** One absolute bundle ceiling at the post-fix <!-- receipt: class=R3 · shadow · would-skip=none · bound=override-list path: .github/workflows/consistency.yml -->
       reading plus 20 %, rounded; per-chunk and chunk-group ceilings,
       `shrink_only` and the `raise_log` obligation end. The log stays in git at
       the pin and is summarised in `agents/evidence/analysis/`.
@@ -92,18 +92,18 @@ actually loads.
       verify: the gate's tests show a budget-file-only diff passes without a record, and a `dispatch_hook.ts` diff still needs one.
       <!-- deferred-resolution: carried-to=road-to-a-hook-system-with-isolated-guards -->
       Carried 2026-11-20 after seven rounds of the two-provider ratification this PR needed. Both seats accepted every technical part; from round 6 on they refused the governance part: with the file off the watched set, adding a package or raising the backstop needs no ratification at all. Their alternative — only expansions (an allowlist addition, a higher `max_bytes`) stay ratified, lowering and removal do not — changes what the owner decided, so it is the owner's call (E5 on the parked roadmap). Meanwhile the file stays watched; with a 20 % backstop and a one-package allowlist that is a rare event, not the per-feature friction it was.
-- [x] **1.4 Reconcile the shrink-only premise elsewhere.** Amend step 2.4 of
+- [x] **1.4 Reconcile the shrink-only premise elsewhere.** Amend step 2.4 of <!-- receipt: class=R3 · shadow · would-skip=none · bound=override-list path: .github/workflows/consistency.yml -->
       `road-to-gates-that-check-what-they-claim` (the hook bundle is no longer a
       shrink-only ceiling) and the source comments that cite the ceiling as a
       reason (`rule_inject_hook.ts:1085`, `lazy_concern.ts:37`,
       `rule_injection.ts:126,281`, `vendor_defaults.ts:17`,
       `instructions_observer_hook.ts:52`).
-      verify: `rg -F 'hook-bundle-budget'` over `src/` returns only the gate, the budget file's readers and comments that state the backstop.
+      verify: a search for the string hook-bundle-budget over `src/` returns only the gate, the budget file's readers and comments that state the backstop.
       Done 2026-11-20: gates roadmap 2.4 scoped; three comments that described a live hard ceiling rewritten. `lazy_concern.ts:37` and `instructions_observer_hook.ts:52` stay — they record what was decided then, which is still true.
 
 ## Phase 2 — Fixed costs out of every event
 
-- [x] **2.1 One YAML copy at runtime.** `settings.ts` (and the lazy reads in
+- [x] **2.1 One YAML copy at runtime.** `settings.ts` (and the lazy reads in <!-- receipt: class=R3 · shadow · would-skip=none · bound=override-list path: .github/workflows/consistency.yml -->
       `agent_settings.ts`) use the bundled reader when bundled, keeping the
       template usable unbundled.
       verify: the load trace of `pre_tool_use`, `post_tool_use`, `user_prompt_submit` and `stop` shows no `node_modules/yaml`; settings tests pass.
@@ -115,28 +115,28 @@ actually loads.
       verify: a second dispatch shows a populated cache; digest, freshness and content gates and the install staging tests pass; five parallel cold dispatches succeed.
       <!-- deferred-resolution: carried-to=road-to-a-hook-system-with-isolated-guards -->
       Partly done 2026-11-20: the `agent-config dispatch:hook` launcher now enables the cache before it imports the bundle (`src/cli/agent-config.ts`), so that path caches the bundle: p50 70 → 59 ms, interleaved n = 30, darwin. The direct path the staged runtime uses (`node dist/hooks/dispatch.js`) is carried under K1: a stub in place of `dispatch.js` moves the digest, the runtime integrity check, the freshness and content gates, the prepack check and the plumbing-write guard (about 40 files reference the path) — not one of them may be weakened, and that is its own change. Measured gain it would buy there: 108 → 93 ms p50.
-- [x] **2.3 Environment hardened once per dispatch.** Harden at dispatch start,
+- [x] **2.3 Environment hardened once per dispatch.** Harden at dispatch start, <!-- receipt: class=R3 · shadow · would-skip=none · bound=override-list path: .github/workflows/consistency.yml -->
       restore at dispatch end; a concern that mutates the environment does not
       leak it to the next concern.
       verify: a test where one concern sets a variable and the next does not see it; existing dispatcher tests pass.
       Done 2026-11-20: `hooks/concern_env.ts` opens one hardened scope around the concern loop and resets only on drift; `tests/scripts/hooks/concern_env.test.ts` plants set, changed and deleted variables. 69 dispatcher test files green; `dispatch_hook.ts` 1,500 → 1,494 lines.
-- [x] **2.4 One feedback write per dispatch.** The summary carries every entry;
+- [x] **2.4 One feedback write per dispatch.** The summary carries every entry; <!-- receipt: class=R3 · shadow · would-skip=none · bound=override-list path: .github/workflows/consistency.yml -->
       a per-concern file is written only for a non-allow outcome; its readers
       read the summary.
       verify: an all-allow `pre_tool_use` writes at most two dispatcher feedback files; `hooks:status` output is unchanged on a fixture session.
       Done 2026-11-20: `hooks/feedback_policy.ts` keeps a per-concern file only for a non-quiet outcome; `summary.json` now also carries `raw_exit_code`. A probe `pre_tool_use` on a `Read` left one file (`summary.json`) where it left one per concern. `hooks_doctor` falls back to the newest summary listing a concern, so its `feedback:` line still appears — pointing at the summary for quiet concerns. 112 test files green.
-- [x] **2.5 Re-measure.** Run the Phase 3.1 bench on darwin against the pin.
+- [x] **2.5 Re-measure.** Run the Phase 3.1 bench on darwin against the pin. <!-- receipt: class=R3 · shadow · would-skip=none · bound=override-list path: .github/workflows/consistency.yml -->
       verify: the table is recorded in `agents/evidence/analysis/` with commit, node and machine.
       Done 2026-11-20: `agents/evidence/analysis/hook-fixed-costs-2026-11-20.md` — `pre_tool_use` 81.9 → 66.4 ms, `post_tool_use` 89.6 → 74.3 ms p50 (real workspace, n = 40); 72 `node_modules` files gone from every hot event.
 
 ## Phase 3 — Checks that see what an event pays
 
-- [x] **3.1 The bench is a script.** Interleaved base-vs-head (or variant)
+- [x] **3.1 The bench is a script.** Interleaved base-vs-head (or variant) <!-- receipt: class=R3 · shadow · would-skip=none · bound=override-list path: .github/workflows/consistency.yml -->
       dispatch timing per event with a `node -e 0` control, plus the load trace,
       as one command.
       verify: one command prints p50, p90 and min per variant and the non-builtin modules each event loads.
       Done 2026-11-20: `internal/bench/core/bench_hook_ab.ts` (variants, `node -e 0` control, `--trace`) over the shared `src/scripts/_lib/hook_load_trace.ts`; the existing `bench_hook_latency.ts` stays the budget gate and sits at its line cap.
-- [x] **3.2 Runtime load-set check.** One fixture dispatch per hot event; the
+- [x] **3.2 Runtime load-set check.** One fixture dispatch per hot event; the <!-- receipt: class=R3 · shadow · would-skip=none · bound=override-list path: .github/workflows/consistency.yml -->
       non-builtin modules loaded must be the bundle and the chunks that event
       declares.
       verify: reintroducing the `createRequire('yaml')` line turns it red; the tree after 2.1 is green.

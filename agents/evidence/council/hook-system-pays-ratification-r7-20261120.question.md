@@ -8,7 +8,7 @@ subject: 6da8bd7a4604a7c05770eee163c8781e2651a00d87f74f2cc231a2947533d044
 
 (Base-revision gate digest over those six files at commit `ad94bf9b45`. The head's gate, which no longer lists the budget file, computes `49ac7110bcef972b44e3b3c41c82f82fb43bd94a0d16dd388ad455aa64960055` over the other five.)
 
-Rounds 4–6 (`agents/evidence/council/hook-system-pays-ratification-r4/-r5/-r6-20261120.question.md`, committed) carry the full description and the full gated files. In round 6 one seat ratified; the other refused on the three points below. This round answers each with code, a test, or the exact workflow lines.
+Rounds 4–6 (the committed r4, r5 and r6 question files of 2026-11-20 beside this one) carry the full description and the full gated files. In round 6 one seat ratified; the other refused on the three points below. This round answers each with code, a test, or the exact workflow lines.
 
 ## Round 6 points
 
