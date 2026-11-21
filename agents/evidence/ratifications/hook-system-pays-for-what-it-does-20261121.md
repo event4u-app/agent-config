@@ -165,3 +165,9 @@ I also disagree that a new monitoring protocol is a ratification prerequisite. T
 
 STANCE: refused | CONFIDENCE: med | DEALBREAKER: yes
 ```
+
+## Gain, risk, rollback (stated by the implementer, not by a seat)
+
+- **Gain.** One concern-env scope per dispatch instead of one hardening and restore per concern; quiet allows no longer write a feedback file each when `summary.json` was written; the hook-bundle budget stops blocking own-code growth (owner directive D1) while a new npm package in the bundle stays a red check.
+- **Risk.** The size guard is looser: the backstop is 1,915,000 bytes, and the per-chunk ceilings are gone, so creep shows up only at the aggregate. The refusing seat's open point is that the per-concern feedback write lost its caller-side `try/catch`. The code it could not see answers it: `release()` calls `execute(['expire', …])`, which returns `undefined` on any error (`src/scripts/_lib/generation_lock.ts`), and `is_replay_mode()` only reads an environment variable. That answer was not put back to the seat.
+- **Rollback.** Revert the merge commit. The retired budget file is kept in git at `2eef08c00b`, and the dispatcher modules are new files with no other importer.
