@@ -56,16 +56,17 @@ export function latest_stop(file: string): { at: number; by: string } | null {
         if (n.startsWith(prefix) && /^\d{13}$/.test(n.slice(prefix.length)) && (best === null || n > best)) best = n;
     }
     let found = best === null ? null : { at: Number(best.slice(prefix.length)), by: fs.readFileSync(path.join(dir, best), 'utf-8') };
-    // The stop slot `<record>.stop`: created empty with the first goal and written
-    // in place by a stop when the store refuses a new file. No goal write touches it.
+    // The stop slot `<record>.stop`: created empty with the first goal; a stop appends one
+    // line to it when the store refuses a new file. No goal write touches it.
     let slot = '';
     try {
         slot = fs.readFileSync(`${file}.stop`, 'utf-8');
     } catch (e) {
         if ((e as NodeJS.ErrnoException).code !== 'ENOENT') throw e;
     }
-    const m = /^(\d{13}) ([\s\S]*)$/.exec(slot);
-    if (m !== null && (found === null || Number(m[1]) > found.at)) found = { at: Number(m[1]), by: m[2] as string };
+    for (const m of slot.matchAll(/^(\d{13}) (.*)$/gm)) {
+        if (found === null || Number(m[1]) > found.at) found = { at: Number(m[1]), by: m[2] as string };
+    }
     return found;
 }
 

@@ -10,7 +10,7 @@ import * as path from 'node:path';
 import { afterEach, beforeEach, describe, expect, it } from 'vitest';
 
 import { release, tryAcquire } from '../../src/scripts/_lib/generation_lock.js';
-import { goal_mandate_block, observe_prompt } from '../../src/scripts/_lib/goal_mandate.js';
+import { goal_mandate_block, observe_prompt, write_stop } from '../../src/scripts/_lib/goal_mandate.js';
 import { goal_mandate_for_subagent, goal_mandate_line, read_goal } from '../../src/scripts/_lib/goal_mandate_store.js';
 
 const T0 = new Date('2026-11-21T09:15:00Z');
@@ -178,6 +178,25 @@ describe('observe_prompt — goal sentences', () => {
         fs.renameSync(staged, path.join(dir, 's1.json'));
         expect(goal_mandate_line(read_goal(root, 's1'))).toBeNull();
         expect(goal_mandate_for_subagent(root, 's1')).toBeNull();
+    });
+
+    // Round 8: two stops in the slot — an older one that passed its freshness
+    // check before a goal, paused, and wrote after a newer stop — keep the newer.
+    it.skipIf(process.getuid?.() === 0)('a paused older stop written into the slot after a newer one keeps the newer', () => {
+        const T2 = new Date('2026-11-21T11:00:00Z');
+        const T3 = new Date('2026-11-21T12:00:00Z');
+        observe_prompt(root, 's1', 'until merged', T2);
+        const dir = path.join(root, '.git', 'agent-session-mandates');
+        fs.chmodSync(dir, 0o555);
+        try {
+            observe_prompt(root, 's1', 'halt', T3);
+            write_stop(path.join(dir, 's1.json'), 'stop', T1);
+        } finally {
+            fs.chmodSync(dir, 0o755);
+        }
+        expect(goal_mandate_line(read_goal(root, 's1'))).toBeNull();
+        expect(goal_mandate_for_subagent(root, 's1')).toBeNull();
+        expect(read_goal(root, 's1')?.revoked_at).toBe(T3.toISOString());
     });
 
     // Round 7: a stop that can be saved nowhere is said on that turn.

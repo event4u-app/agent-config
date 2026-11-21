@@ -33,8 +33,8 @@ function write_goal(root: string, session_id: string, record: GoalRecord): void 
     if (file === null) return;
     fs.mkdirSync(path.dirname(file), { recursive: true });
     write_atomic(file, `${JSON.stringify(record, null, 2)}\n`);
-    // The stop slot exists from the first goal on, so a later stop can be written
-    // into it in place even where the store refuses new files. `a` never truncates.
+    // The stop slot exists from the first goal on, so a later stop can be appended
+    // to it even where the store refuses new files. `a` never truncates.
     fs.writeFileSync(`${file}.stop`, '', { flag: 'a' });
 }
 
@@ -42,17 +42,19 @@ function write_goal(root: string, session_id: string, record: GoalRecord): void 
  * Store a stop as a file of its own beside the record, named by its stamp, so
  * no goal write can overwrite it and concurrent stops keep the latest; lower
  * stops are then pruned. A store that refuses the new file takes the stop in the
- * slot `<record>.stop`, written in place; no goal write touches either. Throws
+ * slot `<record>.stop`, one appended line per stop; no goal write touches either. Throws
  * when neither can be written.
  */
-function write_stop(file: string, revoke: string, now: Date): void {
+export function write_stop(file: string, revoke: string, now: Date): void {
     const stamp = String(now.getTime()).padStart(13, '0');
     const prefix = `${path.basename(file)}.stop-`;
     const own = `${prefix}${stamp}`;
     try {
         fs.writeFileSync(path.join(path.dirname(file), own), revoke);
     } catch {
-        fs.writeFileSync(`${file}.stop`, `${stamp} ${revoke}`);
+        // One append per stop, never an overwrite, so a paused older stop cannot
+        // erase a newer one; `a` adds no directory entry to an existing slot.
+        fs.writeFileSync(`${file}.stop`, `${stamp} ${revoke.replace(/\n/g, ' ')}\n`, { flag: 'a' });
         return;
     }
     for (const n of fs.readdirSync(path.dirname(file))) {
