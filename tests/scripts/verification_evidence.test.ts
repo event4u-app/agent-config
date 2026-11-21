@@ -475,21 +475,19 @@ describe('classifyRun — an exit code the command line masked is not the verifi
         );
     });
 
-    it('an echoed real code of 0 is read instead of the masked one', () => {
-        expect(
-            classifyRun(rec({ command: 'task ci; echo "exit=$?"', exit_code: 0, stdout_tail: 'ok\nexit=0\n' }))
-                .kind,
-        ).toBe('PASS_EVIDENCE_OK');
-    });
-
-    it('an echoed real code of 1 is read as the run failing', () => {
-        expect(
-            reason(
-                classifyRun(
-                    rec({ command: 'task ci; echo "exit=$?"', exit_code: 0, stdout_tail: 'boom\nexit=1\n' }),
-                ),
-            ),
-        ).toBe('nonzero_exit_without_test_failure');
+    // D8: no output line is read as the verifier's status. Where the status goes
+    // (redirected, skipped, reformatted) cannot be established from the command
+    // text, and a masked run is an instrument gap either way.
+    it.each([
+        ['task ci; echo "exit=$?"', 'ok\nexit=0\n'],
+        ['task ci; echo "exit=$?"', 'boom\nexit=1\n'],
+        ['task ci; echo "exit=$?" >/dev/null', 'own output\nexit=1\n'],
+        ['task ci | tail -5; echo "exit=${PIPESTATUS[0]}"', 'boom\nexit=2\n'],
+    ])('`%s` with an exit line in the output stays exit_masked', (command, stdout_tail) => {
+        expect(classifyRun(rec({ command, exit_code: 0, stdout_tail }))).toEqual({
+            kind: 'INVALID_RUN',
+            reason: 'exit_masked',
+        });
     });
 
     it('a masked run that loaded nothing keeps its load-failure verdict', () => {
@@ -524,16 +522,6 @@ describe('classifyRun — an exit code the command line masked is not the verifi
         expect(
             classifyRun(rec({ command: 'task ci | tail -5; echo "exit=$?"', exit_code: 0, stdout_tail: 'exit=0\n' })),
         ).toEqual({ kind: 'INVALID_RUN', reason: 'exit_masked' });
-    });
-
-    it('an echoed PIPESTATUS is the verifier\'s code and is read', () => {
-        expect(
-            reason(
-                classifyRun(
-                    rec({ command: 'task ci | tail -5; echo "exit=${PIPESTATUS[0]}"', exit_code: 0, stdout_tail: 'boom\nexit=2\n' }),
-                ),
-            ),
-        ).toBe('nonzero_exit_without_test_failure');
     });
 
     it('a filter\'s PIPESTATUS is not read as the verifier\'s code', () => {
