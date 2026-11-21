@@ -463,6 +463,16 @@ function failureReachesRecord(ps: readonly Pipeline[], v: number): boolean {
     return true;
 }
 
+/** The pipelines up to and including the first lone `exit`/`return` that runs unconditionally. */
+function reachable(ps: readonly Pipeline[]): Pipeline[] {
+    for (let i = 0; i < ps.length; i += 1) {
+        const before = i === 0 ? ';' : (ps[i - 1] as Pipeline).sepAfter;
+        const h = head(ps[i]);
+        if (before === ';' && (h === 'exit' || h === 'return') && (ps[i] as Pipeline).segs.length === 1) return ps.slice(0, i + 1);
+    }
+    return [...ps];
+}
+
 /**
  * Does the exit code of this command line belong to something other than the
  * command that verified?
@@ -487,7 +497,7 @@ function failureReachesRecord(ps: readonly Pipeline[], v: number): boolean {
  */
 export function exitMasking(command: string): ExitMasking | null {
     if (!command) return null;
-    const ps = pipelinesOf(command);
+    const ps = reachable(pipelinesOf(command));
     let v = -1;
     for (let i = ps.length - 1; i >= 0 && v === -1; i -= 1) if (verifierIndex(ps[i] as Pipeline) !== -1) v = i;
     if (v === -1) return null;

@@ -2413,6 +2413,26 @@ describe('detector G — an edited surface nothing drove and nothing lists', () 
         expect(Date.now() - t0).toBeLessThan(1000);
     });
 
+    it('many Not verified headings in one block are read in linear time', () => {
+        const reply = `Done.\n${'Not verified: 2/3\n'.repeat(20000)}`;
+        const t0 = Date.now();
+        expect(detectCoverageGap(reply, [], undefined)).toBeNull();
+        expect(Date.now() - t0).toBeLessThan(1000);
+    });
+
+    it('a webServer inside a string literal does not credit its script', () => {
+        const dir = fs.realpathSync(fs.mkdtempSync(path.join(os.tmpdir(), 'coverage-str-')));
+        tmp_dirs.push(dir);
+        fs.writeFileSync(path.join(dir, 'package.json'), JSON.stringify({ scripts: { dev: 'vite', preview: 'vite preview' } }));
+        fs.writeFileSync(
+            path.join(dir, 'playwright.config.ts'),
+            `const example = "webServer: { command: 'npm run preview' }";\nexport default { webServer: { command: 'npm run dev' } };\n`,
+        );
+        fs.mkdirSync(path.join(dir, 'src'));
+        const calls: ToolCall[] = [{ name: 'Edit', path: path.join(dir, 'src', 'a.ts') }, { name: 'Bash', command: 'npx playwright test' }];
+        expect(detectCoverageGap('Fertig.', calls, dir)?.evidence).toContain('preview');
+    });
+
     it('a Not verified heading after several blank lines still lists what follows', () => {
         expect(detectCoverageGap('Done.\n\n\n\nNot verified: 40/41 pages', [], undefined)).toBeNull();
     });

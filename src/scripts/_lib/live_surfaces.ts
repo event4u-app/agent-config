@@ -150,6 +150,32 @@ function stripJsComments(text: string): string {
     return out;
 }
 
+/** `text` with every string literal's contents replaced by spaces; quotes and length kept. */
+function maskStringInteriors(text: string): string {
+    let out = '';
+    let quote: string | null = null;
+    for (let i = 0; i < text.length; i += 1) {
+        const c = text[i] as string;
+        if (quote === null) {
+            if (c === '"' || c === "'" || c === '`') quote = c;
+            out += c;
+            continue;
+        }
+        if (c === '\\' && i + 1 < text.length) {
+            out += '  ';
+            i += 1;
+            continue;
+        }
+        if (c === quote) {
+            quote = null;
+            out += c;
+            continue;
+        }
+        out += c === '\n' ? '\n' : ' ';
+    }
+    return out;
+}
+
 /** Surfaces per derivation, enforced while building as well as at the end. */
 const MAX_SURFACES = 64;
 
@@ -352,9 +378,17 @@ export function derive(root: string): { surfaces: LiveSurface[]; inputs: string[
     // `command:` property (metadata, projects) does not start a server.
     const webServers = playwrightTexts.flatMap(({ config, text }) => {
         const code = stripJsComments(text);
-        const m = /webServer\s*:\s*\{([^{}]*)\}/.exec(code);
-        const cmd = m ? /command\s*:\s*(['"`])([^'"`]*)\1/.exec(m[1] as string) : null;
-        return cmd ? [{ config, command: (cmd[2] as string).trim() }] : [];
+        // Find the keys on a copy whose string interiors are blanked (same length), so a
+        // `webServer: { command: … }` written inside a string literal is not a key.
+        const masked = maskStringInteriors(code);
+        const m = /webServer\s*:\s*\{([^{}]*)\}/.exec(masked);
+        if (m === null) return [];
+        const bodyAt = m.index + m[0].indexOf('{') + 1;
+        const cmd = /command\s*:\s*(['"`])/.exec(m[1] as string);
+        if (cmd === null) return [];
+        const open = bodyAt + cmd.index + cmd[0].length;
+        const close = code.indexOf(cmd[1] as string, open);
+        return close < 0 ? [] : [{ config, command: code.slice(open, close).trim() }];
     });
     for (const s of surfaces) {
         if (s.kind !== 'npm-script') continue;

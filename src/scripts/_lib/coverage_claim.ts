@@ -109,14 +109,36 @@ function ratioProse(fenceStripped: string): string {
 
 /** Offsets covered by a `Not verified:` line and the non-blank block it opens. */
 function notVerifiedSpans(text: string): Array<[number, number]> {
+    // Linear: block ends are found once, headings are walked in order, and spans in
+    // one block merge, so many headings in one block cost one pass, not one each.
+    const ends: number[] = [];
+    for (const m of text.matchAll(/\n[ \t]*\n/g)) ends.push(m.index);
     const spans: Array<[number, number]> = [];
+    let e = 0;
     const re = new RegExp(NOT_VERIFIED_RE.source, 'gim');
     for (const m of text.matchAll(re)) {
         const start = text.lastIndexOf('\n', m.index) + 1;
-        const blank = text.slice(start).search(/\n[ \t]*\n/);
-        spans.push([start, blank === -1 ? text.length : start + blank]);
+        while (e < ends.length && (ends[e] as number) < start) e += 1;
+        const end = e < ends.length ? (ends[e] as number) : text.length;
+        const last = spans[spans.length - 1];
+        if (last !== undefined && start <= last[1]) last[1] = Math.max(last[1], end);
+        else spans.push([start, end]);
     }
     return spans;
+}
+
+/** Whether `at` falls in one of `spans` (sorted, disjoint). */
+function inSpans(spans: ReadonlyArray<[number, number]>, at: number): boolean {
+    let lo = 0;
+    let hi = spans.length - 1;
+    while (lo <= hi) {
+        const mid = (lo + hi) >> 1;
+        const [s, t] = spans[mid] as [number, number];
+        if (at < s) hi = mid - 1;
+        else if (at >= t) lo = mid + 1;
+        else return true;
+    }
+    return false;
 }
 
 /** Whether the reply claims completion, on a line that does not negate it. */
@@ -143,7 +165,7 @@ export function partialRatioIn(fenceStripped: string, visible: string): Coverage
         const total = Number(m[2]);
         if (!(n < total) || total === 0) continue;
         const at = m.index;
-        if (spans.some(([s, e]) => at >= s && at < e)) continue;
+        if (inSpans(spans, at)) continue;
         if (NEGATED_CLAIM_RE.test(lineAround(text, at))) continue;
         return {
             detector: 'coverage',
