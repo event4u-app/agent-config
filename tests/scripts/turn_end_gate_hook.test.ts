@@ -2558,6 +2558,14 @@ describe('detector G — an edited surface nothing drove and nothing lists', () 
         expect(detectCoverageGap('Fertig.', calls, dir)).toBeNull();
     });
 
+    it('a run before the edit does not drive the edited surface; the same run after it does', () => {
+        const dir = appWorkspace();
+        const run: ToolCall = { name: 'Bash', command: 'npm run dev' };
+        expect(detectCoverageGap('Fertig.', [run, edit(dir)], dir)?.code).toBe('unlisted_surface');
+        expect(detectCoverageGap('Fertig.', [edit(dir), run], dir)).toBeNull();
+        expect(detectCoverageGap('Fertig.', [edit(dir), run, edit(dir)], dir)?.code).toBe('unlisted_surface');
+    });
+
     it('a playwright config of the same name in another directory does not drive the root one', () => {
         const dir = fs.realpathSync(fs.mkdtempSync(path.join(os.tmpdir(), 'coverage-pw-')));
         tmp_dirs.push(dir);

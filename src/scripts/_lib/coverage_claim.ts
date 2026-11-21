@@ -366,29 +366,33 @@ export function unlistedSurfaceIn(
     // those never read the repo.
     if (completionClaimAt(visible) === null) return null;
     // Documentation is not part of what a surface runs.
-    const edits = calls
-        .filter((c) => EDIT_TOOLS.has(c.name) && c.path !== undefined)
-        .map((c) => c.path as string)
-        .filter((p) => !DOC_PATH.test(p.split(path.sep).join('/')));
+    // Each call keeps its position: only a run AFTER the last edit under a surface drives it.
+    const edits = calls.flatMap((c, at) =>
+        EDIT_TOOLS.has(c.name) && c.path !== undefined && !DOC_PATH.test(c.path.split(path.sep).join('/'))
+            ? [{ at, path: c.path }]
+            : [],
+    );
     if (edits.length === 0) return null;
     const surfaces = given ?? deriveLiveSurfaces(workspaceRoot);
     if (surfaces.length === 0) return null;
     // Each command split once, not once per surface.
     const commands = calls
-        .map((c) => c.command ?? '')
-        .filter((c) => c !== '')
-        .map((c) => commandSegments(c).map((x) => x.trim()));
+        .map((c, at) => ({ at, command: c.command ?? '' }))
+        .filter((c) => c.command !== '')
+        .map((c) => ({ at: c.at, segs: commandSegments(c.command).map((x) => x.trim()) }));
     // Inline code kept (backticks dropped): a list entry is often `npm run dev`.
     const text = fenceStripped.replace(/`/g, ' ');
     const listed = notVerifiedSpans(text).map(([s, e]) => text.slice(s, e)).join('\n');
     for (const surface of surfaces) {
         const root = path.resolve(workspaceRoot, surface.root);
-        const edited = edits.find((p) => {
-            const rel = path.relative(root, path.resolve(workspaceRoot, p));
+        const under = edits.filter((e) => {
+            const rel = path.relative(root, path.resolve(workspaceRoot, e.path));
             return rel !== '' && !rel.startsWith('..') && !path.isAbsolute(rel);
         });
-        if (edited === undefined) continue;
-        if (commands.some((c) => drives(c, surface, workspaceRoot))) continue;
+        const latest = under[under.length - 1];
+        if (latest === undefined) continue;
+        const edited = latest.path;
+        if (commands.some((c) => c.at > latest.at && drives(c.segs, surface, workspaceRoot))) continue;
         const names = [surface.name, surface.start, surface.url].filter((x): x is string => typeof x === 'string');
         if (names.some((n) => namedIn(listed, n))) continue;
         return {

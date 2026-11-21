@@ -194,6 +194,10 @@ describe('exitMasking — whose exit code does the record carry', () => {
         ['false | true || npm run dev', ['false', 'true']],
         // With pipefail a failing first command fails the pipeline.
         ['set -o pipefail; false | true && npm run dev', ['set -o pipefail', 'false', 'true']],
+        // The same rules hold in a pipeline with a verifier in it.
+        ['set -o pipefail; false | npx tsc --noEmit && npm run dev', ['set -o pipefail', 'false', 'npx tsc --noEmit']],
+        ['npx tsc --noEmit | true || npm run dev', ['npx tsc --noEmit', 'true']],
+        ['npx tsc --noEmit | false && npm run dev', ['npx tsc --noEmit', 'false']],
     ])('commandSegments(`%s`) lists only what can run', (command, expected) => {
         expect(commandSegments(command)).toEqual(expected);
     });

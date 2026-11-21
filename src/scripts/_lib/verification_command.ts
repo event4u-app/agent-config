@@ -479,36 +479,29 @@ function step(s: FlowState, p: Pipeline): FlowState[] {
         ];
     }
     const k = verifierIndex(p);
-    if (k === -1) {
-        // The status is the last command's; under pipefail any `false` fails it, and only
-        // a pipeline of nothing but `true` / `:` is sure to pass.
-        const heads = p.segs.map((seg) => bareName(seg.words[0] ?? ''));
-        const last = heads[heads.length - 1] as string;
-        const passes = (x: string): boolean => x === 'true' || x === ':';
-        if (last === 'false' || (p.pipefail && heads.includes('false'))) return [{ ...s, zero: false }];
-        if (passes(last) && (!p.pipefail || heads.every(passes))) return [{ ...s, zero: true }];
-        return [
-            { ...s, zero: true },
-            { ...s, zero: false },
-        ];
-    }
-    if (k === p.segs.length - 1) {
-        return [
-            { ...s, zero: true, last: 'pass', filtered: false },
-            { ...s, zero: false, last: 'fail', filtered: false },
-        ];
-    }
-    if (p.pipefail) {
-        // A 0 under pipefail means the verifier passed; a nonzero may be either.
-        return [
-            { ...s, zero: true, last: 'pass', filtered: false },
-            { ...s, zero: false, last: 'pass', filtered: false },
-            { ...s, zero: false, last: 'fail', filtered: false },
-        ];
-    }
+    // The pipeline's status is its last command's; under pipefail any failing member fails
+    // it, and it passes only when every member does. `true` / `:` pass and `false` fails;
+    // any other non-verifier member may do either. One rule, with or without a verifier.
+    const heads = p.segs.map((seg) => bareName(seg.words[0] ?? ''));
+    const lastAt = heads.length - 1;
+    const passes = (x: string): boolean => x === 'true' || x === ':';
+    const others = heads.filter((_, i) => i !== k);
+    const zeros = (verifier: Verdict): boolean[] => {
+        if (p.pipefail) {
+            if (verifier === 'fail' || others.includes('false')) return [false];
+            return others.every(passes) ? [true] : [true, false];
+        }
+        if (k === lastAt) return [verifier === 'pass'];
+        const last = heads[lastAt] as string;
+        if (last === 'false') return [false];
+        return passes(last) ? [true] : [true, false];
+    };
+    if (k === -1) return zeros('none').map((zero) => ({ ...s, zero }));
+    // A 0 says nothing about the verifier when a filter after it reports the status.
+    const filtered = !p.pipefail && k !== lastAt;
     const out: FlowState[] = [];
     for (const last of ['pass', 'fail'] as const) {
-        for (const zero of [true, false]) out.push({ ...s, zero, last, filtered: true });
+        for (const zero of zeros(last)) out.push({ ...s, zero, last, filtered });
     }
     return out;
 }

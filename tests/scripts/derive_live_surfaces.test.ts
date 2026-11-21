@@ -168,6 +168,18 @@ describe('deriveLiveSurfaces', () => {
         expect(pw?.derived_from).toBe('playwright.config.ts:5');
     });
 
+    it('skips a compose port entry that is not a string or number, keeping every other surface', () => {
+        const dir = fs.mkdtempSync(path.join(os.tmpdir(), 'live-surfaces-bad-port-'));
+        tmps.push(dir);
+        fs.writeFileSync(path.join(dir, 'package.json'), JSON.stringify({ scripts: { dev: 'vite' } }));
+        fs.writeFileSync(
+            path.join(dir, 'docker-compose.yml'),
+            'services:\n  api:\n    ports:\n      - toString: null\n      - "3000:80"\n',
+        );
+        const kinds = deriveLiveSurfaces(dir).map((s) => `${s.kind}:${s.url ?? s.start ?? ''}`).sort();
+        expect(kinds).toEqual(['compose:http://localhost:3000', 'npm-script:npm run dev']);
+    });
+
     it('finds nothing in a library with only a test script', () => {
         expect(deriveLiveSurfaces(copyFixture('none'))).toEqual([]);
     });

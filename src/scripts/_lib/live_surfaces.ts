@@ -285,6 +285,8 @@ function composePorts(root: string, inputs: string[]): LiveSurface[] {
             const line = lineOfService.get(service) ?? 1;
             for (const p of ports.slice(0, MAX_SURFACES)) {
                 if (out.length >= MAX_SURFACES) break;
+                // Only the short string / number form; any other entry is skipped, never coerced.
+                if (typeof p !== 'string' && typeof p !== 'number') continue;
                 const host = /^(?:[\d.]+:)?(\d+):\d+/.exec(String(p));
                 if (host === null) continue;
                 out.push({
