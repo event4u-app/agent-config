@@ -4,6 +4,7 @@
  * 4.1). Each fixture is copied to a temp dir first, because the deriver writes
  * its map under the repo it reads and a fixture must stay as committed.
  */
+import { spawnSync } from 'node:child_process';
 import * as fs from 'node:fs';
 import * as os from 'node:os';
 import * as path from 'node:path';
@@ -31,6 +32,22 @@ afterEach(() => {
 });
 
 describe('deriveLiveSurfaces', () => {
+    it('skips an input file over the size bound instead of reading it', () => {
+        const dir = fs.mkdtempSync(path.join(os.tmpdir(), 'live-surfaces-big-'));
+        tmps.push(dir);
+        const pad = ' '.repeat(2 * 1024 * 1024);
+        fs.writeFileSync(path.join(dir, 'package.json'), `{"scripts":{"dev":"vite"},"x":"${pad}"}`);
+        expect(deriveLiveSurfaces(dir)).toEqual([]);
+    });
+
+    it('skips an input that is not a regular file, so a FIFO cannot block the read', () => {
+        const dir = fs.mkdtempSync(path.join(os.tmpdir(), 'live-surfaces-fifo-'));
+        tmps.push(dir);
+        const made = spawnSync('mkfifo', [path.join(dir, 'package.json')]);
+        if (made.status !== 0) return;
+        expect(deriveLiveSurfaces(dir)).toEqual([]);
+    });
+
     it('reads a tauri window with its size and the line it came from', () => {
         const surfaces = deriveLiveSurfaces(copyFixture('tauri'));
         const tauri = surfaces.find((s) => s.kind === 'tauri');

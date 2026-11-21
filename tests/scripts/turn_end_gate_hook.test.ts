@@ -2286,6 +2286,23 @@ describe('detector G — an edited surface nothing drove and nothing lists', () 
         expect(detectCoverageGap('Fertig.', [], dir)).toBeNull();
     });
 
+    it('a browser run does not drive a compose service', () => {
+        const dir = fs.realpathSync(fs.mkdtempSync(path.join(os.tmpdir(), 'coverage-compose-')));
+        tmp_dirs.push(dir);
+        fs.writeFileSync(path.join(dir, 'docker-compose.yml'), 'services:\n  api:\n    ports:\n      - "8080:80"\n');
+        const calls: ToolCall[] = [
+            { name: 'Edit', path: path.join(dir, 'server.ts') },
+            { name: 'Bash', command: 'npx playwright test' },
+        ];
+        expect(detectCoverageGap('Fertig.', calls, dir)?.code).toBe('unlisted_surface');
+    });
+
+    it('a Not verified block lists a surface by its whole name, not a word containing it', () => {
+        const dir = appWorkspace();
+        const reply = 'Fertig. Der Button ist umgebaut.\n\nNot verified:\n- the development notes';
+        expect(detectCoverageGap(reply, [edit(dir)], dir)?.code).toBe('unlisted_surface');
+    });
+
     it('never refuses', () => {
         const dir = appWorkspace();
         const f = detectCoverageGap('Fertig.', [edit(dir)], dir);

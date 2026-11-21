@@ -23,7 +23,7 @@
 import * as fs from 'node:fs';
 import * as path from 'node:path';
 
-import { deriveLiveSurfaces, type LiveSurface } from '../derive_live_surfaces.js';
+import { deriveLiveSurfaces, type LiveSurface } from './live_surfaces.js';
 import { RECORDED_SUFFIX, type RefusalDetectorId } from './turn_end_refusals.js';
 
 /**
@@ -170,9 +170,12 @@ export interface CallLike {
 
 const EDIT_TOOLS: ReadonlySet<string> = new Set(['Edit', 'Write', 'MultiEdit', 'NotebookEdit']);
 
-/** A call that drove `surface`: its start command, its URL, or a real render or browser run. */
+/** Surfaces a render or browser run reaches without naming them: a web page. */
+const BROWSER_KINDS: ReadonlySet<LiveSurface['kind']> = new Set(['npm-script', 'playwright']);
+
+/** A call that drove `surface`: its start command, its URL, or a render or browser run over a web page. */
 function drives(command: string, surface: LiveSurface): boolean {
-    if (/\bui:render\b|\bplaywright\s+test\b/.test(command)) return true;
+    if (BROWSER_KINDS.has(surface.kind) && /\bui:render\b|\bplaywright\s+test\b/.test(command)) return true;
     if (surface.start !== null && command.includes(surface.start)) return true;
     return surface.url !== undefined && command.includes(surface.url);
 }
@@ -191,11 +194,15 @@ export function unlistedSurfaceIn(
     visible: string,
     calls: readonly CallLike[],
     workspaceRoot: string,
-    surfaces: readonly LiveSurface[] = deriveLiveSurfaces(workspaceRoot),
+    given?: readonly LiveSurface[],
 ): CoverageFinding | null {
-    if (surfaces.length === 0 || completionClaimAt(visible) === null) return null;
+    // The cheap checks first: most turn ends claim nothing or edit nothing, and
+    // those never read the repo.
+    if (completionClaimAt(visible) === null) return null;
     const edits = calls.filter((c) => EDIT_TOOLS.has(c.name) && c.path !== undefined).map((c) => c.path as string);
     if (edits.length === 0) return null;
+    const surfaces = given ?? deriveLiveSurfaces(workspaceRoot);
+    if (surfaces.length === 0) return null;
     const commands = calls.map((c) => c.command ?? '').filter((c) => c !== '');
     const text = ratioProse(fenceStripped);
     const listed = notVerifiedSpans(text).map(([s, e]) => text.slice(s, e)).join('\n');
@@ -208,7 +215,7 @@ export function unlistedSurfaceIn(
         if (edited === undefined) continue;
         if (commands.some((c) => drives(c, surface))) continue;
         const names = [surface.name, surface.start, surface.url].filter((x): x is string => typeof x === 'string');
-        if (names.some((n) => listed.includes(n))) continue;
+        if (names.some((n) => namedIn(listed, n))) continue;
         return {
             detector: 'coverage',
             code: 'unlisted_surface',
@@ -220,6 +227,12 @@ export function unlistedSurfaceIn(
         };
     }
     return null;
+}
+
+/** `name` as a whole word of `text`: `dev` is named by "dev (npm run dev)", not by "development". */
+function namedIn(text: string, name: string): boolean {
+    const escaped = name.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+    return new RegExp(`(?:^|[^\\w-])${escaped}(?:$|[^\\w-])`, 'i').test(text);
 }
 
 /** Both reasons, ratio first: the hook's one entry point for detector G. */
