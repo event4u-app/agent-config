@@ -1,0 +1,2 @@
+{"type":"user","uuid":"g-u1","sessionId":"s-goal","timestamp":"2026-11-01T10:00:00Z","message":{"role":"user","content":"mach weiter mit dem quokka-refactor bis zum merge"}}
+{"type":"user","uuid":"g-u3","sessionId":"s-goal","timestamp":"2026-11-01T10:10:00Z","message":{"role":"user","content":"erstelle den PR für das platypus-cleanup"}}
