@@ -87,7 +87,11 @@ a hold is actually still in force.
 - [x] **2.5** Before/after classification diff over the live estate; every
   changed step justified in the PR body (AC-6).
   Result 2026-11-23: `screenEstate` over `agents/roadmaps/` before and after,
-  384 open steps on both sides, zero class or blocker changes.
+  384 open steps on both sides, zero class or blocker changes; after the R2
+  round-1 parser fixes, `roadmap_drain_queue --json` from `origin/main` and from
+  this branch over the same estate: 31 entries on both sides, zero differences
+  in bucket, dispatchable, runnable or per-class counts, same `next`, same
+  owner/council questions.
 
 ## Not in scope
 
