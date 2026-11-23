@@ -537,11 +537,20 @@ An entry belongs under a dated release section, not here — see
 > keeps the active era under the 250-line drift cap enforced by
 > `tests/test_changelog_eras.py`.
 
-# Era: 20.6.x — current
+# Era: pre-20.7.0 — archived
 
-> Started at `20.6.0`. Full entries live inline below.
+> All entries before `20.7.0` live in
+> [`docs/archive/CHANGELOG-pre-20.7.0.md`](docs/archive/CHANGELOG-pre-20.7.0.md).
+> The archive is read-only; git tags remain the canonical
+> source for what shipped. Splitting them out of the main file
+> keeps the active era under the 250-line drift cap enforced by
+> `tests/test_changelog_eras.py`.
+
+# Era: 20.7.x — current
+
+> Started at `20.7.0`. Full entries live inline below.
 > The drift test caps this era at 250 lines of entry body; growth past
-> that forces a new era split (`# Era: 20.7.x`, etc.) — see
+> that forces a new era split (`# Era: 20.8.x`, etc.) — see
 > [`docs/contracts/CHANGELOG-conventions.md § Era splits`](docs/contracts/CHANGELOG-conventions.md).
 
 ## [20.7.0](https://github.com/event4u-app/agent-config/compare/20.6.0...20.7.0) (2026-11-23)
@@ -1024,29 +1033,6 @@ An entry belongs under a dated release section, not here — see
 * **budget:** raise the session-pins chunk ceiling for the generation lock ([a912d53](https://github.com/event4u-app/agent-config/commit/a912d531d1c0d7f69a7ccff0ac62ef4872c26752))
 
 Tests: 41119 (+785 since 20.6.0)
-
-## [20.6.0](https://github.com/event4u-app/agent-config/compare/20.5.0...20.6.0) (2026-11-20)
-
-### Release highlights
-
-- **Behaviour changes:** _none_
-- **Default changes + migration:** _none_
-- **Security and correctness:** _none_
-- **Honest nulls:** _none_
-- **Known limitations:** _none_
-
-> **Governance mix:** governance-only 2 vs consumer-only 0 (mixed 1, maintenance 0; taxonomy 1.1.0; range 2eef08c00be8..5e72f61d906d).
-
-### Features
-
-* **sessions:** machine-wide session catalog (sessions:catalog) (#2996) ([5e72f61](https://github.com/event4u-app/agent-config/commit/5e72f61d906de765cc82747dc03ccf29f9632ca8))
-
-### Documentation
-
-* **roadmaps:** risk register and owned digest for the halt roadmap ([0bb0092](https://github.com/event4u-app/agent-config/commit/0bb0092a6cfde43c1565e148629a9d0397833c32))
-* **roadmaps:** road to a halt that holds every lane ([e8c9d59](https://github.com/event4u-app/agent-config/commit/e8c9d592153dbb96464d2fbccec9022d1675afd0))
-
-Tests: 40334 (+92 since 20.5.0)
 
 # Era: pre-4.0.0 — archived
 
