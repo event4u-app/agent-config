@@ -8,7 +8,7 @@ upstream repository below. Keep this file shipping with the skill; update the
 
 - Repository: `https://github.com/nextlevelbuilder/ui-ux-pro-max-skill`
 - Commit SHA: `b7e3af80f6e331f6fb456667b82b12cade7c9d35`
-- Last checked: 2026-11-23 (upstream `main` at `6ec2bb58`, 177 commits and 300 files past the base pin; licence still MIT; nothing adopted in this check, a refresh is its own change)
+- Last checked: 2026-11-23 (upstream `main` at `6ec2bb58`, 177 commits and 300 files past the base pin; license still MIT; nothing adopted in this check, a refresh is its own change)
 - Upstream version: `skill.json` v2.5.x (npm `uipro-cli`)
 
 ### Partial adoptions from a later upstream commit
