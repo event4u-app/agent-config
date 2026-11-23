@@ -18,6 +18,8 @@ import { createRequire } from 'node:module';
 import { fileURLToPath, pathToFileURL } from 'node:url';
 import { dirname, join } from 'node:path';
 
+import { enableCompileCacheFailOpen } from '../scripts/_lib/compile_cache.js';
+
 const require = createRequire(import.meta.url);
 
 // Hook hot path (road-to-hook-latency-repair Phase 2): `dispatch:hook` runs
@@ -46,6 +48,10 @@ if (_argv[0] === 'dispatch:hook' && !_argv.includes('--config-root')) {
     }
     if (bundle !== null && existsSync(bundle)) {
         _dispatchHotPathTaken = true;
+        // Before the import, not inside the bundle: the cache covers modules
+        // compiled AFTER the call, so a call inside the bundle never caches the
+        // bundle itself (`_lib/compile_cache.ts`). Fail-open.
+        enableCompileCacheFailOpen();
         void import(pathToFileURL(bundle).href)
             .then((mod) => {
                 const code = (mod as { main: (argv?: string[]) => number }).main(_argv.slice(1));

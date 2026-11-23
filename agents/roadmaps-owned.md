@@ -52,6 +52,7 @@ and keep the full search — this file only adds candidates to it.
 | road-to-a-game-the-agent-can-playtest | later | later | Playtests prove a game done. |
 | road-to-a-graph-that-feeds-the-gate | later | later | The code graph reaches the searches an agent actually runs and feeds a gate decision in shadow. |
 | road-to-a-hard-floor-the-shell-cannot-talk-past | later | later | The one floor the owner kept — irreversible, external, production and out-of-scope destructive actions — gets a mechanism at tool-call … |
+| road-to-a-hook-system-with-isolated-guards | later | later | A fault in advisory hook code cannot refuse a tool call, a tool call costs one dispatch where the host … |
 | road-to-a-knowledge-atlas | later | later | The Workbench page answers four questions about one selection, not one: how the code is built (done by the parent), … |
 | road-to-a-lead-the-user-can-reach-carried | later | parked | Road to a lead the user can reach — carried |
 | road-to-a-learner-the-measurements-gate | later | later | The open dispatch measurements are run or dated; a PR that moves a policy row without a measurement pinned to … |
@@ -210,6 +211,7 @@ and keep the full search — this file only adds candidates to it.
 | road-to-zero-ceremony-host-primitives | later | later | Decide, on probe evidence and inside the governing ADR's own review window, whether tier→host-native-primitive emission is worth its maintenance surface … |
 | orchestrator-spawn-injection | stubs | — | orchestrator-side spawn injection |
 | road-to-a-census-that-refuses-a-partial-store | stubs | — | road to a census that refuses to publish from a partial store |
+| road-to-a-concern-effect-census | stubs | — | road to a concern effect census |
 | road-to-a-discipline-profile-that-loads | stubs | — | a discipline profile that changes what loads |
 | road-to-a-limit-the-host-actually-signals | stubs | — | road to a limit the host actually signals |
 | road-to-a-line-budget-that-does-not-tax-a-why-comment | stubs | — | a line budget that does not tax a why-comment |

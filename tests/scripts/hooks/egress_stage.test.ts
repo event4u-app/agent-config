@@ -37,6 +37,8 @@ import {
 import { planPayloadShapes, type JsonObject } from "../../../src/scripts/hooks/payload_stub.js";
 import { load_agent_settings } from "../../../src/scripts/_lib/agent_settings.js";
 import { feedback_dir } from "../../../src/scripts/hooks/state_io.js";
+import { _load_yaml } from "../../../src/scripts/hooks/dispatch_hook.js";
+import * as doctor from "../../../src/scripts/hooks_doctor.js";
 
 const REPO_ROOT = path.resolve(fileURLToPath(import.meta.url), "..", "..", "..", "..");
 const TS_SCRIPT = path.join(REPO_ROOT, "src", "scripts", "hooks", "dispatch_hook.ts");
@@ -425,6 +427,20 @@ describe("end to end through the dispatcher", () => {
       tool_input: { command: `echo ${PLANTED}` },
     });
     expect(saw(ws, "egress-observe", "recorder")).toStrictEqual({ sawPlanted: true, sawToken: false });
+    // The per-concern file names the dispatch that wrote it, as the summary does (hooks_doctor ties).
+    const fb = feedback_dir(path.join(ws, "agents", "runtime", "state"), "egress-observe");
+    const own = JSON.parse(fs.readFileSync(path.join(fb, "recorder.json"), "utf8")) as { invocation?: unknown };
+    const doc = JSON.parse(fs.readFileSync(path.join(fb, "summary.json"), "utf8")) as {
+      invocations: Array<{ invocation: unknown }>;
+      latest: Record<string, { invocation: unknown; completed_at: unknown }>;
+    };
+    expect(typeof own.invocation).toBe("string");
+    expect(doc.invocations.map((i) => i.invocation)).toEqual([own.invocation]);
+    // Every concern that ran has an uncapped `latest` row naming this dispatch.
+    expect(doc.latest["recorder"]?.invocation).toBe(own.invocation);
+    expect(doc.latest["rewriter"]?.invocation).toBe(own.invocation);
+    expect(typeof doc.latest["rewriter"]?.completed_at).toBe("string");
+    expect(doc.latest["rewriter"]).toMatchObject({ exit_code: 0, decision: "allow" }); // the outcome survives rotation
     const record = fs.readFileSync(path.join(ws, OBSERVATION_FILE), "utf8");
     expect(record.includes(PLANTED)).toBe(false);
     expect(record.includes('"type":"TOKEN"')).toBe(true);
@@ -442,8 +458,63 @@ describe("end to end through the dispatcher", () => {
     // The rewriting fixture did run and reply: without this the assertion above
     // would also pass for a fixture that never started.
     const dir = feedback_dir(path.join(ws, "agents", "runtime", "state"), "egress-rewrite");
-    const entry = JSON.parse(fs.readFileSync(path.join(dir, "rewriter.json"), "utf8")) as Record<string, unknown>;
+    // A quiet allow has no file of its own (feedback_policy.ts); summary.json carries every entry.
+    const summary = JSON.parse(fs.readFileSync(path.join(dir, "summary.json"), "utf8")) as {
+      invocations: Array<{ concerns: Array<Record<string, unknown>> }>;
+    };
+    const entry = summary.invocations.flatMap((i) => i.concerns).find((c) => c["concern"] === "rewriter") as Record<string, unknown>;
     expect(entry["raw_exit_code"]).toBe(0);
     expect(entry["decision"]).toBe("allow");
+    expect(typeof entry["completed_at"]).toBe("string"); // the concern's own clock, for the doctor
+    expect(fs.existsSync(path.join(dir, "rewriter.json"))).toBe(false);
+  });
+
+  describe("writer to doctor: an older block, then a newer quiet allow", () => {
+    const seedAndDispatch = (ws: string, sid: string, breakSummary: boolean): string | null | undefined => {
+      const dir = feedback_dir(path.join(ws, "agents", "runtime", "state"), sid);
+      fs.mkdirSync(dir, { recursive: true });
+      if (breakSummary) fs.mkdirSync(path.join(dir, "summary.json")); // a directory: the summary write fails
+      fs.writeFileSync(
+        path.join(dir, "rewriter.json"),
+        JSON.stringify({ concern: "rewriter", exit_code: 2, raw_exit_code: 2, decision: "block", reason: "older", completed_at: "2026-01-01T00:00:00.000Z", invocation: "pid-old" }),
+      );
+      dispatch(ws, "protect", "pre_tool_use", "PreToolUse", { session_id: sid, tool_name: "Bash", tool_input: { command: "ls" } });
+      const manifest = _load_yaml(path.join(tmp, "manifest.yaml")) as JsonObject;
+      return doctor.collect(ws, manifest).concerns.find((c) => c.concern === "rewriter")?.last_feedback;
+    };
+
+    it("summary written: the doctor reports the summary, whose latest row is the allow", () => {
+      const ws = path.join(tmp, "ws-w2d-ok");
+      const shown = seedAndDispatch(ws, "w2d-ok", false);
+      expect(shown?.endsWith("summary.json")).toBe(true);
+      const doc = JSON.parse(fs.readFileSync(path.join(ws, shown as string), "utf8")) as { latest: Record<string, { decision: string }> };
+      expect(doc.latest["rewriter"]?.decision).toBe("allow");
+    });
+
+    it("summary write failed: the doctor reports the per-concern file, which now holds the allow", () => {
+      const ws = path.join(tmp, "ws-w2d-fallback");
+      const shown = seedAndDispatch(ws, "w2d-fallback", true);
+      expect(shown?.endsWith("rewriter.json")).toBe(true);
+      expect((JSON.parse(fs.readFileSync(path.join(ws, shown as string), "utf8")) as { decision: string }).decision).toBe("allow");
+    });
+  });
+
+  it("a quiet allow whose summary write fails replaces an older block in its own file", () => {
+    const ws = path.join(tmp, "ws-quiet-fallback");
+    const dir = feedback_dir(path.join(ws, "agents", "runtime", "state"), "quiet-fallback");
+    fs.mkdirSync(path.join(dir, "summary.json"), { recursive: true }); // a directory: the summary write fails
+    fs.writeFileSync(
+      path.join(dir, "rewriter.json"),
+      JSON.stringify({ concern: "rewriter", exit_code: 2, raw_exit_code: 2, decision: "block", reason: "older", completed_at: "2026-01-01T00:00:00.000Z" }),
+    );
+    dispatch(ws, "protect", "pre_tool_use", "PreToolUse", {
+      session_id: "quiet-fallback",
+      tool_name: "Bash",
+      tool_input: { command: "ls" },
+    });
+    const own = JSON.parse(fs.readFileSync(path.join(dir, "rewriter.json"), "utf8")) as Record<string, unknown>;
+    expect(own["decision"]).toBe("allow");
+    expect(own["raw_exit_code"]).toBe(0);
+    expect(typeof own["invocation"]).toBe("string");
   });
 });

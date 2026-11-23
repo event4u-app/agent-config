@@ -36,6 +36,7 @@ import {
   read_dispatch_issues,
 } from "./hooks/dispatch_issues.js";
 import { type JsonObject, type JsonValue, _load_yaml } from "./hooks/dispatch_hook.js";
+import { compareRuns, isLatestRun } from "./hooks/feedback_policy.js";
 import * as hooks_status from "./hooks_status.js";
 import {
   DETECTOR_IDS,
@@ -123,37 +124,122 @@ function _concern_state_file(state_dir: string, concern: string): string | null 
 }
 
 /**
- * Return the most-recent dispatcher feedback file for the concern,
- * walking `agents/runtime/state/.dispatcher/<session>/<concern>.json`.
+ * Return the dispatcher feedback file that holds the concern's most recent run,
+ * walking `agents/runtime/state/.dispatcher/<session>/`.
+ *
+ * Since 2026-11-20 a quiet allow has no `<concern>.json` of its own
+ * (`hooks/feedback_policy.ts`); `summary.json` carries every run. So both are
+ * candidates, ranked by the run's RECORDED `completed_at` — never by file mtime,
+ * which a summary advances whenever any other concern runs. On an equal instant
+ * the per-concern file wins when it records the same `invocation` as the
+ * summary's run (same dispatch, more detail); between two dispatches the
+ * writers' own order decides (`compareRuns` in `hooks/feedback_policy.ts`).
  */
 function _latest_feedback(state_dir: string, concern: string): string | null {
   const dispatcher_dir = path.join(state_dir, ".dispatcher");
   if (!_isDir(dispatcher_dir)) {
     return null;
   }
-  const candidates: Array<{ p: string; mtime: number }> = [];
   let sessions: string[];
   try {
     sessions = fs.readdirSync(dispatcher_dir);
   } catch {
     return null;
   }
-  for (const sess of sessions) {
-    const candidate = path.join(dispatcher_dir, sess, `${concern}.json`);
-    try {
-      const st = fs.statSync(candidate);
-      if (st.isFile()) {
-        candidates.push({ p: candidate, mtime: st.mtimeMs });
-      }
-    } catch {
-      /* not a file */
+  // Compared as instants, never as strings: two writers may differ in
+  // fractional-second precision.
+  type Run = { at: string; invocation: string | null } | null;
+  let best: { p: string; at: number; detail: boolean; invocation: string | null } | null = null;
+  const consider = (p: string, run: Run, detail: boolean): void => {
+    const at = run === null ? Number.NaN : Date.parse(run.at);
+    if (run === null || Number.isNaN(at)) return;
+    const c = { p, at, detail, invocation: run.invocation };
+    if (best === null || at > best.at) {
+      best = c;
+      return;
     }
+    if (at !== best.at) return;
+    // Same dispatch: the per-concern file, which holds the detail. Otherwise the
+    // writers' own order (`compareRuns`), so the doctor never disagrees with them.
+    if (c.invocation !== null && c.invocation === best.invocation) {
+      if (detail && !best.detail) best = c;
+      return;
+    }
+    if (compareRuns(at, c.invocation, best.at, best.invocation) > 0) best = c;
+  };
+  for (const sess of sessions) {
+    const own = path.join(dispatcher_dir, sess, `${concern}.json`);
+    consider(own, _recorded_at(own), true);
+    const summary = path.join(dispatcher_dir, sess, "summary.json");
+    consider(summary, _summary_last_run(summary, concern), false);
   }
-  if (candidates.length === 0) {
+  return best === null ? null : (best as { p: string }).p;
+}
+
+/**
+ * `completed_at` of a per-concern feedback file; its mtime when the file records
+ * none (older writers); null when the file is absent.
+ */
+function _recorded_at(file: string): { at: string; invocation: string | null } | null {
+  let mtime: string;
+  try {
+    const st = fs.statSync(file);
+    if (!st.isFile()) return null;
+    mtime = st.mtime.toISOString();
+  } catch {
     return null;
   }
-  candidates.sort((a, b) => b.mtime - a.mtime);
-  return candidates[0]!.p;
+  try {
+    const doc = JSON.parse(fs.readFileSync(file, "utf-8")) as { completed_at?: unknown; invocation?: unknown };
+    return {
+      at: typeof doc.completed_at === "string" ? doc.completed_at : mtime,
+      invocation: typeof doc.invocation === "string" ? doc.invocation : null,
+    };
+  } catch {
+    return { at: mtime, invocation: null };
+  }
+}
+
+/** Latest `completed_at` (and its `invocation`) of `concern` in the summary, over its `latest` row and the invocations that ran it. */
+function _summary_last_run(summary: string, concern: string): { at: string; invocation: string | null } | null {
+  try {
+    const doc = JSON.parse(fs.readFileSync(summary, "utf-8")) as {
+      invocations?: Array<{ invocation?: unknown; completed_at?: unknown; concerns?: Array<{ concern?: unknown; completed_at?: unknown }> }>;
+      latest?: Record<string, unknown>;
+    };
+    let last: { at: string; invocation: string | null } | null = null;
+    const offer = (at: string, invocation: string | null): void => {
+      if (last === null || compareRuns(Date.parse(at), invocation, Date.parse(last.at), last.invocation) > 0) last = { at, invocation };
+    };
+    // `latest` carries the concern's own completion time (the clock its per-concern file uses).
+    // The capped history still counts — a run an older writer recorded there may be newer than
+    // the first `latest` row — except the row's own dispatch, already counted on the finer clock.
+    const readable = (v: unknown): v is string => typeof v === "string" && !Number.isNaN(Date.parse(v));
+    const kept = doc.latest !== null && typeof doc.latest === "object" && !Array.isArray(doc.latest) ? doc.latest[concern] : undefined;
+    // Only a row the writer would keep (`isLatestRun`) counts, and only it may stand in for its
+    // dispatch's history entry; any other row is ignored and the history is read as usual.
+    let keptId: string | null = null;
+    if (isLatestRun(kept)) {
+      keptId = kept.invocation;
+      offer(kept.completed_at, keptId);
+    }
+    // Each history item and concern entry is checked on its own: a damaged one is skipped,
+    // never allowed to throw away a candidate already accepted or a valid item after it.
+    const isObj = (v: unknown): v is Record<string, unknown> => v !== null && typeof v === "object" && !Array.isArray(v);
+    for (const inv of Array.isArray(doc.invocations) ? (doc.invocations as unknown[]) : []) {
+      if (!isObj(inv) || !Array.isArray(inv.concerns)) continue;
+      const entry = (inv.concerns as unknown[]).find((c): c is Record<string, unknown> => isObj(c) && c.concern === concern);
+      if (entry === undefined) continue;
+      const id = typeof inv.invocation === "string" ? inv.invocation : null;
+      if (keptId !== null && id === keptId) continue;
+      // The concern's own completion time; the dispatch's only for an older writer that did not record it.
+      const at = readable(entry.completed_at) ? entry.completed_at : inv.completed_at;
+      if (readable(at)) offer(at, id);
+    }
+    return last;
+  } catch {
+    return null;
+  }
 }
 
 function _rel(p: string | null, root: string): string | null {
