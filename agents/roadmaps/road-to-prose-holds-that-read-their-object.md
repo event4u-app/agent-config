@@ -1,0 +1,70 @@
+---
+complexity: bounded
+status: ready
+execution:
+  mode: phase-checkpoints
+owner: maintainer
+review_by: 2027-01-31
+relates:
+  - slug: road-to-a-halt-that-holds-every-lane
+    relation: extends
+    note: "Carries the two parser findings R2 round 6 left after six review rounds on that roadmap's Phase 2; the halt half closed there."
+---
+# Road to prose holds that read their object
+
+> **Source:** R2 completion review round 6 of `road-to-a-halt-that-holds-every-lane`,
+> `agents/evidence/reviews/road-to-a-halt-that-holds-every-lane.round-6.md`,
+> findings 1 and 2, both reproduced with `screenRoadmap` probes on the branch head.
+
+## Goal
+
+`roadmap_drain_queue`'s prose-hold parser decides a hold by the object the hold
+names — releasing it only when every object it names has resolved, and never
+keeping it once its only object has.
+
+## Findings, as they stand
+
+1. **A resolution that covers one object releases a compound hold.**
+   `RESOLVED_AFTER_RE` is tested against the rest of the sentence, so "It was
+   blocked by the probe and the host, which has since shipped." reads runnable
+   although only the host shipped. Release direction — the risk the parent
+   roadmap's Risk Register ranks second.
+2. **A hold whose only object is a resolved blocker stays held in unlisted
+   phrasings.** `citationRe` accepts four exact forms; "Blocked by blocker `a`
+   and blocker `b`." (both resolved), "Blocked by blocker `a` (resolved
+   2026-10-18).", "Waiting on blocker `a` to ship.", "Parked until blocker `a`
+   has been resolved." and "Blocked by blocker `a` — now resolved." stay held.
+   `main` released them. Fails safe (held), never releases a live hold.
+
+## Acceptance criteria
+
+- **AC-1** Each phrasing above is a fixture, red first, then green.
+- **AC-2** A hold naming several objects releases only when every named object
+  is resolved — by blocker status for blocker refs, by an attached resolution
+  clause for prose objects.
+- **AC-3** No step in the live estate changes class (before/after
+  `roadmap_drain_queue --json` diff over `agents/roadmaps/`).
+
+## Risk Register
+<!-- risk-review: v1 | reviewed: 2026-11-23 | reviewer: claude/host -->
+
+| Rank | Item | Risk type | Description | Mitigation | Anchored under |
+|------|------|-----------|-------------|------------|----------------|
+| 1 | A broader citation grammar releases live holds | product | Accepting more phrasings for a resolved blocker can also accept one that names a second, unresolved object. | Every object named in the hold is enumerated before release (AC-2); fixtures for mixed resolved/unresolved objects in both orders. | Phase 1 — Objects, not phrasings |
+| 2 | Regex growth without an end | implementation | Six review rounds each found new phrasings; another pattern per finding repeats that. | Phase 1 parses the hold's object list once and judges each object, instead of adding phrasing patterns. | Phase 1 — Objects, not phrasings |
+
+## Phase 1 — Objects, not phrasings
+
+- [ ] **1.1** Test first: the six phrasings of findings 1 and 2 as named fixtures (AC-1).
+- [ ] **1.2** Extract a hold's object list (split on `and`, `,`, parentheses) from
+  the hold phrase to the clause end.
+- [ ] **1.3** Judge each object: a blocker ref by its status, a prose object by an
+  attached `which has since <resolving verb>` clause; release only when all
+  objects resolve (AC-2).
+- [ ] **1.4** Before/after `--json` diff over the live estate; every changed step
+  justified in the PR body (AC-3).
+
+## Not in scope
+
+- The emergency halt (closed by the parent roadmap).
+- Any change to the blocker heading format or the `blocked-by` marker.
