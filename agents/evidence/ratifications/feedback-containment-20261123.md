@@ -132,3 +132,7 @@ The analysis’s strongest blind spot is treating evidence for the shown wrapper
 - **Gain.** No post-verdict diagnostic — the timing record, the feedback write, the rule-trip record, or one concern's feedback file — can stop a computed verdict from reaching the host. This closes the dealbreaker the openai seat raised in rounds 25 and 26 of the hook-system change (#3005).
 - **Risk.** A diagnostic that throws is now reported on stderr and skipped instead of ending the dispatch, so a broken feedback tree is quieter than before. The verdict, the exit-code translation and concern isolation are unchanged.
 - **Rollback.** Revert the merge commit; nothing else imports `containFeedback`.
+
+## Owner decision
+
+2026-11-23: the record is short only of provider diversity (openai approved in prose without a stance line, twice; the automatic stance repair returned no usable line). Asked once with the recommendation, the dissent, the exact change, gain, risk and rollback above, the owner chose to push and merge.
