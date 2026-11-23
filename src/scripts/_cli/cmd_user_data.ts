@@ -237,5 +237,11 @@ export function main(argv: readonly string[] = process.argv.slice(2), opts: { ro
     return 2;
 }
 
+// The delegate bundle is `dist/cli-delegate/cmd_user_data.js`, which the `.ts`
+// suffix check never matched: the bundle printed output only because an inlined
+// module with an unguarded entry check ran its own main instead (#2994).
+declare const __AGENT_CONFIG_CLI_DELEGATE__: boolean | undefined;
 const _self = process.argv[1] ? path.resolve(process.argv[1]) : '';
-if (_self && fs.existsSync(_self) && fs.realpathSync(_self).endsWith(path.join('_cli', 'cmd_user_data.ts'))) process.exit(main());
+const _inDelegate =
+    typeof __AGENT_CONFIG_CLI_DELEGATE__ !== 'undefined' && __AGENT_CONFIG_CLI_DELEGATE__ && path.basename(_self, '.js') === 'cmd_user_data';
+if (_inDelegate || (_self && fs.existsSync(_self) && fs.realpathSync(_self).endsWith(path.join('_cli', 'cmd_user_data.ts')))) process.exit(main());

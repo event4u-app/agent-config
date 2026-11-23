@@ -46,7 +46,7 @@ Do NOT use when:
 ### 0. Show what a retro already captured
 
 ```bash
-./scripts-run src/scripts/retro learnings
+agent-config retro learnings
 ```
 
 Lists every retro learning still waiting for a person — proposal files under

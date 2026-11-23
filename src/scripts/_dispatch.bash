@@ -208,6 +208,9 @@ Tier 1 — power-user (release shape, audit, migration):
                              confirmation.
                              Usage: self-repair:release <fingerprint> --dry-run
                                     self-repair:release <fingerprint> --approve <digest>
+  retro                      Read a finished unit's facts and triage for /retro, or
+                             record its one learning (the <retro-queue> path).
+                             Usage: retro [<pr> | --session [<tag>] | status] [--dry-run]
   decision:memo              Record or list a question the run resolved without
                              asking you, so it stays reviewable afterwards.
                              Local-only (gitignored); the locked decision
@@ -1474,6 +1477,12 @@ cmd_self_repair() {
   exec_ts "$script" "$sub" "$@"
 }
 
+# `retro` — the /retro fact reader and recorder. A `_cli/cmd_*` entry so the
+# consumer gets the precompiled bundle; `src/scripts/retro.ts` alone needs tsx.
+cmd_retro() {
+  exec_ts "$PACKAGE_ROOT/src/scripts/_cli/cmd_retro.ts" "$@"
+}
+
 # `decision:memo {write,list}` — the decision-memo channel (UOTL Phase 4.3).
 # A question resolved without contacting the user is only legitimate if the
 # resolution is reviewable afterwards; this is where that record goes. Writes
@@ -1844,6 +1853,7 @@ main() {
     council:revoke-billing)  cmd_council revoke-billing "$@" ;;
     self-repair:status)      cmd_self_repair status "$@" ;;
     self-repair:release)     cmd_self_repair release "$@" ;;
+    retro)                   cmd_retro "$@" ;;
     decision:memo)           cmd_decision_memo "$@" ;;
     run:supervise)           cmd_run_supervise "$@" ;;
     bracket)                 cmd_bracket "$@" ;;
