@@ -1404,8 +1404,10 @@ export function main(argv?: string[]): number {
   }
   assertConcernEnvRestored(); // a failed restore refuses rather than allowing on a dirty process
   const final_rc = _reduce(rcs);
-  writeConcernTimings(String(envelope["event"] ?? ""), String(envelope["platform"] ?? ""), timing_samples);
   // The verdict is computed; no diagnostic write may stop it reaching the host.
+  containFeedback("timing record", () =>
+    writeConcernTimings(String(envelope["event"] ?? ""), String(envelope["platform"] ?? ""), timing_samples),
+  );
   containFeedback("feedback write", () => _write_feedback(envelope, session_id, feedback_entries, final_rc, started_at));
   containFeedback("rule-trip record", () => _record_rule_trips(envelope, feedback_entries));
 

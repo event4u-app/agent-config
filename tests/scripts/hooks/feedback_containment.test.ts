@@ -126,7 +126,7 @@ describe('a blocking verdict survives an unusable feedback tree', () => {
             [TS_SCRIPT, '--platform', 'claude', '--event', 'pre_tool_use', '--native-event', 'PreToolUse', '--manifest', manifest],
             { cwd: broken, env, stdio: ['pipe', 'pipe', 'pipe'] },
         );
-        child.stderr.destroy(); // the host's end of the pipe is gone: every stderr write hits EPIPE
+        child.stderr.destroy(); // the host stops reading stderr
         let stdout = '';
         child.stdout.setEncoding('utf8');
         child.stdout.on('data', (c: string) => {

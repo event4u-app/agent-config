@@ -11,6 +11,7 @@ import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import type * as TtyModule from 'node:tty';
 import type * as StdinPolicy from '../../../src/scripts/hooks/stdin_failure_policy.js';
 import type * as StateIo from '../../../src/scripts/hooks/state_io.js';
+import type * as ConcernTimings from '../../../src/scripts/hooks/concern_timings.js';
 
 const PAYLOAD = JSON.stringify({ session_id: 'throws', tool_name: 'Bash', tool_input: { command: 'ls' } });
 
@@ -31,6 +32,13 @@ vi.mock('../../../src/scripts/hooks/state_io.js', async (orig) => {
                 : real.update_json_under_lock(target, mutate)) as typeof real.update_json_under_lock,
     };
 });
+
+vi.mock('../../../src/scripts/hooks/concern_timings.js', async (orig) => ({
+    ...(await orig<typeof ConcernTimings>()),
+    writeConcernTimings: () => {
+        throw new Error('injected timing failure');
+    },
+}));
 
 const { main } = await import('../../../src/scripts/hooks/dispatch_hook.js');
 const { feedback_dir } = await import('../../../src/scripts/hooks/state_io.js');
@@ -86,6 +94,7 @@ describe('a feedback write that throws', () => {
         expect(rc).toBe(2); // Claude Code's native refusal code
         expect(err.join('')).toContain('fixture block'); // Claude reads a refusal's reason from stderr
         expect(err.join('')).toContain('feedback write for guard failed: injected lock failure');
+        expect(err.join('')).toContain('timing record failed: injected timing failure');
         const dir = feedback_dir(path.join(tmp, 'agents', 'runtime', 'state'), 'throws');
         expect(fs.existsSync(path.join(dir, 'guard.json'))).toBe(false);
         expect(JSON.parse(fs.readFileSync(path.join(dir, 'later.json'), 'utf8'))).toMatchObject({ concern: 'later', reason: 'fixture allow' });
