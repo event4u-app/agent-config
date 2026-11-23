@@ -18,6 +18,25 @@
  */
 import { EXIT_ALLOW } from './exit_codes.js';
 
+/**
+ * Runs one diagnostic write so that nothing it throws reaches the caller. The
+ * dispatcher calls every feedback write after the verdict is computed; an
+ * exception escaping one would stop that verdict reaching the host. A failure
+ * is reported on stderr (itself guarded) and the write is skipped.
+ */
+export function containFeedback(label: string, write: () => void): void {
+    try {
+        write();
+    } catch (exc) {
+        try {
+            const msg = exc instanceof Error ? exc.message : String(exc);
+            process.stderr.write(`dispatch_hook: ${label} failed: ${msg}\n`);
+        } catch {
+            // stderr itself is gone; the verdict still matters more than the report
+        }
+    }
+}
+
 /** An entry that allowed, was not resolved from a crash, and gave no reason. */
 export function isQuietAllow(entry: Readonly<Record<string, unknown>>): boolean {
     return (
