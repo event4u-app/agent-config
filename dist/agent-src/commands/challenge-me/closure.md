@@ -39,8 +39,11 @@ turn whose answer is recorded immediately.
 Run the deterministic detector. It finds and classifies; it resolves nothing.
 
 ```bash
-./scripts-run src/scripts/closure_scan <roadmap-path>
+agent-config closure:scan <roadmap-path>
 ```
+
+In this package's own checkout the same tool is
+`./scripts-run src/scripts/closure_scan <roadmap-path>`.
 
 It reports one row per open decision: an id, a line, a detector kind, and the
 **ownership class** that kind maps to. The families are `tbd`,
@@ -135,8 +138,12 @@ closed decision is re-asked only when that condition became true.
 `lint_decision_classes` enforces both vocabularies. Run it before handing back:
 
 ```bash
-./scripts-run src/scripts/lint_decision_classes
+agent-config closure:lint <roadmap-path>
 ```
+
+Without a path it lints every top-level roadmap of the project containing the
+working directory. In this package's own checkout:
+`./scripts-run src/scripts/lint_decision_classes`.
 
 ## Step 5 — Residue is asked now, never filed
 

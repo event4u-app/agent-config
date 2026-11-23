@@ -58,6 +58,8 @@ export const REGISTRY: readonly CommandEntry[] = [
     { name: 'packs', disposition: 'native', synopsis: 'List packs from the discovery manifest (ls subcommand).' },
     { name: 'packs:active', disposition: 'delegate', synopsis: 'Which packs are active here, from which file — names the degraded zero-pack case.' },
     { name: 'brand:status', disposition: 'delegate', synopsis: 'Whether a consumer brand tokens file is present, where, and dot-prefixed near-misses.' },
+    { name: 'closure:scan', disposition: 'delegate', synopsis: "Find and classify a plan's open decisions — the /challenge-me closure detector." },
+    { name: 'closure:lint', disposition: 'delegate', synopsis: "Check the ## Decisions contract on this project's roadmaps, or on the roots / files given." },
     { name: 'statusline:tap', disposition: 'delegate', synopsis: 'Claude Code status-line tap: chains your line, records the plan window for quota notices.' },
     { name: 'statusline:install', disposition: 'delegate', synopsis: 'Point statusLine at the tap, keeping your status line chained.' },
     { name: 'statusline:uninstall', disposition: 'delegate', synopsis: 'Restore the status line the tap replaced.' },
