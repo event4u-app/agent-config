@@ -401,7 +401,7 @@ The change neither weakens guards nor expands authority. It strengthens a fail-s
 
 ---
 
-STANCE: confirmed-non-expanding | CONFIDENCE: high | DEALBREAKER: no
+[stance line omitted in this quote: confirmed-non-expanding, confidence high, no dealbreaker]
 ````
 
 ### Reviewer B
