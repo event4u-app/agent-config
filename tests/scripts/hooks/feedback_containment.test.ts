@@ -57,7 +57,7 @@ describe('containFeedback', () => {
 });
 
 describe('a blocking verdict survives an unusable feedback tree', () => {
-    function dispatch(ws: string): { status: number | null; stdout: string } {
+    function dispatch(ws: string): { status: number | null; stdout: string; stderr: string } {
         const manifest = path.join(tmp, 'manifest.yaml');
         fs.writeFileSync(
             manifest,
@@ -88,7 +88,7 @@ describe('a blocking verdict survives an unusable feedback tree', () => {
                 env,
             },
         );
-        return { status: r.status, stdout: r.stdout };
+        return { status: r.status, stdout: r.stdout, stderr: r.stderr };
     }
 
     it('the host gets the same refusal whether or not feedback could be written', () => {
@@ -101,14 +101,16 @@ describe('a blocking verdict survives an unusable feedback tree', () => {
 
         const ok = dispatch(healthy);
         const bad = dispatch(broken);
-        expect(ok.status).not.toBe(0); // the fixture refused, so this is a real verdict
-        expect(bad.status).toBe(ok.status);
+        expect(ok.status).toBe(2); // Claude Code's native refusal code
+        expect(ok.stderr).toContain('fixture block'); // the refusal came from the fixture, not a crash
+        expect(bad.status).toBe(2);
+        expect(bad.stderr).toContain('fixture block');
         expect(bad.stdout).toBe(ok.stdout);
         expect(fs.existsSync(path.join(healthy, 'agents', 'runtime', 'state'))).toBe(true);
     });
 
-    // Pins a property no listener provides: every entry calls `process.exit(main())`
-    // synchronously, so an asynchronous EPIPE on stderr never runs before the exit.
+    // Pins observed behaviour only: with the host's stderr closed, the exit code
+    // still arrives. It does not show that a write hit EPIPE.
     it('a host that closed stderr still gets the refusal while every feedback write fails', async () => {
         const healthy = path.join(tmp, 'healthy-2');
         fs.mkdirSync(healthy, { recursive: true });
@@ -132,7 +134,8 @@ describe('a blocking verdict survives an unusable feedback tree', () => {
         });
         child.stdin.end(JSON.stringify({ session_id: 'containment', tool_name: 'Bash', tool_input: { command: 'ls' } }));
         const status = await new Promise<number | null>((resolve) => child.on('close', (code) => resolve(code)));
-        expect(status).toBe(ok.status);
+        expect(ok.status).toBe(2);
+        expect(status).toBe(2);
         expect(stdout).toBe(ok.stdout);
     });
 });
