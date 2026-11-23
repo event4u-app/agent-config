@@ -2,12 +2,12 @@
 proposed_by: agent:claude-opus-5-5
 implemented_by: agent:claude-opus-5-5
 reviewed_by: ai-council
-subject: 64594b04c379bec86a0e466ad43c23cf4cee7725d3ed8f3767b98be10f5809cb
-providers: [anthropic]
+subject: bf0fc6eba2be821e18d79ff672dc6fba73067afa77f604172b94476b79a0d7f7
+providers: [anthropic, openai]
 verdict: ratified
 seats:
   anthropic: ratified
-  openai: no-final-verdict
+  openai: ratified
 effective_after: merge
 ---
 
@@ -15,9 +15,9 @@ effective_after: merge
 
 # Modification review
 
-Round 3 (rerun in analysis mode after the openai seat's round-3 reply carried no stance line) over the two gated files of the feedback-containment change. The openai seat approved in prose in both runs (round 3: 'APPROVE'), but closed without a stance line both times, and the one automatic stance repair did not return a usable line.
+Round 4 over the two gated files of the feedback-containment change, after the per-concern write moved into feedback_policy.ts for the source-size budget. Rounds 1-3 are committed beside it; in round 3 the openai seat approved in prose without a stance line, and the owner had already chosen to merge on that record.
 
-Verdict `ratified`, derived from each seat's stance line; the prompt every seat answered is `agents/evidence/council/feedback-containment-ratification-r3-20261123.question.md`, committed at `6119aa11441fbc8860caf3c58d0c5c8812bd1f4c` and naming this record's subject.
+Verdict `ratified`, derived from each seat's stance line; the prompt every seat answered is `agents/evidence/council/feedback-containment-ratification-r4-20261123.question.md`, committed at `f4b15a71ffa9e57c330a51f47815a399c7cc22be` and naming this record's subject.
 
 What this record does not establish: that a council produced the session it was rendered from. That file is the caller’s and council output is not kept, so on that point this record is exactly as trustworthy as a typed one. What it does establish is that the header says no more than the replies below, and that the prompt showed this content.
 
@@ -25,106 +25,118 @@ What this record does not establish: that a council produced the session it was 
 
 ### anthropic — `ratified`
 
-```text
-## Independent Review – Round 3
+````text
+## Analysis of Prior Reviews
 
-I have not seen prior rounds' reasoning, only the stance lines and quoted round 2 text.
+### Agreement with Reviewer A
 
-### Agreement with Round 2 Reviewers
+I **agree** with all major points:
+- **No weakening detected**: The change strengthens fail-closed behavior by preventing diagnostic failures from blocking verdict emission
+- **No uncontained throws**: The `containFeedback` wrapper has nested try-catch (outer for the write, inner for stderr), making it comprehensive
+- **Defense-in-depth is legitimate**: The nested containment (per-concern + outer wrapper on `_write_feedback`) is sound defensive programming, not redundant
 
-**Round 2 Reviewer B (REQUEST_CHANGES):**
-- ✓ Timing diagnostics in round 2 ran outside containment
-- ✓ The `String()` conversions and `writeConcernTimings` call needed protection
-- ✓ The request to put the entire statement including argument evaluation inside containment was correct
+### Partial Agreement with Reviewer B
 
-**Round 2 Reviewer A (ratified but noted refinement):**
-- ✓ The two-level wrapping serves distinct purposes
-- ✓ The JSON invariant made timing conversions safe in practice
-- ✓ Wrapping them anyway was "belt-and-suspenders" appropriate for follow-up
+**Agree**:
+- The excerpt doesn't show the complete path from verdict to host emission, creating a theoretical verification gap
+- The in-process test is cited but not shown with its assertions
 
-Round 3 implements Reviewer B's requested change, which Reviewer A also endorsed as appropriate.
+**Disagree**:
+- **On emphasis of discovery loops**: This is a ratification review of a specific diff, not a roadmap assessment. The diff shows the three diagnostic calls after `_reduce(rcs)` and their containment wrappers. If other post-verdict diagnostics existed, we'd expect them in the diff since that's what the change is about
+- **On "inferred vs confirmed"**: The containment mechanism itself is confirmed in the diff - `containFeedback` catches all exceptions with nested guards. The claim that these are the *only* post-verdict diagnostics is reasonably inferred from the diff context
+- **Reviewer B provided no stance line**, which makes round comparison difficult
 
 ### New Points
 
-1. **The change is complete and symmetric.** All three post-verdict diagnostics now use identical containment: timing (line 1406), feedback (line 1409), rule-trips (line 1410). The pattern is clean and consistent.
+1. **`containFeedback` is bulletproof**: Even parameter evaluation (`String(exc)`, `exc instanceof Error`) happens inside the catches. If you passed `null` as the write function, the resulting TypeError from calling it would still be caught by the outer try-catch.
 
-2. **The test proves the core property through dual injection.** Mocking both `update_json_under_lock` and `writeConcernTimings` to throw, then asserting exit 2 + refusal reason + both error reports + later feedback survival - this directly establishes that multiple diagnostic failures can't prevent verdict delivery.
+2. **The design intent is explicit**: The comment "The verdict is computed; no diagnostic write may stop it reaching the host" directly states the safety property. The code implements this exactly.
 
-3. **The comment is now supported.** Line 1405 claims "no diagnostic write may stop it reaching the host." In round 2 this was aspirational; in round 3 it's factual - all three diagnostic calls are wrapped, and `String()` conversions are inside the lambda.
+3. **Silent failure is intentional**: If stderr itself throws in the inner catch, the outer catch swallows it silently. This matches the stated priority (verdict > diagnostic reporting) and is correct for the design goal.
 
-### Question Answers
+## Answers to the Three Questions
 
-**Q1: Does this weaken guards or expand authority?**
-No. All changes occur after `_reduce(rcs)` at line 1404. No modifications to: concern isolation (`assertConcernEnvRestored` at 1403), child-process hardening, fail-closed logic, authority boundaries, or exit-code translation.
+### 1. Does this change weaken guards or expand authority?
 
-**Q2: Can any call between `_reduce(rcs)` and host emission still throw out of `main`?**
-Not in the shown diff. The three diagnostic operations are each wrapped in `containFeedback`, which catches all exceptions (including from its own stderr write) and never rethrows. The `String()` conversions at line 1407 that were unprotected in round 2 are now inside the lambda. Nothing shown can throw out of `main`.
+**No.** This change:
+- Uses the same feedback write logic (`keepNewerOutcome`, same lock, same failure detection)
+- Accesses no new file paths or permissions
+- **Strengthens** fail-closed behavior by preventing diagnostic failures from blocking the verdict
+- Maintains per-concern isolation (each write still happens under its concern's lock)
 
-(If there is code after line 1410 but before the return, it's not modified in this diff and therefore out of scope.)
+### 2. Can anything throw between `_reduce(rcs)` and host emission?
 
-**Q3: Is anything unnecessary or wrong?**
-No. The two-level wrapping is purposeful: inner wraps (line 896) let later concerns write when one fails; outer wraps (lines 1406-1410) protect the diagnostic operations themselves. The test coverage directly proves the mechanism. `String(entry["concern"])` at line 896 is outside the inner try but safe - `entry` is internal data where `concern` is a string identifier. Error messages are specific enough to debug.
-
-### Operational Assessment
-
-**Maintenance burden:** Minimal. `containFeedback` is 20 lines of straightforward error handling. Consistent pattern across all three diagnostic calls. No complex state or cleanup.
-
-**Operational cost:** Negligible. Try-catch overhead is trivial versus I/O (file writes, spawns). Benefit: when diagnostic infrastructure fails (disk full, permission errors, concurrent locks), agents still return verdicts correctly. Operators get clear stderr messages instead of silent failures.
-
-**Day-to-day running:** This reduces support burden. Diagnostic failures no longer cause verdict delivery failures. Error reports are specific and actionable.
-
-### Verification Against Round 2
-
-Round 2 Reviewer B requested: "put the entire `writeConcernTimings(...)` statement, including argument evaluation, inside the existing containment helper."
-
-This change does exactly that. The lambda at line 1407 contains both `String()` calls and the `writeConcernTimings` invocation. The test forces the timing write to throw and verifies containment.
-
-STANCE: ratified | CONFIDENCE: high | DEALBREAKER: no
+**No.** All three diagnostic calls are wrapped in `containFeedback`:
+```typescript
+containFeedback("timing record", () => writeConcernTimings(...));
+containFeedback("feedback write", () => _write_feedback(...));
+containFeedback("rule-trip record", () => _record_rule_trips(...));
 ```
 
-### openai — `no-final-verdict`
+The `containFeedback` implementation catches ALL exceptions:
+- Outer try-catch wraps the entire `write()` call
+- Inner try-catch guards the stderr error report itself
+- Even if stderr throws, the outer catch swallows it
+- Inside `_write_feedback`, each per-concern write has its own `containFeedback` wrapper (defense-in-depth)
+
+Nothing can escape to block the verdict.
+
+### 3. Is anything unnecessary or wrong?
+
+**No.** The nested containment (per-concern writes individually wrapped, plus outer wrapper on `_write_feedback`) appears redundant at first glance, but it's legitimate defense-in-depth: if the loop setup, the `summaryWritten && isQuietAllow(entry)` check, or any future code in `_write_feedback` throws, the outer wrapper catches it. The logic preservation is exact (same `keepNewerOutcome`, same lock usage, same "failed" detection). The import hygiene is correct.
+
+The 1505-vs-1500-line motivation is an external process concern, but the refactor is mechanically sound regardless.
+
+---
+
+**Summary**: This change converts "diagnostic writes that could stop the verdict" into "contained diagnostic writes that log on failure." The containment mechanism is comprehensive (nested guards, handles both write and reporting failures). No guards weakened, no authority expanded, no throw path remains. The stated test evidence (108 files, 2037 tests passing) supports behavior preservation.
+
+STANCE: ratified | CONFIDENCE: high | DEALBREAKER: no
+````
+
+### openai — `ratified`
 
 ```text
-## Critique of the analysis
+## Independent review
 
-The analysis reaches a plausible ratification, but it overstates what the supplied evidence proves. Its strongest evidence is the diff and regression test; claims about untouched code and behavior outside the excerpts are less secure.
+### 1. Guard, contract, and authority
 
-### Deduplicated findings and evidence quality
+The diff shows no weakened fail-closed guard, changed exit-code contract, child-process hardening change, or expanded authority. The three diagnostic calls run after `_reduce(rcs)` and are wrapped in `containFeedback`; the per-concern write still uses the lock-protected update and `keepNewerOutcome`.
 
-- **No guard or authority change:** Reviewers A and B repeat that the changes are post-verdict diagnostics and do not alter fail-closed behavior, exit translation, child-process hardening, concern isolation, or authority. **Evidence: inferred.** The diff shows the new wrappers after `_reduce(rcs)` and no edits to those mechanisms, but the excerpt does not show their full implementations or the full function.
-- **All three shown diagnostic calls are contained:** The diff puts the timing call, `_write_feedback`, and `_record_rule_trips` inside `containFeedback`; the timing arguments are evaluated inside its callback. **Evidence: confirmed** by the diff. The helper catches exceptions from the callback and its stderr report. This supports containment of those calls as shown.
-- **A throwing concern write preserves the refusal and later feedback:** The test injects a lock-writer exception and checks exit code 2, refusal text, the containment report, and the later concern’s feedback. **Evidence: confirmed** by the test excerpt. It also injects a timing-writer exception and checks its report, though it does not separately assert later feedback after that timing failure.
-- **The nested wrappers have distinct purposes:** The inner per-entry wrapper allows later concern writes after one entry fails; the outer wrapper contains failures from the overall diagnostic operation. **Evidence: inferred.** This follows from the shown control flow, though the analysis’s claim that the outer wrapper protects “feedback setup” is broader than the specific test evidence.
-- **No call between `_reduce(rcs)` and host emission can throw out of `main`:** **Evidence: speculative as a whole-function claim.** The excerpt shows the three diagnostics contained, but omits the rest of `main` through host emission. Reviewer A explicitly limits its conclusion to calls shown in the diff, while Reviewer B’s phrasing is broader. The analysis should preserve that limit.
+I agree with Reviewer A’s conclusion that the shown wrappers contain exceptions from those diagnostic operations. Reviewer B’s caution is also fair: this excerpt does not include the entire path through host emission, so it cannot prove that every intervening operation is non-throwing.
 
-The analysis also says the timing-throw test “directly proves” verdict delivery. It verifies the error report and refusal-related assertions in the shown test, but the exact effect of a thrown timing writer on all host-emission paths is not established by those assertions alone. That is a small overstatement, not a reason to reject the change.
+### 2. Throws before host emission
 
-### Roadmap readiness
+From the shown diff, the timing, feedback, and rule-trip calls are contained. The per-entry feedback write is contained as well. `containFeedback` also guards its stderr reporting.
 
-The containment change and its regression test are **roadmap-ready**: the diff identifies the exact calls, and the test exercises injected failures for a concern write and timing write.
+I cannot establish from this excerpt whether another call between `_reduce(rcs)` and host emission can throw: that code is omitted. So “no call can throw out of `main`” is **not confirmed** by the provided material.
 
-A claim that *every* post-verdict call is unable to interrupt host delivery needs a **discovery loop** first: inspect the full remaining `main` path and identify any calls between diagnostics and host emission. Separately, testing a throw from `_record_rule_trips` would improve coverage, but the supplied analysis does not establish that it is a roadmap blocker.
+### 3. Unnecessary or wrong
+
+The outer wrapper around `_write_feedback` overlaps with the per-entry wrappers. It is useful for failures in the loop or other work inside `_write_feedback`, so it is not clearly unnecessary. Moving the write helper also appears mechanically consistent with the shown diff.
+
+The claim that behavior is unchanged and the size ratchet is satisfied is supported only by the brief’s assertions about tests and line counts; the diff itself does not verify either. These are evidence gaps, not demonstrated defects.
+
+**Evidence quality:** The placement of the three wrappers and per-entry wrapper is confirmed by the diff. The claim that the entire post-verdict path cannot throw is inferred at best. The test count, passing results, and line-budget rationale are stated but not independently evidenced here. No finding is purely speculative.
+
+**Roadmap readiness:** The code change is concrete and reviewable from the diff. An end-to-end claim that no intervening operation can prevent host emission needs a discovery loop over the omitted path. The test and line-ratchet claims also need direct references if they are to serve as roadmap acceptance criteria.
 
 ### Follow-up actions, ranked by leverage
 
-1. **Inspect the full post-verdict path through host emission** to substantiate or narrow the “no call can throw” claim. Supports: “No call between `_reduce(rcs)` and host emission.”
-2. **Keep the conclusion scoped to the three wrapped diagnostics** unless that inspection confirms the rest of the path is safe. Supports: “All three shown diagnostic calls are contained.”
-3. **Add a focused injected failure for `_record_rule_trips` if its distinct failure path matters to the guarantee.** Supports: “A throwing concern write…” and the stated test-coverage limitation.
-4. **Tighten the test-coverage wording** to distinguish assertions made for the timing failure from those made for the per-concern failure. Supports: “A throwing concern write preserves the refusal and later feedback.”
+1. Inspect the full path from `_reduce(rcs)` through host emission to identify any uncontained calls. This addresses the central claim.
+2. Verify the in-process test’s assertions for write and timing failures, and confirm host emission still occurs.
+3. Check the actual source-size ratchet result and the resulting `dispatch_hook.ts` line count.
+4. Keep the nested containment if `_write_feedback` can perform throwing work beyond each individual write; otherwise simplify only after confirming that scope.
 
-### Skeptical assessment
+### Top-N consensus
 
-The weakest assumption is that the diff’s shown diagnostic calls account for the entire path between verdict reduction and host emission. The likely overlooked failure mode is an exception in an omitted post-verdict operation—such as output construction or another conversion—escaping `main` even though all three diagnostic calls are contained.
+- The diff contains the three named post-verdict diagnostic calls and each per-concern write; this does not prove the entire route to host emission is exception-free.
+- The feedback write extraction preserves the visible lock update and failed-write report, while behavior preservation remains asserted rather than independently verified.
+- The stated tests and source-size ratchet support the rationale but lack direct evidence in the excerpt.
 
-### Top-N consensus list
+The strongest blind spot is the missing code between verdict reduction and host emission, which prevents confirming the brief’s end-to-end “every diagnostic” claim.
 
-- **No guard or authority change is visible:** inferred from the post-verdict placement and limited diff.
-- **The three shown diagnostic calls, including timing argument evaluation, are contained:** confirmed by the diff.
-- **The regression test demonstrates containment for injected concern-write and timing-write failures:** confirmed by the test, with broader delivery claims requiring care.
-- **The inner and outer wrappers serve different containment scopes:** inferred from their control flow.
-- **The claim that no call anywhere before host emission can throw remains unverified:** speculative from the excerpt because the full path is absent.
-
-The analysis’s strongest blind spot is treating evidence for the shown wrappers as evidence about the entire post-verdict path.
+STANCE: ratified | CONFIDENCE: med | DEALBREAKER: no
 ```
 
 ## Gain, risk, rollback (stated by the implementer, not by a seat)
