@@ -126,3 +126,9 @@ The weakest assumption is that the diff’s shown diagnostic calls account for t
 
 The analysis’s strongest blind spot is treating evidence for the shown wrappers as evidence about the entire post-verdict path.
 ```
+
+## Gain, risk, rollback (stated by the implementer, not by a seat)
+
+- **Gain.** No post-verdict diagnostic — the timing record, the feedback write, the rule-trip record, or one concern's feedback file — can stop a computed verdict from reaching the host. This closes the dealbreaker the openai seat raised in rounds 25 and 26 of the hook-system change (#3005).
+- **Risk.** A diagnostic that throws is now reported on stderr and skipped instead of ending the dispatch, so a broken feedback tree is quieter than before. The verdict, the exit-code translation and concern isolation are unchanged.
+- **Rollback.** Revert the merge commit; nothing else imports `containFeedback`.
