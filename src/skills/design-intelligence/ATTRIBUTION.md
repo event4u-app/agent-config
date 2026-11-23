@@ -31,7 +31,7 @@ unchanged from the base pin.
 ### Re-check of 2026-11-23 — checked, not adopted
 
 Upstream HEAD `6ec2bb58334ca3014573c4cbd4834ee3a40afd9d` (2026-11-22) is 177
-commits past the base pin and touches 101 corpus/data files. The licence is
+commits past the base pin and touches 101 corpus/data files. The license is
 unchanged (MIT, same copyright holder). Nothing was adopted, so the base pin
 stays: moving it would claim an adoption that did not happen. A refresh that
 takes the drift is its own change.
