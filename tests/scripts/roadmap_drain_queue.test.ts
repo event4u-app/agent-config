@@ -237,6 +237,10 @@ describe('screenRoadmap — holds written in prose', () => {
         ['"not just"', 'Not just waiting on the probe.'],
         ['"not yet"', 'Not yet dispatched, blocked by the probe.'],
         ['"not yet" directly before the phrase', 'Not yet blocked by the probe; it will be.'],
+        // R2 round 2 findings 1 and 3.
+        ['a resolution qualified away', 'It was blocked by the upstream fix, which has since merged upstream but is not yet released.'],
+        ['a partial resolution', 'It was blocked by the fix, which has since been fixed in part; the rest is pending.'],
+        ['"or not"', 'Whether or not blocked by the probe, the step waits.'],
         ['a negation in another clause', 'The probe is not shipped, and the step is blocked by it.'],
     ])('keeps %s held', (_case, note) => {
         const s = screen('road-to-h2', roadmap({ done: 1, open: [`- [ ] **2.1 Work.**\n      ${note}`] }));
@@ -252,6 +256,19 @@ describe('screenRoadmap — holds written in prose', () => {
             blockers: '### blocker: settled\n- **Status:** resolved — 2026-10-18\n- **Owner:** owner',
         });
         expect(screen('road-to-r2', text).steps[0]?.cls).toBe('held');
+    });
+
+    it.each([
+        'Blocked on the probe (blocker `settled`).',
+        'Waiting on the probe, see blocker `settled`.',
+        "Isn't blocked by the probe any more.",
+    ])('releases a dependency hold its own sentence ties to the resolved blocker: %s', (note) => {
+        const text = roadmap({
+            done: 1,
+            open: [`- [ ] **2.1 Work.**\n      ${note}`],
+            blockers: '### blocker: settled\n- **Status:** resolved — 2026-10-18\n- **Owner:** owner',
+        });
+        expect(screen('road-to-r4', text).steps[0]?.cls).toBe('runnable');
     });
 
     it('releases only the hold phrase that names the resolved blocker, not its whole clause', () => {

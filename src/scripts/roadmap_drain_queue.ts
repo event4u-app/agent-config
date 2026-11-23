@@ -184,29 +184,35 @@ const SENTENCE_SPLIT_RE = /(?<=[.!?;:])\s+/;
 const CLAUSE_SPLIT_RE = /,|\s[—–]\s|\b(?:but|and|while|whereas)\b/i;
 // "not currently blocked by": only an adverb may sit between negator and phrase —
 // "not only / not just / not yet blocked by" still hold.
-const NEGATED_BEFORE_RE = /\b(?:no longer|not|never|isn't|is not|no more)(?:\s+(?:currently|presently|actually))?\s+$/i;
+const NEGATED_BEFORE_RE =
+    /(?<!\bor )\b(?:no longer|not|never|isn't|aren't|wasn't|weren't|doesn't|is not|no more)(?:\s+(?:currently|presently|actually))?\s+$/i;
 // "was blocked by …": a past-tense hold, released only by RESOLVED_AFTER_RE.
 const PAST_BEFORE_RE = /\b(?:was|were|had been)(?:\s+[\w'-]+)?\s+$/i;
-// "…, which has since shipped": the resolution must attach to the hold's own object.
+// "…, which has since shipped.": the resolution attaches to the hold's own object
+// and ends the sentence — "merged upstream but not released" and "fixed in part" do not.
 const RESOLVED_AFTER_RE =
-    /^[^,.;:]*,\s*which\s+(?:has|have)\s+(?:since\s+)?(?:been\s+)?(?:shipped|landed|merged|resolved|fixed|cleared|lifted)\b/i;
+    /^[^,.;:]*,\s*which\s+(?:has|have)\s+(?:since\s+)?(?:been\s+)?(?:shipped|landed|merged|resolved|fixed|cleared|lifted)(?:\s+(?:on|in)\s+[\w-]+)?\s*[.!?]?\s*$/i;
+// A hold the owner placed, not a dependency: a resolved blocker never releases it.
+const OWNER_HOLD_RE = /^(?:owner-reserved|on hold|parked until)$/i;
 
 /**
  * True when a hold phrase in `text` is still in force. Each phrase is judged in
- * its own clause, so match order never decides; a phrase whose object is one of
- * `resolvedRefs` ("held by blocker `x`") holds nothing, other phrases still do.
+ * its own clause, so match order never decides. A dependency hold whose sentence
+ * names a resolved blocker from `resolvedRefs` holds nothing; an owner hold in
+ * the same sentence still does.
  */
 function proseHold(text: string, resolvedRefs: readonly string[] = []): boolean {
     const flat = text.replace(/\s+/g, ' ');
+    const refs = resolvedRefs.map((id) => `\`${id.toLowerCase()}\``);
     for (const sentence of flat.split(SENTENCE_SPLIT_RE)) {
+        const namesResolved = refs.some((r) => sentence.toLowerCase().includes(r));
         let offset = 0;
         for (const clause of sentence.split(CLAUSE_SPLIT_RE)) {
             const at = sentence.indexOf(clause, offset);
             offset = at + clause.length;
             for (const m of clause.matchAll(PROSE_HOLD_RE)) {
                 const before = clause.slice(0, m.index);
-                const after = clause.slice(m.index + m[0].length).toLowerCase();
-                if (resolvedRefs.some((id) => new RegExp(`^\\s*(?:by\\s+|on\\s+)?(?:the\\s+)?blocker\\s+\`${id.toLowerCase()}\``).test(after))) continue;
+                if (namesResolved && !OWNER_HOLD_RE.test(m[0])) continue;
                 if (NEGATED_BEFORE_RE.test(before)) continue;
                 if (PAST_BEFORE_RE.test(before) && RESOLVED_AFTER_RE.test(sentence.slice(at + m.index + m[0].length))) continue;
                 return true;
