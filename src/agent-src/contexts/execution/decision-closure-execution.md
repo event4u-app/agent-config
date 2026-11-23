@@ -58,8 +58,8 @@ is routed identically:
 
 Every resolution is appended to `## Decisions` **with the step id in the
 evidence column**, so a later reader can tell a decision planning closed from
-one the run met. `./scripts-run src/scripts/lint_decision_classes` validates
-the row.
+one the run met. `agent-config closure:lint <roadmap-path>` validates the row
+(`./scripts-run src/scripts/lint_decision_classes` in this package's checkout).
 
 **Parking is not deferring.** A parked step keeps its `[ ]`, keeps its place in
 the count, and is returned to in the same run once the answer lands. It does

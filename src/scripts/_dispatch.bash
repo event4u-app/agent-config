@@ -80,6 +80,9 @@ TS-shell native (run via the installed `agent-config` binary):
   brand:status               Is a consumer brand layer present, and at which of the
                              four canonical tokens.json paths. Flags a dot-prefixed
                              .tokens.json, which nothing reads.
+  closure:scan <roadmap>     Find and classify a plan's open decisions (/challenge-me closure).
+  closure:lint [path...]     Check the ## Decisions contract on this project's roadmaps,
+                             or on the project roots / roadmap files given.
   statusline:tap             Claude Code status-line tap: chains your status line and
                              records the plan window (rate_limits) for quota notices.
   statusline:install         Point statusLine at the tap, keeping yours chained.
@@ -894,6 +897,11 @@ cmd_mcp_available() {
 
 cmd_brand_status() {
   exec_ts "$PACKAGE_ROOT/src/scripts/_cli/cmd_brand_status.ts" "$@"
+}
+
+# `closure:scan|lint` — the /challenge-me closure tools; scripts/_cli/cmd_closure.ts.
+cmd_closure() {
+  exec_ts "$PACKAGE_ROOT/src/scripts/_cli/cmd_closure.ts" "$@"
 }
 
 # `statusline:tap|install|uninstall` — the plan-window tap and its installer.
@@ -1766,6 +1774,8 @@ main() {
     git:convention)          cmd_git_convention "$@" ;;
     mcp:available)           cmd_mcp_available "$@" ;;
     brand:status)            cmd_brand_status "$@" ;;
+    closure:scan)            cmd_closure scan "$@" ;;
+    closure:lint)            cmd_closure lint "$@" ;;
     statusline:tap)          cmd_statusline tap "$@" ;;
     statusline:install)      cmd_statusline install "$@" ;;
     statusline:uninstall)    cmd_statusline uninstall "$@" ;;
