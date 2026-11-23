@@ -277,7 +277,7 @@ export function harvest_inline_findings(
  */
 export function composeFinalRoundSuffix(
     suffix: string,
-    opts: { is_final: boolean; inline_findings: boolean; stance_tally: boolean },
+    opts: { is_final: boolean; inline_findings: boolean; stance_tally: boolean; stance_contract?: string | null },
 ): string {
     if (!opts.is_final) {
         return suffix;
@@ -287,7 +287,7 @@ export function composeFinalRoundSuffix(
         out = `${out}\n\n---\n\n${INLINE_FINDINGS_CONTRACT}`;
     }
     if (opts.stance_tally) {
-        out = `${out}\n\n---\n\n${STANCE_LINE_CONTRACT}`;
+        out = `${out}\n\n---\n\n${opts.stance_contract ?? STANCE_LINE_CONTRACT}`;
     }
     return out;
 }

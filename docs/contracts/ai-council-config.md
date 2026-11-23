@@ -708,6 +708,13 @@ is invoked.
   vs user_explicit follow the same lens map). Typical use: leave the
   global at `educate` and force `debate` lens to `block` because
   debate is the most expensive transport.
+- **Ratification prompts bypass the classifier** in every mode and
+  invocation tier: a prompt declaring one `subject:` line
+  (`ratification_prompt.ts`) is a run the ratification gate already
+  requires, so `council:necessity · bypassed (ratification prompt …)` is
+  printed and the run proceeds. Such a run also closes its final round on
+  the ratification stance contract alone — no generic `STANCE` contract and
+  no inline-findings block.
 
 **Invocation context (CLI flags).**
 
