@@ -432,7 +432,7 @@ export function consult(
         // inline findings). Both off → the question flows through untouched,
         // byte-identical to today. Order lives in the composer.
         const is_final = round_idx === rounds - 1;
-        const suffix_for_round = composeFinalRoundSuffix(current_suffix, { is_final, inline_findings, stance_tally });
+        const suffix_for_round = composeFinalRoundSuffix(current_suffix, { is_final, inline_findings, stance_tally, stance_contract: opts.stance_repair_contract ?? null });
         const prompt_for_round = `${question.user_prompt}${suffix_for_round}`;
         const round_question =
             round_idx === 0 && prompt_for_round === question.user_prompt

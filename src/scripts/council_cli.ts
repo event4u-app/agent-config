@@ -180,7 +180,7 @@ import {
     with_chairman_fields,
 } from './ai_council/blind_review.js';
 import { tallyFromResponses } from './ai_council/stance_tally.js';
-import { ratificationRepairOptions, readRatificationPrompt } from './ai_council/ratification_prompt.js';
+import { ratificationInlineFindings, ratificationNecessityBypass, ratificationRepairOptions, readRatificationPrompt } from './ai_council/ratification_prompt.js';
 import { storedStopClass } from './ai_council/stop_class.js';
 import { buildHandoffFromStanceTally, type HandoffEnvelope } from './ai_council/handoff.js';
 
@@ -2297,7 +2297,7 @@ function cmd_run(
     // A ratification prompt gets the stance contract and one unattended repair (ai_council/ratification_prompt.ts).
     const { problem: ratification_problem, ratification: ratification_prompt } = readRatificationPrompt(args.input_mode, args.question);
     if (ratification_problem !== null) return (_stderr(`❌  council:run: ${ratification_problem}.\n`), 2);
-    const [proceed, gate_exit] = _necessity_gate({
+    const [proceed, gate_exit] = ratification_prompt ? ratificationNecessityBypass(_stdout) : _necessity_gate({
         prompt: question.user_prompt,
         lens: question.mode,
         invocation: _getattr(args, 'invocation', 'agent'),
@@ -2438,6 +2438,7 @@ function cmd_run(
           )
         : null;
     const stance_repairs: CouncilResponse[] = [];
+    const inline_findings_on = ratificationInlineFindings(inlineFindingsActive(ai_cfg, question.mode), ratification_prompt);
     const responses = consult(members, question, budget, {
         table,
         project,
@@ -2445,9 +2446,7 @@ function cmd_run(
         rounds,
         advisor_plans,
         stance_tally: stance_tally_on,
-        // Phase 1B — the same predicate the harvest below reads, so a member is asked
-        // for the block exactly when the consensus round intends to read one.
-        inline_findings: inlineFindingsActive(ai_cfg, question.mode),
+        inline_findings: inline_findings_on, // Phase 1B — the predicate the harvest below reads
         member_prompt_suffix,
         no_project_context_members,
         // Mid-flight cli→api fallback (ai-council-config.md § failure-class-
@@ -2534,7 +2533,7 @@ function cmd_run(
     const persona_labels = build_persona_labels(advisor_plans, billable);
     // Phase 1B — BEFORE peer review, chairman synthesis and rendering read
     // `responses`; the block is scaffolding, not argument. Off → null, nothing touched.
-    const inline_extractions = inlineFindingsActive(ai_cfg, question.mode) ? harvest_inline_findings(members, responses) : null;
+    const inline_extractions = inline_findings_on ? harvest_inline_findings(members, responses) : null;
     const peer_review = _maybe_run_peer_review(
         ai_cfg,
         args,

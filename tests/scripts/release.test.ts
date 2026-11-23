@@ -26,6 +26,7 @@ import { afterEach, describe, expect, it } from 'vitest';
 
 import { measuredSection } from '../../src/scripts/_lib/dispatch_policy.js';
 import { preflightPosition } from '../../src/scripts/_lib/release_position.js';
+import { effective_resume } from '../../src/scripts/_lib/release_resume.js';
 import { _TEST_LIST_ARGV } from '../../src/scripts/release_publication.js';
 
 import {
@@ -494,6 +495,40 @@ describe('prepend_changelog', () => {
         expect(out.indexOf('1.1.0')).toBeLessThan(out.indexOf('1.0.5'));
         // The era header + intro survive ABOVE the new entry.
         expect(out.indexOf('# Era: 1.0.x — current')).toBeLessThan(out.indexOf('1.1.0'));
+    });
+});
+
+describe('prepend_changelog — idempotent per version', () => {
+    it('does not prepend a second section for a version already in the CHANGELOG', () => {
+        const cl = mkTmpFile(
+            'CHANGELOG.md',
+            '# Changelog\n\n## [1.1.0](y) (2026-02-02)\n\n* new\n\n## [1.0.0](x) (2026-01-01)\n\n* older\n',
+        );
+        const before = fs.readFileSync(cl, 'utf-8');
+        const wrote = prepend_changelog(cl, '## [1.1.0](y) (2026-02-03)\n\n* new again\n');
+        expect(wrote).toBe(false);
+        expect(fs.readFileSync(cl, 'utf-8')).toBe(before);
+    });
+
+    it('still prepends a version whose number is only a prefix of an existing one', () => {
+        const cl = mkTmpFile('CHANGELOG.md', '# Changelog\n\n## [1.1.10](y) (2026-02-02)\n\n* x\n');
+        expect(prepend_changelog(cl, '## [1.1.1](z) (2026-02-03)\n\n* y\n')).toBe(true);
+        expect(fs.readFileSync(cl, 'utf-8')).toContain('## [1.1.1]');
+    });
+});
+
+describe('effective_resume — an in-flight release resumes without the flag', () => {
+    it('the flag alone resumes', () => {
+        expect(effective_resume({ flag: true, in_flight: null, target: '2.0.0' })).toBe(true);
+    });
+    it('an in-flight target equal to the release target resumes without the flag', () => {
+        expect(effective_resume({ flag: false, in_flight: '2.0.0', target: '2.0.0' })).toBe(true);
+    });
+    it('an explicit target that differs from the in-flight one does not resume', () => {
+        expect(effective_resume({ flag: false, in_flight: '2.0.0', target: '2.1.0' })).toBe(false);
+    });
+    it('no in-flight release and no flag is a fresh release', () => {
+        expect(effective_resume({ flag: false, in_flight: null, target: '2.0.0' })).toBe(false);
     });
 });
 

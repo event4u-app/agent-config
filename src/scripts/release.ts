@@ -50,6 +50,7 @@
  * Idempotency: pass `--resume` to recover from a partial failure. Each
  * step then probes existing state (branch, commit, PR, tag, GitHub
  * Release) and skips work that is already done, instead of erroring out.
+ * A release already in flight (`effective_resume`) resumes without the flag.
  * Re-running from `release/{target}` needs neither the flag nor a clean
  * tree — that position, dirty, is the state `guard_release_curation` leaves
  * behind, and `preflightPosition` accepts it (a dirty `main` still refuses).
@@ -131,6 +132,7 @@ import { COMMIT_LOG_FORMAT, NO_IMPACT_TRAILERS, is_breaking_commit, parse_commit
 import { span_bump } from './_lib/impact_bump.js';
 import { span_surfaces, type MajorSurface } from './_lib/major_surface.js';
 import { preflightPosition } from './_lib/release_position.js';
+import { changelog_has_version, effective_resume } from './_lib/release_resume.js';
 import { TAG_TRIGGERED_WORKFLOWS, dispatchTagWorkflows, tagPushProbe } from './_lib/release_tag_dispatch.js';
 import {
     RELEASE_HEAD_DEFAULT,
@@ -594,10 +596,11 @@ function _changelog_line(c: Commit): string {
  * version headings yet, just the intro blockquote) places the new entry after
  * the intro instead of appended at end-of-file. When no current era header
  * exists, falls back to the legacy "above the most recent ## [" heuristic for
- * safety.
+ * safety. Returns false, writing nothing, when the version's section exists.
  */
-function prepend_changelog(p: string, entry: string): void {
+function prepend_changelog(p: string, entry: string): boolean {
     const text = fs.readFileSync(p, 'utf-8');
+    if (changelog_has_version(text, entry)) return false;
     const lines = _splitlines(text);
     const insert_at = current_era_insertion_point(lines);
     if (insert_at !== null) {
@@ -605,7 +608,7 @@ function prepend_changelog(p: string, entry: string): void {
         const after = lines.slice(insert_at).join('\n');
         const head = before + (before ? '\n' : '');
         fs.writeFileSync(p, head + entry + '\n' + after + '\n', 'utf-8');
-        return;
+        return true;
     }
 
     // Legacy fallback — no era header present at all.
@@ -613,11 +616,12 @@ function prepend_changelog(p: string, entry: string): void {
     const m = marker_re.exec(text);
     if (!m) {
         fs.writeFileSync(p, _rstrip(text) + '\n\n' + entry, 'utf-8');
-        return;
+        return true;
     }
     const before = text.slice(0, m.index);
     const after = text.slice(m.index);
     fs.writeFileSync(p, before + entry + '\n' + after, 'utf-8');
+    return true;
 }
 
 /** Mirror of Python `str.splitlines()` (no trailing empty for a final newline). */
@@ -932,7 +936,7 @@ function execute(
             set_plugin_manifest_versions(plan.target);
             set_template_pin(PROJECT_TEMPLATE, plan.target);
             writeReleasedSurface(plan.target);
-            prepend_changelog(CHANGELOG, plan.changelog_entry);
+            if (!prepend_changelog(CHANGELOG, plan.changelog_entry)) _step(2, total, `CHANGELOG already has a ${plan.target} section — not prepended`);
         }
 
         // Regenerate derived files (pack manifests, dist/agent-src/, tool
@@ -1474,25 +1478,11 @@ function main(argv: readonly string[] | null = null): number {
     const surfaces = span_surfaces(prev, (args) => git(args, { capture: true }));
     const bump = resolve_bump(args.bump_override, commits, surfaces);
 
-    // An in-flight release is a STATE, never a flag — so the probe runs
-    // unconditionally and `--resume` no longer decides what is being released.
-    //
-    // The comment this replaces already stated the right intent ("so we don't
-    // accidentally start a 1.16.0 release while 1.15.0 is still in flight") and
-    // the `args.resume ?` gate narrowed it to resumed runs only. Measured on
-    // 14.20.0: `guard_release_curation` refuses after step 2 has bumped
-    // `package.json`, so a plain re-run computed the bump from the ALREADY
-    // BUMPED version, landed on 14.21.0, and then refused its own branch with
-    // `release must run from 'main' or 'release/14.21.0', currently on
-    // 'release/14.20.0'`. The 2026-09-07 start-position fix could not help: it
-    // was asked about the wrong target.
-    //
-    // Neither branch of `_detect_in_flight_target` needs the flag — HEAD
-    // sitting on `release/X.Y.Z`, and a `package.json` version whose tag is not
-    // PUBLISHED, are both facts about the repository. On a clean `main` after a
-    // completed release the second branch returns null (the tag is published),
-    // so a fresh release is unaffected; what changes is that an abandoned bump
-    // can no longer be silently released as the NEXT version.
+    // An in-flight release is a STATE, never a flag: it picks the target here and
+    // turns the skips on below. Measured on 14.20.0, when only `--resume` read it:
+    // a plain re-run bumped from the ALREADY BUMPED version, landed on 14.21.0, and
+    // refused its own branch. The 20.7.0 sequel and the predicate:
+    // `_lib/release_resume.ts`.
     const in_flight = _detect_in_flight_target();
     let target: string;
     if (args.explicit) {
@@ -1506,6 +1496,8 @@ function main(argv: readonly string[] | null = null): number {
         target = bump_version(current, bump);
     }
     parse_version(target);
+    const resume = effective_resume({ flag: args.resume, in_flight, target });
+    if (resume && !args.resume) process.stdout.write(`release ${target} is in flight — resuming it as if --resume were passed\n`);
 
     // Runs in dry-run too — a preview that hides the one condition which will
     // refuse the real run is the case previews are for — but REPORTS there
@@ -1515,14 +1507,14 @@ function main(argv: readonly string[] | null = null): number {
     assert_scheduled_deprecations_clear(target, undefined, { previewOnly: args.dry_run });
 
     if (!args.dry_run) {
-        preflight(target, { resume: args.resume, ci: args.ci });
+        preflight(target, { resume, ci: args.ci });
     }
 
     const today = localIsoDate(new Date());
     // Dry-run stays fast: the trend line costs a full vitest collection
     // (~15s+), which `--dry-run exits 0 without needing …` contracts (and
     // the release test) assume never runs. Real releases compute it.
-    const test_trend_line = args.dry_run ? null : _render_test_trend_line(prev, args.resume ? target : undefined);
+    const test_trend_line = args.dry_run ? null : _render_test_trend_line(prev, resume ? target : undefined);
     // Derived unconditionally, dry-run included: it is one `git log` (~25 ms),
     // not the trend line's full vitest collection. Skipping it on `--dry-run`
     // made the preview print the `_none_` skeleton while the real run wrote
@@ -1570,7 +1562,7 @@ function main(argv: readonly string[] | null = null): number {
 
     const plan = new Plan(current, target, bump, commits, prev, body, full, split, surfaces);
     print_preview(plan);
-    if (args.resume) {
+    if (resume) {
         process.stdout.write('(resume) probing existing state — completed steps will be skipped.\n');
     }
 
@@ -1592,7 +1584,7 @@ function main(argv: readonly string[] | null = null): number {
         pr_extra: showcase.pr_section,
         wait_for_checks: !args.no_wait,
         dry_run: false,
-        resume: args.resume,
+        resume,
         ci: args.ci,
     });
     return 0;

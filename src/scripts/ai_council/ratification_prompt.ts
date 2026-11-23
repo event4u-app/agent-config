@@ -12,7 +12,8 @@ const RATIFICATION_SUBJECT_LINE = /^`?subject: [0-9a-f]{64}`?\s*$/gmu;
 export const RATIFICATION_LABELS = ['ratified', 'confirmed-non-expanding', 'refused'] as const;
 export const RATIFICATION_STANCE_CONTRACT = `Close your reply with EXACTLY this line, and nothing after it:
 STANCE: <ratified | confirmed-non-expanding | refused> | CONFIDENCE: high|med|low | DEALBREAKER: yes|no
-Use one of the three labels exactly as written; no other label is recorded.`;
+Use one of the three labels exactly as written; no other label is recorded.
+This line replaces any other closing format named earlier (APPROVE / REQUEST_CHANGES, a Top-N list, a findings block).`;
 
 /** A prompt that declares exactly one `subject:` line is a ratification prompt (ratification_record_writer.ts). */
 export function isRatificationPrompt(text: string): boolean {
@@ -46,7 +47,9 @@ export function readRatificationPrompt(inputMode: unknown, questionPath: unknown
 /**
  * The consult options a ratification run adds: a seat must close on one of the
  * record writer's labels, because `abstain` or an invented label is a paid round
- * that yields no record.
+ * that yields no record. The same contract closes the final round, so the seat
+ * is handed one closing format (2026-11-23: the codex seat closed on
+ * `REQUEST_CHANGES`); see also `ratificationInlineFindings`.
  */
 export function ratificationRepairOptions(ratification: boolean): {
     stance_repair_contract: string | null;
@@ -57,4 +60,23 @@ export function ratificationRepairOptions(ratification: boolean): {
         stance_repair_contract: RATIFICATION_STANCE_CONTRACT,
         stance_label_accepted: (label) => (RATIFICATION_LABELS as readonly string[]).includes(label.trim().toLowerCase()),
     };
+}
+
+/**
+ * The one inline-findings predicate for a run: the prompt asks for the block
+ * and the harvest reads it exactly when this is true. A ratification run drops
+ * the block, which would otherwise be a second closing format after the stance.
+ */
+export function ratificationInlineFindings(active: boolean, ratification: boolean): boolean {
+    return active && !ratification;
+}
+
+/**
+ * The necessity verdict for a ratification prompt: proceed, in every mode and
+ * invocation. The ratification gate already requires the run; the prompt-shape
+ * classifier skipped agent-invoked ones as `unnecessary` (2026-11-23).
+ */
+export function ratificationNecessityBypass(out: (s: string) => void): [true, 0, null] {
+    out('council:necessity · bypassed (ratification prompt — required by the ratification gate)\n');
+    return [true, 0, null];
 }
