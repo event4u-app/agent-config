@@ -271,6 +271,35 @@ describe('screenRoadmap — holds written in prose', () => {
         expect(screen('road-to-r4', text).steps[0]?.cls).toBe('runnable');
     });
 
+    it.each([
+        'Still blocked by the host binary, and blocker `settled` has resolved.',
+        'Blocked by the host binary (blocker `settled` is resolved).',
+    ])('keeps a dependency hold the resolved blocker is only reported beside, not cited for: %s', (note) => {
+        const text = roadmap({
+            done: 1,
+            open: [`- [ ] **2.1 Work.**\n      ${note}`],
+            blockers: '### blocker: settled\n- **Status:** resolved — 2026-10-18\n- **Owner:** owner',
+        });
+        expect(screen('road-to-r5', text).steps[0]?.cls).toBe('held');
+    });
+
+    it('does not let a phase blockquote citing a resolved blocker hold the phase', () => {
+        const text = [
+            '---',
+            'status: ready',
+            '---',
+            '## Phase 5 — Waiting',
+            '> Blocked by blocker `settled`.',
+            '- [ ] **5.1 A.** Uses blocker `settled`.',
+            '- [ ] **5.2 B.**',
+            '',
+            '### blocker: settled',
+            '- **Status:** resolved — 2026-10-18',
+            '- **Owner:** owner',
+        ].join('\n');
+        expect(screen('road-to-ph2', text).steps.map((x) => x.cls)).toEqual(['runnable', 'runnable']);
+    });
+
     it('releases only the hold phrase that names the resolved blocker, not its whole clause', () => {
         const text = roadmap({
             done: 1,
@@ -312,6 +341,17 @@ describe('buildQueue — emergency halt', () => {
         const q = buildQueue([started, fresh], none, TODAY, 's1', { halted: true });
         expect(q.queue.length).toBe(2);
         expect(q.queue.filter((e) => e.dispatchable)).toEqual([]);
+    });
+
+    it('refuses the dead-lane resume entry while halted — the exact re-dispatch path', () => {
+        const dead: ClaimView = {
+            live: [],
+            dead: [{ session_id: 'gone', roadmap_slug: 'road-to-a', worktree: '/wt/a', branch: 'feat/a' }],
+        };
+        const q = buildQueue([a], dead, TODAY, 's1', { halted: true });
+        expect(q.queue[0]?.bucket).toBe('resume');
+        expect(q.queue[0]?.dispatchable).toBe(false);
+        expect(q.next).toBeNull();
     });
 
     it('names the halt at the top of the text output, so an empty queue never reads as nothing to do', () => {

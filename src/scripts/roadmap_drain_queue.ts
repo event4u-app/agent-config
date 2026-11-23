@@ -196,23 +196,40 @@ const RESOLVED_AFTER_RE =
 const OWNER_HOLD_RE = /^(?:owner-reserved|on hold|parked until)$/i;
 
 /**
+ * "held by blocker `x`", "blocked on the probe (blocker `x`)", "waiting on it, see
+ * blocker `x`": the forms in which a dependency hold CITES its blocker. A ref that
+ * is the subject of its own statement ("blocker `x` has resolved") cites nothing.
+ */
+function citationRe(ids: readonly string[]): RegExp | null {
+    if (ids.length === 0) return null;
+    const ref = `\`(?:${ids.map((id) => id.toLowerCase()).join('|')})\`(?!\\s+(?:is|has|was|had|are)\\b)`;
+    return new RegExp(
+        `^(?:\\s*(?:by|on)?\\s*(?:the\\s+)?blocker\\s+${ref}|[^.;]*?\\(\\s*blocker\\s+${ref}\\s*\\)|[^.;]*?\\bsee\\s+blocker\\s+${ref})`,
+        'i',
+    );
+}
+
+/**
  * True when a hold phrase in `text` is still in force. Each phrase is judged in
- * its own clause, so match order never decides. A dependency hold whose sentence
- * names a resolved blocker from `resolvedRefs` holds nothing; an owner hold in
- * the same sentence still does.
+ * its own clause, so match order never decides. A dependency hold that cites a
+ * resolved blocker from `resolvedRefs` holds nothing; every other hold — an
+ * owner hold, or a dependency the resolved blocker is merely reported beside —
+ * still does.
  */
 function proseHold(text: string, resolvedRefs: readonly string[] = []): boolean {
     const flat = text.replace(/\s+/g, ' ');
-    const refs = resolvedRefs.map((id) => `\`${id.toLowerCase()}\``);
+    const cites = citationRe(resolvedRefs);
     for (const sentence of flat.split(SENTENCE_SPLIT_RE)) {
-        const namesResolved = refs.some((r) => sentence.toLowerCase().includes(r));
+        const holds = [...sentence.matchAll(PROSE_HOLD_RE)].map((h) => h.index);
         let offset = 0;
         for (const clause of sentence.split(CLAUSE_SPLIT_RE)) {
             const at = sentence.indexOf(clause, offset);
             offset = at + clause.length;
             for (const m of clause.matchAll(PROSE_HOLD_RE)) {
                 const before = clause.slice(0, m.index);
-                if (namesResolved && !OWNER_HOLD_RE.test(m[0])) continue;
+                const start = at + m.index + m[0].length;
+                const nextHold = holds.find((h) => h >= start) ?? sentence.length;
+                if (cites !== null && !OWNER_HOLD_RE.test(m[0]) && cites.test(sentence.slice(start, nextHold))) continue;
                 if (NEGATED_BEFORE_RE.test(before)) continue;
                 if (PAST_BEFORE_RE.test(before) && RESOLVED_AFTER_RE.test(sentence.slice(at + m.index + m[0].length))) continue;
                 return true;
@@ -331,6 +348,7 @@ export function screenRoadmap(
     const lines = text.split('\n');
     const blockers = parseBlockers(text);
     const local = new Map(blockers.map((b) => [b.id, b]));
+    const resolvedLocal = blockers.filter((b) => !b.open).map((b) => b.id);
     const counts: Record<StepClass, number> = { runnable: 0, council: 0, owner: 0, time: 0, held: 0 };
     const steps: OpenStep[] = [];
     let done = 0;
@@ -357,7 +375,7 @@ export function screenRoadmap(
         const m = CHECKBOX_RE.exec(line);
         if (m === null) {
             // A blockquote before the first step of a phase speaks for the phase.
-            if (!checkboxSinceHeading && /^\s*>/.test(line) && proseHold(line)) phaseHeld = true;
+            if (!checkboxSinceHeading && /^\s*>/.test(line) && proseHold(line, resolvedLocal)) phaseHeld = true;
             continue;
         }
         checkboxSinceHeading = true;
@@ -403,7 +421,7 @@ export function screenRoadmap(
             } else if (isTimeGated(block, today)) {
                 cls = 'time';
             } else if (phaseHeld || proseHold(continuation, namedAll.map((b) => b.id))) {
-                // A resolved named blocker releases only the clause that names it.
+                // A resolved named blocker releases only the dependency hold that cites it.
                 cls = 'held';
             } else {
                 cls = 'runnable';

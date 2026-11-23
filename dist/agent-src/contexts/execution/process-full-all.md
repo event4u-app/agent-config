@@ -81,10 +81,12 @@ first lane's claim, and the queue lists every lane's roadmap as `claimed`.
 
 **A lane that dies keeps its work.** A spend or rate limit or a watchdog
 stops the lane, not its worktree: its commits and edits stay on disk. Before
-re-dispatching, re-run the queue and read its entry. **`dispatchable: false`
-with `dispatch_hold: emergency.orchestration_halt is set` stops the
-re-dispatch** — the halt holds every lane, the fresh one included, and the
-worktree waits for the switch to be disarmed. Otherwise read
+re-dispatching, re-run the queue and read its entry. **A halt stops the
+re-dispatch** — under `--json` the entry reads `dispatchable: false` and the
+queue's top-level `dispatch_hold` reads `emergency.orchestration_halt is set`;
+the text output opens with a `HALTED —` line. The halt holds every lane, the
+fresh one included, and the worktree waits for the switch to be disarmed.
+Otherwise read
 `salvage: N commit(s) ahead, M uncommitted file(s)`, run
 `agent-config run:supervise --root <lane worktree> --verify <slug>`, put any
 disagreeing field first in the brief, and send a FRESH lane into the SAME
