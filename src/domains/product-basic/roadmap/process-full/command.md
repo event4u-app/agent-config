@@ -234,9 +234,7 @@ NEVER INTERRUPT THE OWNER MID-RUN FOR A DECISION THE INVOCATION ALREADY DELEGATE
 
 **Report shape** — read [`process-full-delivery`](../../contexts/execution/process-full-delivery.md#final-pr-only--the-ux-invariant).
 
-**Every question goes down the rungs first** — read [`Who answers a question`](../../contexts/communication/rules-auto/user-interaction-mechanics.md#who-answers-a-question).
-A dominant option is decided and named in the report, a technical trade-off goes to
-the council, and only the owner's four classes reach the end report as owner asks.
+**Every question goes down the rungs first** (agent → council → owner) — read [`Who answers a question`](../../contexts/communication/rules-auto/user-interaction-mechanics.md#who-answers-a-question).
 
 ## Spend — whatever ceiling was configured, and none when none was
 
@@ -269,11 +267,8 @@ NO BATCH FLIP AT THE ARCHIVE COMMIT. NO "I'LL DO IT AT THE END."
 
 - **No silent acceleration past a halt.** Every halt condition stops
   the run; the user resumes on the next turn.
-- **No silent stop at an authoring annotation.** Encountering
-  "gated on Phase N", "deferred", "optional", or any equivalent
-  phase-internal annotation is **not** a halt condition. Continue.
-- **No silent batch flip.** Each step's checkbox flips in the same
-  reply that lands its work — never deferred to the archive commit.
+- **No silent stop at an authoring annotation** ("gated on Phase N",
+  "deferred", "optional"): not a halt condition (Iron Law above). Continue.
 - **Phase quality pipeline runs at every phase boundary** when cadence
   is `per_phase` or `per_step`. `end_of_roadmap` skips per-phase and
   runs only at the final archival check.
@@ -293,4 +288,4 @@ NO BATCH FLIP AT THE ARCHIVE COMMIT. NO "I'LL DO IT AT THE END."
 - [`/roadmap:process-phase`](process-phase.md) — default scope, single phase
 - [`roadmap-process-loop`](../../contexts/execution/roadmap-process-loop.md) — canonical mechanics
 - [`ADR-237`](../../../../docs/decisions/ADR-237-end-to-end-execution-authority.md) — the end-to-end delegation contract this command implements
-- [`ADR-235`](../../../../docs/decisions/ADR-235-process-full-blocked-terminal-outcome.md) — superseded; kept for the census and the `[~]`-prohibition argument
+- [`ADR-235`](../../../../docs/decisions/ADR-235-process-full-blocked-terminal-outcome.md) — superseded (census, `[~]` prohibition)

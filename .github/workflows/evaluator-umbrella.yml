@@ -136,7 +136,11 @@ jobs:
           branch=chore/evaluator-nightly-record
           git checkout -B "$branch"
           git commit -m 'chore(evaluator): refresh the nightly measurement record'
-          git push --force origin "HEAD:refs/heads/${branch}"
+          # `npm ci` ran `prepare`, which installed this repo's pre-push hook, and
+          # its CI-mirror check wants a local replay stamp no runner has: every
+          # nightly with a changed record died here. The PR this push opens runs
+          # every CI gate, so the local replay check is the one skipped (printed).
+          AGENT_CONFIG_SKIP_PREPUSH_MIRROR=1 git push --force origin "HEAD:refs/heads/${branch}"
           api="https://api.github.com/repos/${GITHUB_REPOSITORY}"
           auth=(-H "Authorization: Bearer ${GH_TOKEN}" -H 'Accept: application/vnd.github+json')
           open="$(curl -fsS "${auth[@]}" "${api}/pulls?state=open&head=${GITHUB_REPOSITORY_OWNER}:${branch}")"
