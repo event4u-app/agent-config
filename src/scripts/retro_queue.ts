@@ -280,7 +280,8 @@ export function queueLine(pending: readonly StoredEntry[]): string | null {
     return (
         `<retro-queue pending="${pending.length}" prs="${prs}" sessions="${pending.length - prs}">` +
         "Finished work is waiting for a retro. Run `/retro` after the user's first task is done; never defer " +
-        'that task for it.</retro-queue>'
+        'that task for it. Where `/retro` is not installed (it ships with the memory pack), ' +
+        '`agent-config retro` examines the queued units.</retro-queue>'
     );
 }
 

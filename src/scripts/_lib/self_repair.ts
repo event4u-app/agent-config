@@ -612,8 +612,39 @@ function reportSubject(prompt: string, matchStart: number, matchEnd: number): st
     return subject === '' ? undefined : subject;
 }
 
+// A hand-back from a subagent or a peer session arrives on `user_prompt_submit`
+// too, framed as text the host injected rather than words the user typed. Its
+// report prose ("which you did not ask for") matches the complaint patterns,
+// so it is refused before the patterns run (#2994).
+// A deny-list, not "anything but user": an unknown kind a host uses for a real
+// prompt must not silence the user's own complaint.
+const NON_USER_ORIGINS = new Set(['peer', 'subagent', 'agent', 'sidechain']);
+const HANDBACK_FRAME_RE = /^\s*\[(?:subagent|peer|agent)[\s-]+hand-?back\]/i;
+
+/**
+ * True when a `user_prompt_submit` payload did not come from the user: a host
+ * meta record (`isMeta`), a sidechain, a peer/agent `origin.kind`, or a prompt
+ * carrying the subagent hand-back frame. `payloads` are checked in order, so a
+ * caller passes the nested host payload and the dispatcher envelope alike.
+ */
+export function isNonUserPrompt(prompt: string, ...payloads: readonly unknown[]): boolean {
+    if (HANDBACK_FRAME_RE.test(prompt)) return true;
+    for (const p of payloads) {
+        if (typeof p !== 'object' || p === null || Array.isArray(p)) continue;
+        const o = p as Record<string, unknown>;
+        if (o['isMeta'] === true || o['isSidechain'] === true) return true;
+        const origin = o['origin'];
+        if (typeof origin === 'object' && origin !== null && !Array.isArray(origin)) {
+            const kind = (origin as Record<string, unknown>)['kind'];
+            if (typeof kind === 'string' && NON_USER_ORIGINS.has(kind)) return true;
+        }
+    }
+    return false;
+}
+
 /** Intake path 1 — the user says the agent worked wrongly. */
 export function detectUserReport(prompt: string): DefectFinding | null {
+    if (HANDBACK_FRAME_RE.test(prompt)) return null;
     for (const re of COMPLAINT_PATTERNS) {
         const m = re.exec(prompt);
         if (m !== null && !spanExonerated(prompt, m.index, m.index + m[0].length)) {

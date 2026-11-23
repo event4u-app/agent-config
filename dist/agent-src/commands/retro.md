@@ -47,7 +47,7 @@ back on.**
 ### 1. Read the facts and the triage
 
 ```bash
-./scripts-run src/scripts/retro [<N> | --session [<tag>] | --since <day>]
+agent-config retro [<N> | --session [<tag>] | --since <day>]
 ```
 
 The output is one entry per unit: its unit key, its facts and its deterministic
@@ -81,7 +81,7 @@ recur without a note. `none` with its reason is a complete answer.
 ### 3. Record it
 
 ```bash
-./scripts-run src/scripts/retro record --unit '<unit key>' --candidate <file.json>
+agent-config retro record --unit '<unit key>' --candidate <file.json>
 ```
 
 The target decides what is written, and nothing is applied:

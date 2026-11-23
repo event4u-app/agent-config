@@ -146,6 +146,7 @@ export const REGISTRY: readonly CommandEntry[] = [
     { name: 'eval:record', disposition: 'native', synopsis: 'Record a live trigger-eval result into a corpus manifest (corpus-refresh DoD, ADR-061 §6).' },
     { name: 'self-repair:status', disposition: 'delegate', synopsis: 'List queued agent-config defect records (read-only).' },
     { name: 'self-repair:release', disposition: 'delegate', synopsis: 'Publish one defect record as a PR, or an issue when a PR is impossible (Hard-Floor gated).' },
+    { name: 'retro', disposition: 'delegate', synopsis: 'Read a finished unit\'s facts and triage for /retro, or record its one learning.' },
     { name: 'decision:memo', disposition: 'delegate', synopsis: 'Record or list an autonomously-resolved question so it stays reviewable (local-only).' },
     { name: 'bracket', disposition: 'delegate', synopsis: 'Drive an /arena bracket run (plan|init|scan|dedupe|next|advance|collect|correct|card|decline|jury|status); state under agents/runtime/bracket/.' },
     { name: 'run:supervise', disposition: 'delegate', synopsis: 'Report runs whose session died with open steps left. Never merges, pushes, or closes.' },

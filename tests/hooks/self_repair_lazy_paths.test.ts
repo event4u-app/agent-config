@@ -75,6 +75,36 @@ describe('self-repair through both dispatch paths', () => {
         expect(listRecords(root)).toHaveLength(1);
     });
 
+    // #2994 — a subagent hand-back reaches `user_prompt_submit` too; its report
+    // prose ("which you did not ask for") is not the user complaining.
+    const HANDBACK = '[Subagent hand-back]\nDone. It also added a flag which you did not ask for.';
+
+    it.each([
+        ['the hand-back frame', { prompt: HANDBACK }],
+        ['isMeta', { prompt: 'It added a flag which you did not ask for.', isMeta: true }],
+        ['origin.kind peer', { prompt: 'It added a flag which you did not ask for.', origin: { kind: 'peer' } }],
+    ])('does not queue a hand-back carrying a complaint phrase (%s)', (_label, host) => {
+        const root = path.join(tmp, 'handback');
+        vi.spyOn(process.stdout, 'write').mockImplementation(() => true);
+        setHookStdinOverride(JSON.stringify({ event: 'user_prompt_submit', workspace_root: root, payload: host }));
+        expect(resolveConcernMain(SCRIPT)!([])).toBe(0);
+        expect(listRecords(root)).toHaveLength(0);
+    });
+
+    it('still queues the same phrase when the user typed it', () => {
+        const root = path.join(tmp, 'user');
+        vi.spyOn(process.stdout, 'write').mockImplementation(() => true);
+        setHookStdinOverride(
+            JSON.stringify({
+                event: 'user_prompt_submit',
+                workspace_root: root,
+                payload: { prompt: 'It added a flag which you did not ask for.', origin: { kind: 'user' } },
+            }),
+        );
+        expect(resolveConcernMain(SCRIPT)!([])).toBe(2);
+        expect(listRecords(root)).toHaveLength(1);
+    });
+
     it('the built dispatcher writes the record and delivers the queue line to the host', (t) => {
         const dispatch = path.resolve('dist', 'hooks', 'dispatch.js');
         // skip-reason: dist/ is untracked, so a clean checkout has no bundle to run.
