@@ -219,6 +219,7 @@ describe('screenRoadmap — holds written in prose', () => {
         ['a negation one word away from the phrase', 'Not currently blocked by the probe.'],
         ['a past-tense hold that has since resolved', 'It was blocked by the probe, which has since shipped.'],
         ['a past-tense hold resolved across a wrapped line', 'It was blocked by the probe, which\n      has since shipped.'],
+        ['a dated resolution', 'It was blocked by the probe, which has since shipped on 2026-10-30.'],
     ])('reads %s as runnable', (_case, note) => {
         const s = screen('road-to-n2', roadmap({ done: 1, open: [`- [ ] **2.1 Work.**\n      ${note}`] }));
         expect(s.steps[0]?.cls).toBe('runnable');
@@ -239,7 +240,9 @@ describe('screenRoadmap — holds written in prose', () => {
         ['"not yet" directly before the phrase', 'Not yet blocked by the probe; it will be.'],
         // R2 round 2 findings 1 and 3.
         ['a resolution qualified away', 'It was blocked by the upstream fix, which has since merged upstream but is not yet released.'],
-        ['a partial resolution', 'It was blocked by the fix, which has since been fixed in part; the rest is pending.'],
+        ['a partial resolution', 'It was blocked by the fix, which has since been fixed in part.'],
+        ['a resolution in another place', 'It was blocked by the fix, which has since merged in staging.'],
+        ['a resolution in theory', 'It was blocked by the fix, which has since been fixed in theory.'],
         ['"or not"', 'Whether or not blocked by the probe, the step waits.'],
         ['a negation in another clause', 'The probe is not shipped, and the step is blocked by it.'],
     ])('keeps %s held', (_case, note) => {

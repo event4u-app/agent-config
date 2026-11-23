@@ -191,7 +191,7 @@ const PAST_BEFORE_RE = /\b(?:was|were|had been)(?:\s+[\w'-]+)?\s+$/i;
 // "…, which has since shipped.": the resolution attaches to the hold's own object
 // and ends the sentence — "merged upstream but not released" and "fixed in part" do not.
 const RESOLVED_AFTER_RE =
-    /^[^,.;:]*,\s*which\s+(?:has|have)\s+(?:since\s+)?(?:been\s+)?(?:shipped|landed|merged|resolved|fixed|cleared|lifted)(?:\s+(?:on|in)\s+[\w-]+)?\s*[.!?]?\s*$/i;
+    /^[^,.;:]*,\s*which\s+(?:has|have)\s+(?:since\s+)?(?:been\s+)?(?:shipped|landed|merged|resolved|fixed|cleared|lifted)(?:\s+on\s+20\d\d-\d\d-\d\d)?\s*[.!?]?\s*$/i;
 // A hold the owner placed, not a dependency: a resolved blocker never releases it.
 const OWNER_HOLD_RE = /^(?:owner-reserved|on hold|parked until)$/i;
 
