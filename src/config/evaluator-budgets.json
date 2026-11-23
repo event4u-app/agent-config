@@ -40,7 +40,7 @@
         "package.json",
         "package-lock.json"
       ],
-      "baseline_note": "127 → 141, max 140 → 150 on 2026-10-28 (release 19.0.0 gate). Measured 141 by the packed-artifact evaluation of release PR #2734 (run 40666473640); the nightly on main had already recorded 140 on 2026-10-27, so the install sat at the cap before this release and the +1 MB is ordinary payload growth, not a new dependency (runtime_dep_count is unchanged at 204). Raised consciously by maintainer decision rather than blocking the release, for the same reason unpacked_size_mb was ungated at 9.17.0. Headroom is 9 MB."
+      "baseline_note": "129 \u2192 130 on 2026-11-23 (fix/self-repair-peer-prompts-and-retro, #2994): `retro` registers in the SAME PR that adds it \u2014 the <retro-queue> line and the /retro, /memory propose and /pr merge commands named `./scripts-run src/scripts/retro`, a wrapper a consumer does not have. A verb for the reason `ci:settle` gave. Re-measured via the pinned method (registry enumeration): 130. 127 → 141, max 140 → 150 on 2026-10-28 (release 19.0.0 gate). Measured 141 by the packed-artifact evaluation of release PR #2734 (run 40666473640); the nightly on main had already recorded 140 on 2026-10-27, so the install sat at the cap before this release and the +1 MB is ordinary payload growth, not a new dependency (runtime_dep_count is unchanged at 204). Raised consciously by maintainer decision rather than blocking the release, for the same reason unpacked_size_mb was ungated at 9.17.0. Headroom is 9 MB."
     },
     "runtime_dep_count": {
       "max": 210,
@@ -69,8 +69,8 @@
       "deterministic": false
     },
     "cli_help_command_count": {
-      "max": 129,
-      "last_measured": 129,
+      "max": 130,
+      "last_measured": 130,
       "last_measured_at": "2026-11-23",
       "method": "registry enumeration — count of `{ name: '...', disposition` entries in src/cli/registry.ts (NOT --help prose parsing; methods historically disagreed 74 vs 76 vs 79)",
       "inputs": [
