@@ -235,7 +235,8 @@ function proseHold(text: string, resolvedRefs: readonly string[] = []): boolean 
                 const start = at + m.index + m[0].length;
                 const nextHold = holds.find((h) => h >= start) ?? sentence.length;
                 if (cites !== null && !OWNER_HOLD_RE.test(m[0]) && cites.test(sentence.slice(start, nextHold))) continue;
-                if (NEGATED_BEFORE_RE.test(before)) continue;
+                // "not only waits on": the "only" belongs to the phrase, so "not" restricts, never negates.
+                if (NEGATED_BEFORE_RE.test(before) && !/^(?:still|only)\s/i.test(m[0])) continue;
                 if (PAST_BEFORE_RE.test(before) && RESOLVED_AFTER_RE.test(sentence.slice(at + m.index + m[0].length))) continue;
                 return true;
             }

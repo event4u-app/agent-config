@@ -236,6 +236,8 @@ describe('screenRoadmap — holds written in prose', () => {
         ['a resolution of another subject in the same sentence', 'It was blocked by the probe and the doc has since shipped.'],
         ['"not only"', 'Not only blocked by the probe.'],
         ['"not just"', 'Not just waiting on the probe.'],
+        // R2 round 9 finding 1 — "only" sits inside the hold phrase; main held this.
+        ['"not only" inside the phrase', 'Not only waits on the probe.'],
         ['"not yet"', 'Not yet dispatched, blocked by the probe.'],
         ['"not yet" directly before the phrase', 'Not yet blocked by the probe; it will be.'],
         // R2 round 2 findings 1 and 3.

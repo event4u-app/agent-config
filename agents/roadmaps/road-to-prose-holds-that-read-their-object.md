@@ -8,13 +8,15 @@ review_by: 2027-01-31
 relates:
   - slug: road-to-a-halt-that-holds-every-lane
     relation: extends
-    note: "Carries the two parser findings R2 round 6 left after six review rounds on that roadmap's Phase 2; the halt half closed there."
+    note: "Carries the parser findings the R2 completion review rounds of that roadmap's Phase 2 left open; the halt half closed there."
 ---
 # Road to prose holds that read their object
 
-> **Source:** R2 completion review round 6 of `road-to-a-halt-that-holds-every-lane`,
-> `agents/evidence/reviews/road-to-a-halt-that-holds-every-lane.round-6.md`,
-> findings 1 and 2, both reproduced with `screenRoadmap` probes on the branch head.
+> **Source:** R2 completion review of `road-to-a-halt-that-holds-every-lane`,
+> rounds 6–9 (`agents/evidence/reviews/road-to-a-halt-that-holds-every-lane.round-*.md`).
+> Every release-direction regression against `main` was fixed there; what is
+> carried here either fails safe (a hold kept after its object resolved) or
+> already behaved the same on `main`.
 
 ## Goal
 
@@ -39,7 +41,10 @@ keeping it once its only object has.
    `a`." stay held. `main` released them. The parent dropped the parenthetical
    and `see` forms after R2 round 8 showed they also released holds with a
    second, unresolved object ("Blocked on the host binary and the probe
-   (blocker `a`)."). Fails safe: no path releases a hold whose object is open.
+   (blocker `a`)."). Fails safe.
+3. **A restrictive negation releases a hold, as on `main`.** "Not blocked by the
+   probe alone, but also by the host." reads runnable: the negator governs
+   "alone", not the hold. Release direction, pre-existing (R2 round 9 finding 2).
 
 ## Acceptance criteria
 
@@ -60,7 +65,7 @@ keeping it once its only object has.
 
 ## Phase 1 — Objects, not phrasings
 
-- [ ] **1.1** Test first: the phrasings of findings 1 and 2 as named fixtures (AC-1),
+- [ ] **1.1** Test first: the phrasings of findings 1–3 as named fixtures (AC-1),
   plus the parent's compound fixtures that must stay held while one object is open.
 - [ ] **1.2** Extract a hold's object list (split on `and`, `,`, parentheses) from
   the hold phrase to the clause end.
