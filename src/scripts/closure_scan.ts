@@ -523,8 +523,16 @@ export function main(argv?: readonly string[]): number {
     return strict && blocking.length > 0 ? 1 : 0;
 }
 
+/** Defined by every esbuild bundle; this module is never a bundle entry. */
+declare const __AGENT_CONFIG_BUNDLE__: boolean | undefined;
+
 function _isCliEntry(): boolean {
+    // Inlined into `dist/cli-delegate/cmd_closure.js`, `import.meta.url` names
+    // that bundle — the same file as argv[1] — so the checks below would run
+    // this main() on the `closure:*` argv. The bundled caller invokes main().
+    if (typeof __AGENT_CONFIG_BUNDLE__ !== 'undefined' && __AGENT_CONFIG_BUNDLE__) return false;
     if (!process.argv[1]) return false;
+    if (process.argv[1] === _HERE) return true;
     try {
         return fs.realpathSync(_HERE) === fs.realpathSync(path.resolve(process.argv[1]));
     } catch {
@@ -532,6 +540,6 @@ function _isCliEntry(): boolean {
     }
 }
 
-if (_isCliEntry() || process.argv[1] === _HERE) {
+if (_isCliEntry()) {
     process.exitCode = main();
 }
