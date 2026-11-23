@@ -278,6 +278,14 @@ Pinned by `tests/scripts/release.test.ts` § `preflightPosition`.
 Release behind: those skips are what it is for. It is no longer the difference
 between a re-run working and crashing.
 
+**Since 2026-11-23 an in-flight release resumes without the flag.** When the
+target is the in-flight one (`_detect_in_flight_target`: HEAD on
+`release/X.Y.Z`, or a `package.json` version with no published tag),
+`effective_resume` turns the skips on and says so. Measured on 20.7.0: two
+plain re-runs released the in-flight version and redid its completed steps, so
+the CHANGELOG carried the section three times. `prepend_changelog` also refuses
+a second section for a version it already holds.
+
 - Re-run `release.yml` via **workflow_dispatch** with `resume: true`, or locally
   `task release -- --resume`.
 - Firing the `release` label path twice is a clean no-op (the `--ci`
