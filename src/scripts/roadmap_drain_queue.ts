@@ -177,12 +177,37 @@ const BLOCKER_HEADING_RE = /^###[ \t]+blocker:[ \t]*([A-Za-z0-9-]+)/i;
 const BLOCKED_BY_RE = /<!--[ \t]*blocked-by:[ \t]*([a-z0-9-]+(?:#[a-z0-9-]+)?)/i;
 const PROSE_BLOCKER_RE = /\bblocker[ \t]+`([a-z0-9-]+)`/gi;
 const PROSE_HOLD_RE =
-    /\b(held open|still held|on hold|held off|parked until|(?:still |only )?waits on|waiting on|blocked (?:by|on)|owner-reserved)\b/i;
-// "no longer blocked by", "not owner-reserved": the phrase names a hold that is gone.
-const NEGATED_HOLD_RE = /\b(?:no longer|not|never)[ \t]+(?:blocked (?:by|on)|owner-reserved|on hold|held)\b/gi;
+    /\b(held open|still held|on hold|held off|parked until|(?:still |only )?waits on|waiting on|blocked (?:by|on)|owner-reserved)\b/gi;
+// A sentence ends at terminal punctuation followed by space, never inside "v1.2".
+const SENTENCE_SPLIT_RE = /(?<=[.!?;:])\s+/;
+// A clause ends at a comma, a dash, or a coordinating conjunction.
+const CLAUSE_SPLIT_RE = /,|\s[—–]\s|\b(?:but|and|while|whereas)\b/i;
+// "not currently blocked by": the negator governs the phrase at most two words away.
+const NEGATED_BEFORE_RE = /\b(?:no longer|not|never|isn't|is not|no more)(?:\s+[\w'-]+){0,2}\s+$/i;
+// "was blocked by …, which has since shipped": a hold the same sentence says is over.
+const PAST_BEFORE_RE = /\b(?:was|were|had been)(?:\s+[\w'-]+)?\s+$/i;
+const RESOLVED_RE = /\b(?:(?:has|have) since|since (?:shipped|landed|merged|resolved)|(?:has|have) (?:shipped|landed|merged|resolved|been resolved|cleared))\b/i;
 
-function proseHold(text: string): boolean {
-    return PROSE_HOLD_RE.test(text.replace(NEGATED_HOLD_RE, ''));
+/**
+ * True when a hold phrase in `text` is still in force. Each phrase is judged in
+ * its own clause, so match order never decides; a clause naming one of
+ * `resolvedRefs` speaks only for that resolved blocker and holds nothing.
+ */
+function proseHold(text: string, resolvedRefs: readonly string[] = []): boolean {
+    const flat = text.replace(/\s+/g, ' ');
+    for (const sentence of flat.split(SENTENCE_SPLIT_RE)) {
+        const resolvedSentence = RESOLVED_RE.test(sentence);
+        for (const clause of sentence.split(CLAUSE_SPLIT_RE)) {
+            if (resolvedRefs.some((id) => clause.toLowerCase().includes(`\`${id}\``))) continue;
+            for (const m of clause.matchAll(PROSE_HOLD_RE)) {
+                const before = clause.slice(0, m.index);
+                if (NEGATED_BEFORE_RE.test(before)) continue;
+                if (resolvedSentence && PAST_BEFORE_RE.test(before)) continue;
+                return true;
+            }
+        }
+    }
+    return false;
 }
 const ACCEPTANCE_HEADING_RE = /^##[ \t]+acceptance criteria\b/i;
 const AC_ITEM_RE = /^\s*-\s\[[ xX~-]\]\s*(?:<!--[\s\S]*?-->\s*)?(?:\*\*)?AC-\d+/;
@@ -365,8 +390,8 @@ export function screenRoadmap(
                 cls = classOfBlocker(named);
             } else if (isTimeGated(block, today)) {
                 cls = 'time';
-            } else if (namedAll.length === 0 && (phaseHeld || proseHold(continuation))) {
-                // A hold that names a blocker which has since resolved is not a hold.
+            } else if (phaseHeld || proseHold(continuation, namedAll.map((b) => b.id))) {
+                // A resolved named blocker releases only the clause that names it.
                 cls = 'held';
             } else {
                 cls = 'runnable';

@@ -77,15 +77,17 @@ a hold is actually still in force.
 
 ## Phase 2 — Prose holds that mean what they say
 
-- [ ] **2.1** Test first: the four cases of finding 2 as named fixtures (AC-4).
-- [ ] **2.2** Negation: strip a negation that governs the hold phrase within the
+- [x] **2.1** Test first: the four cases of finding 2 as named fixtures (AC-4).
+- [x] **2.2** Negation: strip a negation that governs the hold phrase within the
   same clause, not only when adjacent.
-- [ ] **2.3** Past-tense resolution ("was blocked by … has since shipped") is
+- [x] **2.3** Past-tense resolution ("was blocked by … has since shipped") is
   not a hold.
-- [ ] **2.4** Evaluate prose holds even when a named blocker resolved; the
+- [x] **2.4** Evaluate prose holds even when a named blocker resolved; the
   resolved name suppresses only the hold that names it (AC-5).
-- [ ] **2.5** Before/after classification diff over the live estate; every
+- [x] **2.5** Before/after classification diff over the live estate; every
   changed step justified in the PR body (AC-6).
+  Result 2026-11-23: `screenEstate` over `agents/roadmaps/` before and after,
+  384 open steps on both sides, zero class or blocker changes.
 
 ## Not in scope
 

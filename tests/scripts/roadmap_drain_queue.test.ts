@@ -214,6 +214,39 @@ describe('screenRoadmap — holds written in prose', () => {
         expect(screen('road-to-ph', text).steps.map((x) => x.cls)).toEqual(['runnable', 'held', 'held']);
     });
 
+    // Finding 2 of the after-the-fact #2768 review — each was misread on main.
+    it.each([
+        ['a negation one word away from the phrase', 'Not currently blocked by the probe.'],
+        ['a past-tense hold that has since resolved', 'It was blocked by the probe, which has since shipped.'],
+        ['a past-tense hold resolved across a wrapped line', 'It was blocked by the probe, which\n      has since shipped.'],
+    ])('reads %s as runnable', (_case, note) => {
+        const s = screen('road-to-n2', roadmap({ done: 1, open: [`- [ ] **2.1 Work.**\n      ${note}`] }));
+        expect(s.steps[0]?.cls).toBe('runnable');
+    });
+
+    it.each([
+        ['negated first, live second', 'No longer blocked by the probe but still blocked by the host binary.'],
+        ['live first, negated second', 'Still blocked by the host binary; no longer blocked by the probe.'],
+        ['a negation that governs another verb', 'It is not clear whether this is blocked by the probe.'],
+        ['a past-tense hold nobody says is over', 'It was blocked by the probe.'],
+        ['a resolution that belongs to another sentence', 'It was blocked by the probe. Phase 3 has since shipped.'],
+        ['a negation in another clause', 'The probe is not shipped, and the step is blocked by it.'],
+    ])('keeps %s held', (_case, note) => {
+        const s = screen('road-to-h2', roadmap({ done: 1, open: [`- [ ] **2.1 Work.**\n      ${note}`] }));
+        expect(s.steps[0]?.cls).toBe('held');
+    });
+
+    it('keeps an independent owner-reserved hold when a named blocker in the same step resolved', () => {
+        const text = roadmap({
+            done: 1,
+            open: [
+                "- [ ] **2.1 Work.**\n      Still held by blocker `settled`.\n      Owner-reserved: the flip is the maintainer's call.",
+            ],
+            blockers: '### blocker: settled\n- **Status:** resolved — 2026-10-18\n- **Owner:** owner',
+        });
+        expect(screen('road-to-r2', text).steps[0]?.cls).toBe('held');
+    });
+
     it('drops a prose hold whose named blocker has resolved', () => {
         const text = roadmap({
             done: 1,
