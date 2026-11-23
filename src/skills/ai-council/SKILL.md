@@ -186,9 +186,7 @@ Agent orchestration MUST call `council_cli` with
 requests. User-typed `/council` keeps the default
 (`--invocation user_explicit`); the user gets the educational message
 + `--proceed-anyway` override path. Mode `block` ignores
-`--proceed-anyway` by design — cost-strict opt-in. A ratification
-prompt (one `subject:` line) bypasses the gate in every mode, so an
-agent-run ratification needs no `user_explicit` workaround.
+`--proceed-anyway` by design — cost-strict opt-in.
 
 ## Goal
 

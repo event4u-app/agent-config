@@ -70,3 +70,13 @@ export function ratificationRepairOptions(ratification: boolean): {
 export function ratificationInlineFindings(active: boolean, ratification: boolean): boolean {
     return active && !ratification;
 }
+
+/**
+ * The necessity verdict for a ratification prompt: proceed, in every mode and
+ * invocation. The ratification gate already requires the run; the prompt-shape
+ * classifier skipped agent-invoked ones as `unnecessary` (2026-11-23).
+ */
+export function ratificationNecessityBypass(out: (s: string) => void): [true, 0, null] {
+    out('council:necessity · bypassed (ratification prompt — required by the ratification gate)\n');
+    return [true, 0, null];
+}

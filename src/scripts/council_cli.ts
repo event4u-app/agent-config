@@ -180,7 +180,7 @@ import {
     with_chairman_fields,
 } from './ai_council/blind_review.js';
 import { tallyFromResponses } from './ai_council/stance_tally.js';
-import { ratificationInlineFindings, ratificationRepairOptions, readRatificationPrompt } from './ai_council/ratification_prompt.js';
+import { ratificationInlineFindings, ratificationNecessityBypass, ratificationRepairOptions, readRatificationPrompt } from './ai_council/ratification_prompt.js';
 import { storedStopClass } from './ai_council/stop_class.js';
 import { buildHandoffFromStanceTally, type HandoffEnvelope } from './ai_council/handoff.js';
 
@@ -1826,17 +1826,10 @@ function _necessity_gate(opts: {
     ai_cfg: Dict;
     stdout?: ((s: string) => void) | null;
     original_ask?: string;
-    ratification?: boolean;
 }): [boolean, number, ClassificationResult | null] {
     const out = opts.stdout ?? _stdout;
     const [enabled, mode] = _resolve_necessity_mode(opts.ai_cfg, opts.lens, opts.invocation);
     if (!enabled || mode === 'off') {
-        return [true, 0, null];
-    }
-    // The kernel-edit ratification gate already decided this run is required —
-    // a prompt-shape verdict cannot overrule it, in any mode or invocation.
-    if (opts.ratification === true) {
-        out('council:necessity · bypassed (ratification prompt — required by the ratification gate)\n');
         return [true, 0, null];
     }
     const result = classify_necessity(opts.prompt, opts.lens, opts.invocation as never, { ratePressure: recentHostMarker(REPO_ROOT) || planWindowHot() });
@@ -2304,14 +2297,13 @@ function cmd_run(
     // A ratification prompt gets the stance contract and one unattended repair (ai_council/ratification_prompt.ts).
     const { problem: ratification_problem, ratification: ratification_prompt } = readRatificationPrompt(args.input_mode, args.question);
     if (ratification_problem !== null) return (_stderr(`❌  council:run: ${ratification_problem}.\n`), 2);
-    const [proceed, gate_exit] = _necessity_gate({
+    const [proceed, gate_exit] = ratification_prompt ? ratificationNecessityBypass(_stdout) : _necessity_gate({
         prompt: question.user_prompt,
         lens: question.mode,
         invocation: _getattr(args, 'invocation', 'agent'),
         proceed_anyway: _getattr(args, 'proceed_anyway', false),
         ai_cfg,
         original_ask: _getattr(args, 'original_ask', '') || '',
-        ratification: ratification_prompt,
     });
     if (!proceed) {
         return gate_exit;
@@ -2454,9 +2446,7 @@ function cmd_run(
         rounds,
         advisor_plans,
         stance_tally: stance_tally_on,
-        // Phase 1B — the same predicate the harvest below reads, so a member is asked
-        // for the block exactly when the consensus round intends to read one.
-        inline_findings: inline_findings_on,
+        inline_findings: inline_findings_on, // Phase 1B — the predicate the harvest below reads
         member_prompt_suffix,
         no_project_context_members,
         // Mid-flight cli→api fallback (ai-council-config.md § failure-class-
@@ -3819,6 +3809,5 @@ export {
     // `quorum_out`), and constructing a real roster would spend money.
     _format_quorum_line,
     _size_fit_gate,
-    _necessity_gate,
     CouncilDisabledError,
 };

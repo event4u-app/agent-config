@@ -26,6 +26,7 @@ import { afterEach, describe, expect, it } from 'vitest';
 
 import { measuredSection } from '../../src/scripts/_lib/dispatch_policy.js';
 import { preflightPosition } from '../../src/scripts/_lib/release_position.js';
+import { effective_resume } from '../../src/scripts/_lib/release_resume.js';
 import { _TEST_LIST_ARGV } from '../../src/scripts/release_publication.js';
 
 import {
@@ -51,7 +52,6 @@ import {
     _count_from_list_result,
     _TEST_LIST_MAX_BUFFER,
     _detect_in_flight_target,
-    effective_resume,
     _failed_check_names,
     _failed_checks_report,
     Commit,
