@@ -10,7 +10,6 @@ and keep the full search — this file only adds candidates to it.
 | slug | dir | status | owns |
 |---|---|---|---|
 | road-to-a-challenge-the-bench-has-measured-carried | active | active | The guardrail trip of the 2026-11-08 honesty run is sized on audited clean labels, and a count of concessions to … |
-| road-to-a-halt-that-holds-every-lane | active | ready | `emergency.orchestration_halt` stops every dispatch, including the re-dispatch of a dead lane, and the roadmap drain queue classifies a step as … |
 | road-to-a-language-pin-from-owner-prose-live-wiring | active | ready | The live hooks set the reply-language pin only from owner prose and the turn-end gate refuses on language only behind … |
 | road-to-a-learning-pipeline-that-yields-lessons | active | ready | A fault that recurs across sessions becomes a lesson without anyone writing it: the intake sees repeated errors and owner … |
 | road-to-a-link-with-agent-switch | active | ready | When a session nears its plan limit, the user is told in-session and asked whether to move; the same question … |
