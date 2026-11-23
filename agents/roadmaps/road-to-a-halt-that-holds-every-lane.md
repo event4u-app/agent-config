@@ -68,10 +68,10 @@ a hold is actually still in force.
 
 ## Phase 1 — Halt covers every dispatch
 
-- [ ] **1.1** Test first: settings file with `emergency.orchestration_halt: true`
+- [x] **1.1** Test first: settings file with `emergency.orchestration_halt: true`
   → queue → no entry dispatchable, `next` null, hold named (AC-1, AC-3).
-- [ ] **1.2** `buildQueue`: when halted, every entry's `dispatchable` is `false`.
-- [ ] **1.3** `process-full-all.md`: the dead-lane re-dispatch reads the queue
+- [x] **1.2** `buildQueue`: when halted, every entry's `dispatchable` is `false`.
+- [x] **1.3** `process-full-all.md`: the dead-lane re-dispatch reads the queue
   entry's `dispatchable` and `dispatch_hold` first and stops on a halt (AC-2);
   `task sync` regenerates the projection.
 

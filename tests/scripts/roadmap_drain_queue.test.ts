@@ -2,17 +2,20 @@ import * as fs from 'node:fs';
 import * as os from 'node:os';
 import * as path from 'node:path';
 
-import { afterEach, beforeEach, describe, expect, it } from 'vitest';
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
 import {
     buildQueue,
     isTimeGated,
     isTimeboxed,
+    main,
+    renderText,
     screenEstate,
     sheetIds,
     screenRoadmap,
     WIP_CAP,
     type ClaimView,
+    type DrainQueue,
     type RoadmapScreen,
 } from '../../src/scripts/roadmap_drain_queue.js';
 
@@ -235,6 +238,66 @@ describe('buildQueue — emergency halt', () => {
         const q = buildQueue([a], none, TODAY, 's1', { halted: false });
         expect(q.next?.slug).toBe('road-to-a');
         expect(q.dispatch_hold).toBeNull();
+    });
+
+    it('marks no entry dispatchable while halted — a re-dispatch reads the entry, not `next`', () => {
+        const started = screen('road-to-s', roadmap({ done: 1, open: ['- [ ] **1.1 Work.**'] }));
+        const fresh = screen('road-to-f', roadmap({ done: 0, open: ['- [ ] **1.1 Work.**'] }));
+        const q = buildQueue([started, fresh], none, TODAY, 's1', { halted: true });
+        expect(q.queue.length).toBe(2);
+        expect(q.queue.filter((e) => e.dispatchable)).toEqual([]);
+    });
+
+    it('names the halt at the top of the text output, so an empty queue never reads as nothing to do', () => {
+        const text = renderText(buildQueue([a], none, TODAY, 's1', { halted: true }));
+        expect(text.split('\n')[1]).toMatch(/^HALTED — emergency\.orchestration_halt is set/);
+        expect(text).toContain('next: none — emergency.orchestration_halt is set');
+    });
+});
+
+describe('emergency halt — from a real settings file to the dispatch decision', () => {
+    let root = '';
+    const run = (): { json: DrainQueue; text: string } => {
+        const chunks: string[] = [];
+        const spy = vi.spyOn(process.stdout, 'write').mockImplementation((c: string | Uint8Array) => {
+            chunks.push(String(c));
+            return true;
+        });
+        try {
+            main(['--root', root, '--today', TODAY, '--session', 's-test', '--json']);
+            const json = JSON.parse(chunks.join('')) as DrainQueue;
+            chunks.length = 0;
+            main(['--root', root, '--today', TODAY, '--session', 's-test']);
+            return { json, text: chunks.join('') };
+        } finally {
+            spy.mockRestore();
+        }
+    };
+    beforeEach(() => {
+        root = fs.mkdtempSync(path.join(os.tmpdir(), 'drain-halt-'));
+        const dir = path.join(root, 'agents/roadmaps');
+        fs.mkdirSync(dir, { recursive: true });
+        fs.writeFileSync(path.join(dir, 'road-to-s.md'), roadmap({ done: 1, open: ['- [ ] **1.1 Work.**'] }));
+        fs.writeFileSync(path.join(dir, 'road-to-f.md'), roadmap({ done: 0, open: ['- [ ] **1.1 Work.**'] }));
+    });
+    afterEach(() => fs.rmSync(root, { recursive: true, force: true }));
+
+    it('refuses every entry when .agent-settings.yml arms the halt', () => {
+        fs.writeFileSync(path.join(root, '.agent-settings.yml'), 'emergency:\n  orchestration_halt: true\n');
+        const { json, text } = run();
+        expect(json.queue.length).toBeGreaterThan(0);
+        expect(json.queue.filter((e) => e.dispatchable)).toEqual([]);
+        expect(json.next).toBeNull();
+        expect(json.dispatch_hold).toBe('emergency.orchestration_halt is set');
+        expect(text).toContain('HALTED — emergency.orchestration_halt is set');
+    });
+
+    it('dispatches when the same file disarms it', () => {
+        fs.writeFileSync(path.join(root, '.agent-settings.yml'), 'emergency:\n  orchestration_halt: false\n');
+        const { json, text } = run();
+        expect(json.next?.slug).toBe('road-to-s');
+        expect(json.dispatch_hold).toBeNull();
+        expect(text).not.toContain('HALTED');
     });
 });
 
