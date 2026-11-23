@@ -34,6 +34,7 @@ import { fileURLToPath, pathToFileURL } from 'node:url';
 import {
     type DefectFinding,
     detectUserReport,
+    isNonUserPrompt,
     runDetectors,
     type TurnSnapshot,
 } from './_lib/self_repair.js';
@@ -210,7 +211,8 @@ export function main(): number {
 
     if (slot === 'user_prompt_submit') {
         const prompt = field('prompt', 'user_prompt', 'text');
-        const f = detectUserReport(prompt);
+        // A subagent or peer hand-back is not the user speaking (#2994).
+        const f = isNonUserPrompt(prompt, payload, env) ? null : detectUserReport(prompt);
         if (f !== null) {
             findings.push(f);
         }

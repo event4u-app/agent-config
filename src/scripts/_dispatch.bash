@@ -80,6 +80,9 @@ TS-shell native (run via the installed `agent-config` binary):
   brand:status               Is a consumer brand layer present, and at which of the
                              four canonical tokens.json paths. Flags a dot-prefixed
                              .tokens.json, which nothing reads.
+  closure:scan <roadmap>     Find and classify a plan's open decisions (/challenge-me closure).
+  closure:lint [path...]     Check the ## Decisions contract on this project's roadmaps,
+                             or on the project roots / roadmap files given.
   statusline:tap             Claude Code status-line tap: chains your status line and
                              records the plan window (rate_limits) for quota notices.
   statusline:install         Point statusLine at the tap, keeping yours chained.
@@ -205,6 +208,9 @@ Tier 1 — power-user (release shape, audit, migration):
                              confirmation.
                              Usage: self-repair:release <fingerprint> --dry-run
                                     self-repair:release <fingerprint> --approve <digest>
+  retro                      Read a finished unit's facts and triage for /retro, or
+                             record its one learning (the <retro-queue> path).
+                             Usage: retro [<pr> | --session [<tag>] | status] [--dry-run]
   decision:memo              Record or list a question the run resolved without
                              asking you, so it stays reviewable afterwards.
                              Local-only (gitignored); the locked decision
@@ -896,6 +902,11 @@ cmd_brand_status() {
   exec_ts "$PACKAGE_ROOT/src/scripts/_cli/cmd_brand_status.ts" "$@"
 }
 
+# `closure:scan|lint` — the /challenge-me closure tools; scripts/_cli/cmd_closure.ts.
+cmd_closure() {
+  exec_ts "$PACKAGE_ROOT/src/scripts/_cli/cmd_closure.ts" "$@"
+}
+
 # `statusline:tap|install|uninstall` — the plan-window tap and its installer.
 cmd_statusline() {
   exec_ts "$PACKAGE_ROOT/src/scripts/_cli/cmd_statusline.ts" "$@"
@@ -1466,6 +1477,12 @@ cmd_self_repair() {
   exec_ts "$script" "$sub" "$@"
 }
 
+# `retro` — the /retro fact reader and recorder. A `_cli/cmd_*` entry so the
+# consumer gets the precompiled bundle; `src/scripts/retro.ts` alone needs tsx.
+cmd_retro() {
+  exec_ts "$PACKAGE_ROOT/src/scripts/_cli/cmd_retro.ts" "$@"
+}
+
 # `decision:memo {write,list}` — the decision-memo channel (UOTL Phase 4.3).
 # A question resolved without contacting the user is only legitimate if the
 # resolution is reviewable afterwards; this is where that record goes. Writes
@@ -1766,6 +1783,8 @@ main() {
     git:convention)          cmd_git_convention "$@" ;;
     mcp:available)           cmd_mcp_available "$@" ;;
     brand:status)            cmd_brand_status "$@" ;;
+    closure:scan)            cmd_closure scan "$@" ;;
+    closure:lint)            cmd_closure lint "$@" ;;
     statusline:tap)          cmd_statusline tap "$@" ;;
     statusline:install)      cmd_statusline install "$@" ;;
     statusline:uninstall)    cmd_statusline uninstall "$@" ;;
@@ -1834,6 +1853,7 @@ main() {
     council:revoke-billing)  cmd_council revoke-billing "$@" ;;
     self-repair:status)      cmd_self_repair status "$@" ;;
     self-repair:release)     cmd_self_repair release "$@" ;;
+    retro)                   cmd_retro "$@" ;;
     decision:memo)           cmd_decision_memo "$@" ;;
     run:supervise)           cmd_run_supervise "$@" ;;
     bracket)                 cmd_bracket "$@" ;;

@@ -8,7 +8,7 @@ sub: inbox
 cluster: analyze
 skills: [learning-to-rule-or-skill, roadmap-writing, decision-review]
 description: Analyze a dropped inbox artifact (review, prompt, spec, transcript) against the current tree, reproduce its steps, verify its claims, map survivors onto this suite's artefacts, emit a roadmap each.
-argument-hint: "[<path>|<round-id>]... [--process] [--pr] [--merge] [--no-related] [--no-pr] [--worktree] [--triage-only]"
+argument-hint: "[<path>|<round-id>]... [--process] [--pr] [--merge] [--related] [--no-related] [--no-pr] [--worktree] [--triage-only]"
 limits:
   mode_default: execute
   max_iterations: 3
@@ -47,14 +47,15 @@ shared vocabulary, lenses and tiers:
 
 | Given | Scope |
 |---|---|
-| a file path | that file, **plus** the inbox entries that belong to the same change (Phase 1a) |
-| a directory | every file in it, triaged first, **plus** the entries that belong to the same change (Phase 1a) |
-| several paths | their union, expanded once (Phase 1a) — one change, not one run per path |
+| a file path | that file — related inbox entries are **proposed and asked about**, never joined on signals alone (Phase 1a) |
+| a directory | every file in it, triaged first — related entries proposed and asked about (Phase 1a) |
+| several paths | their union, checked once (Phase 1a) — one change, not one run per path |
 | a round id | the round: `agents/runtime/analysis/<round-id>/` plus `agents/tmp/<round-id>/`, read as one set |
 | nothing | `agents/tmp/` |
 
 Scope flags: `--no-related` takes the named paths literally and skips the
-Phase 1a expansion · `--triage-only` stops after Phase 2 (no deep analysis, no
+Phase 1a check · `--related` joins related entries on their signals without
+asking (the old default, now opt-in) · `--triage-only` stops after Phase 2 (no deep analysis, no
 roadmap) · `--no-roadmap` analyses but emits findings instead of roadmaps ·
 `--keep-inbox` skips the `tmp.old/` move (default is to move — see Phase 6) ·
 `--worktree` runs the run in an isolated worktree (see below; off by default,
@@ -74,7 +75,9 @@ Phase 1 with one line naming the conflict.
 The invocation the operator types today in prose — *"analyse agents/tmp/x and
 everything that fits, then process the roadmaps with `/roadmap:process-full`, in
 a worktree, open a PR and merge it"* — is
-`/analyze:inbox agents/tmp/x --process --merge`.
+`/analyze:inbox agents/tmp/x --related --process --merge`. "And everything that fits"
+is the `--related` consent; without that phrase the flag is dropped and related
+entries are asked about.
 
 ## Enforced limits
 
@@ -366,20 +369,26 @@ Paste the `ENC1:` token into the intake note. That token, and the codename map a
 correspondence may exist. Never a second plaintext copy — not in the roadmap, not
 in the PR body, not in a commit message.
 
-### Phase 1a — Expand a named target to its change set
+### Phase 1a — Propose related entries, and ask before widening
 
 ```
-A NAMED PATH IS A SEED, NOT A BOUNDARY. EVERY OTHER INBOX ENTRY IS CHECKED
-AGAINST IT, AND THE ONES THAT BELONG TO THE SAME CHANGE JOIN THE RUN.
+A NAMED PATH IS THE SCOPE. OTHER INBOX ENTRIES ARE CHECKED AGAINST IT, AND THE
+ONES THAT LOOK LIKE THE SAME CHANGE ARE PROPOSED — IN ONE QUESTION, LISTING ALL
+OF THEM. A CANDIDATE JOINS ONLY ON THE OPERATOR'S YES, NEVER ON SIGNALS ALONE.
+NO ANSWER, OR NO ONE TO ASK → PROCEED AS --no-related; CANDIDATES ARE near-miss.
 ONE CHANGE → ONE ROUND, ONE LEDGER, ONE BRANCH, ONE PR.
-THE EXPANSION IS SHOWN, WITH ITS SIGNALS, BEFORE PHASE 2 — NEVER SILENT.
 ```
 
-An operator who names `agents/tmp/design-fix` usually means "this, and the other
-drops about the same thing". Analysing them as separate runs costs one full
-census, one ledger, one closure pass and one PR **each**, and — worse — plans
-the same surface several times without any run seeing the others' constraints.
-So a named path seeds the scope; the change set is what gets analysed.
+An operator who names `agents/tmp/design-fix` *may* mean "this, and the other
+drops about the same thing" — and analysing them as separate runs costs one full
+census, one ledger, one closure pass and one PR **each**. But inbox folders are
+the operator's working material, and Phase 6 moves every member of the change to
+`agents/tmp.old/`. Widening on signals alone once joined three folders to a
+one-folder invocation — one of them still being edited — and the move then
+emptied the inbox. The over-correction that followed, a project rule forcing
+`--keep-inbox` on every run, broke the move for the next run. Both failures share
+one root cause: no consent step between *related* and *joined*. So the check
+still runs and every candidate is still shown; widening is the operator's call.
 
 **Candidates** are every other top-level entry in `agents/tmp/` (never
 `tmp.old/`, never `agents/runtime/`). Each is scored on four cheap signals,
@@ -396,19 +405,43 @@ Anchors are fixed strings from untrusted content: each goes in its own `-e`
 under `-F`, and one carrying a quote or a newline is dropped and named — the
 same discipline as Phase 5's owner search.
 
-A candidate **joins** on one strong signal plus any other, or on two strong
-ones. One medium signal alone, or time alone, **does not** join — it is listed
-as `near-miss` so the operator sees it was looked at. The thresholds are stated
-defaults, not a measured optimum; *revisit-if:* an operator removes a joined
-entry, or names a near-miss as belonging, on more than one run.
+A candidate is **proposed** on one strong signal plus any other, or on two
+strong ones. One medium signal alone, or time alone, is not proposed — it is
+listed as `near-miss` so the operator sees it was looked at. The thresholds are
+stated defaults, not a measured optimum; *revisit-if:* an operator declines a
+proposed entry, or names a near-miss as belonging, on more than one run.
+
+**Then ask — once, before Phase 2.** One question lists every proposed entry
+with its signals, as numbered options: join all · join only the ones I name ·
+none (the named scope stands). An answer that names entries joins exactly those.
+Without a yes:
+
+| Situation | Effect |
+|---|---|
+| operator answers none, or does not answer | proceed as `--no-related`; every proposed entry becomes `near-miss` |
+| non-interactive run (CI, hook, pipe, nobody to ask) | the same — never a default join |
+| `--related` on the invocation | proposed entries join without the question (the operator consented up front) |
+| `--no-related` on the invocation | no check, no question |
+
+A project that wants the auto-join every time puts `--related` in its own
+invocation, never a rule that disables the Phase 6 move — such a rule fights the
+command and breaks the next run's inbox hygiene.
+
+There is no `analysis.*` settings key for this default: the settings template
+carries no `analysis` group, and a new key needs a class entry in
+`docs/contracts/settings-classes.md`. The flag is the switch; *revisit-if:* more
+than one project asks for a standing default.
 
 Print one table before Phase 2, one row per candidate checked:
 
 | entry | signals | verdict | why (one clause) |
 
-Verdicts are `seed` · `joined` · `near-miss` · `unrelated`. The scope line then
-states the seeds, the joined entries and the totals. `--no-related` skips the
-expansion and prints `expansion: skipped (--no-related)` instead of the table.
+Verdicts are `seed` · `proposed` · `near-miss` · `unrelated`; after the answer a
+`proposed` row becomes `joined` (confirmed, or `--related`) or `near-miss`
+(declined or unanswered). The scope line then states the seeds, the joined
+entries, how each joined (`confirmed` · `--related`) and the totals.
+`--no-related` skips the check and prints `expansion: skipped (--no-related)`
+instead of the table.
 
 What joining means, downstream:
 
@@ -421,7 +454,10 @@ What joining means, downstream:
 - Phase 5 plans them as one change: a subject the members share gets **one**
   roadmap (or one step on its owner), never one per file. Several roadmaps are
   fine when the change genuinely has several owners.
-- Phase 6 consumes exactly the members of the change — never a `near-miss`.
+- Phase 6 moves only the seeds and the entries that joined by confirmation or
+  `--related` — never a `near-miss`. A joined member whose content still feeds a
+  later step (a dossier, a research step on an emitted roadmap) stays in
+  `agents/tmp/` and is listed with the reason it stays.
 
 ### Phase 2 — Triage (cheap, all files)
 
@@ -1299,7 +1335,16 @@ reply**: `mv` the consumed file to `agents/tmp.old/`, point the roadmap's
 `Source:` line at its new path — still the codename — and regenerate the
 dashboard. A consumed file
 left in `agents/tmp/` is a rule violation, not untidiness. Move only the files
-actually processed — never sweep the rest of the inbox.
+actually processed — never sweep the rest of the inbox. "Processed" means a seed
+or a member that joined in Phase 1a; a joined member whose content a later
+roadmap step still reads is not moved, and the hand-back names it with that
+reason.
+
+**Hand-back: one line per folder in scope** — seeds, joined members and
+near-misses alike — stating what was done with it (`gap read` · `plan text` ·
+`dossier` · `triage only` · `looked at, not joined`) and where it now lies
+(`agents/tmp.old/<round>/<member>`, or still in `agents/tmp/` with the reason).
+An operator never has to ask where a folder went.
 
 Files dispositioned `delete` in Phase 2 are reported, **not** deleted — say what
 each one is and why it is spent, and let the user remove it.
@@ -1460,8 +1505,11 @@ prompted this section could not be given.
 - Merge without `--merge` on the invocation, merge on anything but green, or
   merge any PR but the run's own.
 - Analyse a named path alone when another inbox entry belongs to the same
-  change, without listing that entry as `near-miss` or `unrelated`. A silent
-  narrow scope plans half a change.
+  change, without listing that entry as `proposed`, `near-miss` or `unrelated`.
+  A silent narrow scope plans half a change.
+- Join an inbox entry the operator did not name on signals alone, or move one to
+  `tmp.old/` that was neither named nor confirmed. Showing the widening in a
+  table is not asking for it.
 - Drop a point because it is phrased as a feeling. A complaint carries a demand
   and goes through Phase 5b like any other: "this is annoying", "das nervt",
   "wenn es endlich mal …". <!-- md-language-check: ignore -->

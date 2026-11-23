@@ -292,7 +292,7 @@ terminal-only — **never between two merges of one queue** — enqueue every PR
 invocation merged as a retro unit, in one call:
 
 ```bash
-./scripts-run src/scripts/retro enqueue-merged --pr <N> [--pr <M> …]
+agent-config retro enqueue-merged --pr <N> [--pr <M> …]
 ```
 
 Depth row: `retro` in `src/config/step-depth-table.json` (per merge; per

@@ -33,6 +33,7 @@ import * as path from 'node:path';
 import process from 'node:process';
 import { fileURLToPath } from 'node:url';
 
+import { resolve_project_root } from './_lib/agent_settings.js';
 import { assertScanned, DeadScopeError } from './_lib/scan_scope.js';
 import { OWNER_LOCKED_CLASSES } from './ai_council/ownership_classes.js';
 
@@ -343,8 +344,48 @@ export function checkFile(rel: string, text: string): Violation[] {
 // CLI.
 // --------------------------------------------------------------------------
 
-function _repoRoot(): string {
-    return path.resolve(path.dirname(_HERE), '..', '..');
+/**
+ * The project whose roadmaps are linted — resolved from the working directory,
+ * never from this file's location. Installed under `node_modules`, a
+ * script-relative root names the PACKAGE, so a consumer's run scanned the
+ * package directory and reported a dead scope instead of linting its own plans.
+ */
+export function projectRoot(cwd: string = process.cwd()): string {
+    return resolve_project_root(null, { cwd })[0];
+}
+
+/**
+ * What one run lints: the top-level corpus of a project root, or the files
+ * named on the command line. A directory argument is a project root; a file
+ * argument is linted on its own, whatever its status or location.
+ */
+export function resolveTargets(
+    targets: readonly string[],
+    cwd: string = process.cwd(),
+): { base: string; files: string[]; roots: string[] } | { error: string } {
+    if (targets.length === 0) {
+        const base = projectRoot(cwd);
+        return { base, files: listCorpus(path.join(base, 'agents', 'roadmaps')), roots: ['agents/roadmaps'] };
+    }
+    const files: string[] = [];
+    const roots: string[] = [];
+    for (const t of targets) {
+        const abs = path.resolve(cwd, t);
+        let stat: fs.Stats;
+        try {
+            stat = fs.statSync(abs);
+        } catch {
+            return { error: `cannot read ${t}` };
+        }
+        if (stat.isDirectory()) {
+            files.push(...listCorpus(path.join(abs, 'agents', 'roadmaps')));
+            roots.push(path.join(t, 'agents', 'roadmaps'));
+        } else {
+            files.push(abs);
+            roots.push(t);
+        }
+    }
+    return { base: cwd, files, roots };
 }
 
 export function listCorpus(root: string): string[] {
@@ -362,8 +403,9 @@ export function listCorpus(root: string): string[] {
 
 function _usage(): string {
     return (
-        `usage: ${_PROG} [-h] [--quiet] [--json] [--self-test]\n\n` +
-        `Validate the \`## Decisions\` contract on top-level agents/roadmaps/*.md.\n`
+        `usage: ${_PROG} [-h] [--quiet] [--json] [--self-test] [<project-root | roadmap.md> ...]\n\n` +
+        `Validate the \`## Decisions\` contract on top-level agents/roadmaps/*.md of the\n` +
+        `project containing the working directory, or on the roots / files given.\n`
     );
 }
 
@@ -373,6 +415,7 @@ export function main(argv?: readonly string[]): number {
     let json = false;
     let selfTest = false;
     const unknown: string[] = [];
+    const targets: string[] = [];
     for (const a of args) {
         if (a === '-h' || a === '--help') {
             process.stdout.write(_usage());
@@ -380,7 +423,8 @@ export function main(argv?: readonly string[]): number {
         } else if (a === '--quiet') quiet = true;
         else if (a === '--json') json = true;
         else if (a === '--self-test') selfTest = true;
-        else unknown.push(a);
+        else if (a.startsWith('-')) unknown.push(a);
+        else targets.push(a);
     }
     if (unknown.length) {
         process.stderr.write(`${_usage()}${_PROG}: error: unrecognized arguments: ${unknown.join(' ')}\n`);
@@ -389,15 +433,18 @@ export function main(argv?: readonly string[]): number {
 
     if (selfTest) return _selfTest();
 
-    const repo = _repoRoot();
-    const root = path.join(repo, 'agents', 'roadmaps');
-    const files = listCorpus(root);
+    const resolved = resolveTargets(targets);
+    if ('error' in resolved) {
+        process.stderr.write(`${_PROG}: error: ${resolved.error}\n`);
+        return 2;
+    }
+    const { base: repo, files, roots } = resolved;
     try {
         assertScanned({
             gate: _PROG,
             scanned: files.length,
             units: 'roadmap file(s)',
-            roots: ['agents/roadmaps'],
+            roots,
         });
     } catch (e) {
         if (e instanceof DeadScopeError) {
@@ -484,8 +531,16 @@ function _selfTest(): number {
     return 0;
 }
 
+/** Defined by every esbuild bundle; this module is never a bundle entry. */
+declare const __AGENT_CONFIG_BUNDLE__: boolean | undefined;
+
 function _isCliEntry(): boolean {
+    // Inlined into `dist/cli-delegate/cmd_closure.js`, `import.meta.url` names
+    // that bundle — the same file as argv[1] — so the checks below would run
+    // this main() on the `closure:*` argv. The bundled caller invokes main().
+    if (typeof __AGENT_CONFIG_BUNDLE__ !== 'undefined' && __AGENT_CONFIG_BUNDLE__) return false;
     if (!process.argv[1]) return false;
+    if (process.argv[1] === _HERE) return true;
     try {
         return fs.realpathSync(_HERE) === fs.realpathSync(path.resolve(process.argv[1]));
     } catch {
@@ -493,6 +548,6 @@ function _isCliEntry(): boolean {
     }
 }
 
-if (_isCliEntry() || process.argv[1] === _HERE) {
+if (_isCliEntry()) {
     process.exitCode = main();
 }

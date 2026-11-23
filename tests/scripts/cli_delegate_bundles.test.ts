@@ -127,6 +127,28 @@ describe('cli-delegate bundles', () => {
         }
         expect(broken).toEqual([]);
     }, 120_000);
+
+    it('cmd_closure runs each tool exactly once — the inlined scripts never self-start', () => {
+        // The opposite failure to a silent no-op: closure_scan and
+        // lint_decision_classes are inlined into this bundle, where their own
+        // entry guard saw `import.meta.url === argv[1]` and ran main() on the
+        // `closure:*` argv beside the delegate's dispatch. Measured: every
+        // `closure:scan` also printed "lint_decision_classes: error: cannot read scan".
+        const dir = fs.mkdtempSync(path.join(os.tmpdir(), 'closure-bundle-'));
+        try {
+            fs.writeFileSync(path.join(dir, 'plan.md'), '- [ ] Pick the codec: TBD\n');
+            const res = spawnSync(process.execPath, [path.join(OUT_DIR, 'cmd_closure.js'), 'scan', 'plan.md'], {
+                cwd: dir,
+                encoding: 'utf-8',
+                timeout: 30_000,
+            });
+            expect(res.status).toBe(0);
+            expect(res.stdout).toContain('open decisions: 1');
+            expect(res.stderr).toBe('');
+        } finally {
+            fs.rmSync(dir, { recursive: true, force: true });
+        }
+    });
 });
 
 /**
