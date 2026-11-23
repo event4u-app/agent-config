@@ -265,6 +265,9 @@ describe('screenRoadmap — holds written in prose', () => {
         'Blocked on the probe (blocker `settled`).',
         'Waiting on the probe, see blocker `settled`.',
         "Isn't blocked by the probe any more.",
+        // R2 round 5 finding 1 — main released these; the branch must too.
+        'Parked until blocker `settled` ships.',
+        'On hold until blocker `settled` resolves.',
     ])('releases a dependency hold its own sentence ties to the resolved blocker: %s', (note) => {
         const text = roadmap({
             done: 1,
@@ -277,6 +280,10 @@ describe('screenRoadmap — holds written in prose', () => {
     it.each([
         'Still blocked by the host binary, and blocker `settled` has resolved.',
         'Blocked by the host binary (blocker `settled` is resolved).',
+        // R2 round 5 finding 2 — the citation must be the hold's whole object.
+        'Blocked by blocker `settled` and the probe.',
+        'Blocked by the probe and blocker `settled`.',
+        'Blocked by the host binary, see blocker `settled` for the earlier probe.',
     ])('keeps a dependency hold the resolved blocker is only reported beside, not cited for: %s', (note) => {
         const text = roadmap({
             done: 1,

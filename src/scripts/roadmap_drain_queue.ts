@@ -193,18 +193,25 @@ const PAST_BEFORE_RE = /\b(?:was|were|had been)(?:\s+[\w'-]+)?\s+$/i;
 const RESOLVED_AFTER_RE =
     /^[^,.;:]*,\s*which\s+(?:has|have)\s+(?:since\s+)?(?:been\s+)?(?:shipped|landed|merged|resolved|fixed|cleared|lifted)(?:\s+on\s+20\d\d-\d\d-\d\d)?\s*[.!?]?\s*$/i;
 // A hold the owner placed, not a dependency: a resolved blocker never releases it.
-const OWNER_HOLD_RE = /^(?:owner-reserved|on hold|parked until)$/i;
+const OWNER_HOLD_RE = /^owner-reserved$/i;
 
 /**
- * "held by blocker `x`", "blocked on the probe (blocker `x`)", "waiting on it, see
- * blocker `x`": the forms in which a dependency hold CITES its blocker. A ref that
- * is the subject of its own statement ("blocker `x` has resolved") cites nothing.
+ * "held by blocker `x`", "parked until blocker `x` ships", "blocked on the probe
+ * (blocker `x`)", "waiting on it, see blocker `x`": the forms in which a dependency
+ * hold CITES its blocker as its whole object. Anything after the citation but the
+ * end of the sentence ("… and the probe", "… for the earlier probe") means the hold
+ * has another object, so it is not released. A ref that is the subject of its own
+ * statement ("blocker `x` has resolved") cites nothing.
  */
 function citationRe(ids: readonly string[]): RegExp | null {
     if (ids.length === 0) return null;
-    const ref = `\`(?:${ids.map((id) => id.toLowerCase()).join('|')})\`(?!\\s+(?:is|has|was|had|are)\\b)`;
+    const ref = `\`(?:${ids.map((id) => id.toLowerCase()).join('|')})\``;
+    const end = String.raw`\s*(?:[.,;:]\s*)?$`;
     return new RegExp(
-        `^(?:\\s*(?:by|on)?\\s*(?:the\\s+)?blocker\\s+${ref}|[^.;]*?\\(\\s*blocker\\s+${ref}\\s*\\)|[^.;]*?\\bsee\\s+blocker\\s+${ref})`,
+        `^(?:\\s*(?:by|on)?\\s*(?:the\\s+)?blocker\\s+${ref}${end}` +
+            `|\\s*(?:until\\s+)?blocker\\s+${ref}\\s+(?:is\\s+|has\\s+)?[a-z]+${end}` +
+            `|[^.;]*?\\(\\s*blocker\\s+${ref}\\s*\\)${end}` +
+            `|[^.;]*?\\bsee\\s+blocker\\s+${ref}${end})`,
         'i',
     );
 }

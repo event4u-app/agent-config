@@ -84,7 +84,8 @@ stops the lane, not its worktree: its commits and edits stay on disk. Before
 re-dispatching, re-run the queue and read its entry. **A halt stops the
 re-dispatch** — under `--json` the entry reads `dispatchable: false` and the
 queue's top-level `dispatch_hold` reads `emergency.orchestration_halt is set`;
-the text output opens with a `HALTED —` line. The halt holds every lane, the
+the text output carries a `HALTED —` line directly under its
+`drain queue ·` header. The halt holds every lane, the
 fresh one included, and the worktree waits for the switch to be disarmed.
 Otherwise read
 `salvage: N commit(s) ahead, M uncommitted file(s)`, run
