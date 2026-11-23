@@ -190,8 +190,9 @@ const NEGATED_BEFORE_RE =
 const PAST_BEFORE_RE = /\b(?:was|were|had been)(?:\s+[\w'-]+)?\s+$/i;
 // "…, which has since shipped.": the resolution attaches to the hold's own object
 // and ends the sentence — "merged upstream but not released" and "fixed in part" do not.
+// A hold with several objects ("the probe and the host, which …") is never released here.
 const RESOLVED_AFTER_RE =
-    /^[^,.;:]*,\s*which\s+(?:has|have)\s+(?:since\s+)?(?:been\s+)?(?:shipped|landed|merged|resolved|fixed|cleared|lifted)(?:\s+on\s+20\d\d-\d\d-\d\d)?\s*[.!?]?\s*$/i;
+    /^(?:(?!\b(?:and|or|both)\b)[^,.;:])*,\s*which\s+(?:has|have)\s+(?:since\s+)?(?:been\s+)?(?:shipped|landed|merged|resolved|fixed|cleared|lifted)(?:\s+on\s+20\d\d-\d\d-\d\d)?\s*[.!?]?\s*$/i;
 // A hold the owner placed, not a dependency: a resolved blocker never releases it.
 const OWNER_HOLD_RE = /^owner-reserved$/i;
 

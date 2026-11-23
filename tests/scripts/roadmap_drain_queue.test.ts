@@ -241,6 +241,9 @@ describe('screenRoadmap — holds written in prose', () => {
         // R2 round 2 findings 1 and 3.
         ['a resolution qualified away', 'It was blocked by the upstream fix, which has since merged upstream but is not yet released.'],
         ['a partial resolution', 'It was blocked by the fix, which has since been fixed in part.'],
+        // R2 round 7 finding 1 — main held these; a resolution of the last object must not release them.
+        ['a resolution of one of two objects', 'It was blocked by the probe and the host, which has since shipped.'],
+        ['a resolution of one of "both" objects', 'Was blocked by both the probe and the host binary, which has since landed.'],
         ['a resolution in another place', 'It was blocked by the fix, which has since merged in staging.'],
         ['a resolution in theory', 'It was blocked by the fix, which has since been fixed in theory.'],
         ['"or not"', 'Whether or not blocked by the probe, the step waits.'],

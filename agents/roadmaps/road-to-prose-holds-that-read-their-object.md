@@ -24,11 +24,11 @@ keeping it once its only object has.
 
 ## Findings, as they stand
 
-1. **A resolution that covers one object releases a compound hold.**
-   `RESOLVED_AFTER_RE` is tested against the rest of the sentence, so "It was
-   blocked by the probe and the host, which has since shipped." reads runnable
-   although only the host shipped. Release direction — the risk the parent
-   roadmap's Risk Register ranks second.
+1. **A compound past-tense hold never releases.** The parent closed the release
+   direction conservatively: `RESOLVED_AFTER_RE` refuses any object list
+   containing `and` / `or` / `both`, so "It was blocked by the probe and the
+   host, which have since shipped." stays held even when both objects did ship.
+   Fails safe; the gap is a step left held after every object resolved.
 2. **A hold whose only object is a resolved blocker stays held in unlisted
    phrasings.** `citationRe` accepts four exact forms; "Blocked by blocker `a`
    and blocker `b`." (both resolved), "Blocked by blocker `a` (resolved
@@ -55,7 +55,8 @@ keeping it once its only object has.
 
 ## Phase 1 — Objects, not phrasings
 
-- [ ] **1.1** Test first: the six phrasings of findings 1 and 2 as named fixtures (AC-1).
+- [ ] **1.1** Test first: the phrasings of findings 1 and 2 as named fixtures (AC-1),
+  plus the parent's compound fixtures that must stay held while one object is open.
 - [ ] **1.2** Extract a hold's object list (split on `and`, `,`, parentheses) from
   the hold phrase to the clause end.
 - [ ] **1.3** Judge each object: a blocker ref by its status, a prose object by an
