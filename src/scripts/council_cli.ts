@@ -180,7 +180,7 @@ import {
     with_chairman_fields,
 } from './ai_council/blind_review.js';
 import { tallyFromResponses } from './ai_council/stance_tally.js';
-import { ratificationRepairOptions, readRatificationPrompt } from './ai_council/ratification_prompt.js';
+import { ratificationInlineFindings, ratificationRepairOptions, readRatificationPrompt } from './ai_council/ratification_prompt.js';
 import { storedStopClass } from './ai_council/stop_class.js';
 import { buildHandoffFromStanceTally, type HandoffEnvelope } from './ai_council/handoff.js';
 
@@ -2446,6 +2446,7 @@ function cmd_run(
           )
         : null;
     const stance_repairs: CouncilResponse[] = [];
+    const inline_findings_on = ratificationInlineFindings(inlineFindingsActive(ai_cfg, question.mode), ratification_prompt);
     const responses = consult(members, question, budget, {
         table,
         project,
@@ -2455,7 +2456,7 @@ function cmd_run(
         stance_tally: stance_tally_on,
         // Phase 1B — the same predicate the harvest below reads, so a member is asked
         // for the block exactly when the consensus round intends to read one.
-        inline_findings: inlineFindingsActive(ai_cfg, question.mode),
+        inline_findings: inline_findings_on,
         member_prompt_suffix,
         no_project_context_members,
         // Mid-flight cli→api fallback (ai-council-config.md § failure-class-
@@ -2542,7 +2543,7 @@ function cmd_run(
     const persona_labels = build_persona_labels(advisor_plans, billable);
     // Phase 1B — BEFORE peer review, chairman synthesis and rendering read
     // `responses`; the block is scaffolding, not argument. Off → null, nothing touched.
-    const inline_extractions = inlineFindingsActive(ai_cfg, question.mode) ? harvest_inline_findings(members, responses) : null;
+    const inline_extractions = inline_findings_on ? harvest_inline_findings(members, responses) : null;
     const peer_review = _maybe_run_peer_review(
         ai_cfg,
         args,
@@ -2849,7 +2850,7 @@ function cmd_debate(
         max_bundle_bytes: _getattr<number | null>(args, 'max_bundle_bytes', null),
         prompt_mode_override: 'debate',
     });
-    const { problem: debate_problem, ratification: debate_ratification } = readRatificationPrompt(args.input_mode, args.question);
+    const debate_problem = readRatificationPrompt(args.input_mode, args.question).problem;
     if (debate_problem !== null) return (_stderr(`❌  council:debate: ${debate_problem}.\n`), 2);
     const [proceed, gate_exit] = _necessity_gate({
         prompt: question.user_prompt,
@@ -2858,7 +2859,6 @@ function cmd_debate(
         proceed_anyway: _getattr(args, 'proceed_anyway', false),
         ai_cfg,
         original_ask: _getattr(args, 'original_ask', '') || '',
-        ratification: debate_ratification,
     });
     if (!proceed) {
         return gate_exit;

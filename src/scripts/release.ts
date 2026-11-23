@@ -596,8 +596,7 @@ function _changelog_line(c: Commit): string {
  * the intro instead of appended at end-of-file. When no current era header
  * exists, falls back to the legacy "above the most recent ## [" heuristic for
  * safety.
- */
-/**
+ *
  * Returns false, writing nothing, when the CHANGELOG already carries a section
  * for the entry's version. Measured on 20.7.0: two re-runs without `--resume`
  * each prepended the section again, and the duplicates had to be reverted on
@@ -1352,15 +1351,6 @@ export interface InFlightProbes {
 }
 
 /**
- * In-flight release target: `package.json` claims `V` while no PUBLISHED tag
- * `V` exists, so the publish step never completed. HEAD on `release/X.Y.Z`
- * wins first; stale `release/*` branches are never consulted (a merged one
- * left undeleted can tag a downgrade). PUBLISHED means on the REMOTE, because
- * publish-npm.yml triggers on `push: tags:`. Why not a local tag, and the
- * 14.6.0 release that stranded on the old form: see
- * `tests/scripts/release.test.ts` § _detect_in_flight_target.
- */
-/**
  * Whether this run resumes. An in-flight release is a state, not a flag — the
  * target derivation already reads it, and every skip decision in `execute()`
  * must read the same fact, or a re-run without `--resume` releases the
@@ -1371,6 +1361,15 @@ export function effective_resume(o: { flag: boolean; in_flight: string | null; t
     return o.flag || (o.in_flight !== null && o.in_flight === o.target);
 }
 
+/**
+ * In-flight release target: `package.json` claims `V` while no PUBLISHED tag
+ * `V` exists, so the publish step never completed. HEAD on `release/X.Y.Z`
+ * wins first; stale `release/*` branches are never consulted (a merged one
+ * left undeleted can tag a downgrade). PUBLISHED means on the REMOTE, because
+ * publish-npm.yml triggers on `push: tags:`. Why not a local tag, and the
+ * 14.6.0 release that stranded on the old form: see
+ * `tests/scripts/release.test.ts` § _detect_in_flight_target.
+ */
 function _detect_in_flight_target(probes: InFlightProbes = {}): string | null {
     const head_branch =
         probes.head_branch ?? (() => git(['rev-parse', '--abbrev-ref', 'HEAD'], { capture: true }));

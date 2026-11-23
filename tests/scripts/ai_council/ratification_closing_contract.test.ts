@@ -8,7 +8,7 @@ import { describe, expect, it } from 'vitest';
 import { CouncilResponse, ExternalAIClient } from '../../../src/scripts/ai_council/clients.js';
 import { consult, CouncilQuestion } from '../../../src/scripts/ai_council/orchestrator.js';
 import { INLINE_FINDINGS_CONTRACT, STANCE_LINE_CONTRACT } from '../../../src/scripts/ai_council/prompts.js';
-import { RATIFICATION_STANCE_CONTRACT, ratificationRepairOptions } from '../../../src/scripts/ai_council/ratification_prompt.js';
+import { RATIFICATION_STANCE_CONTRACT, ratificationInlineFindings, ratificationRepairOptions } from '../../../src/scripts/ai_council/ratification_prompt.js';
 
 class Recording extends ExternalAIClient {
     prompts: string[] = [];
@@ -33,7 +33,7 @@ describe('ratification runs carry one closing contract', () => {
         const seat = new Recording(() => RATIFIED);
         consult([seat], q, null, {
             stance_tally: true,
-            inline_findings: true,
+            inline_findings: ratificationInlineFindings(true, true),
             on_stance_repair: () => true,
             ...ratificationRepairOptions(true),
         });
@@ -45,7 +45,7 @@ describe('ratification runs carry one closing contract', () => {
 
     it('a non-ratification run keeps the generic contract and the caller\'s findings setting', () => {
         const seat = new Recording(() => 'x\n\nSTANCE: a | CONFIDENCE: high | DEALBREAKER: no');
-        consult([seat], q, null, { stance_tally: true, inline_findings: true, ...ratificationRepairOptions(false) });
+        consult([seat], q, null, { stance_tally: true, inline_findings: ratificationInlineFindings(true, false), ...ratificationRepairOptions(false) });
         expect(seat.prompts[0]).toContain(STANCE_LINE_CONTRACT);
         expect(seat.prompts[0]).toContain(INLINE_FINDINGS_CONTRACT);
     });

@@ -47,19 +47,26 @@ export function readRatificationPrompt(inputMode: unknown, questionPath: unknown
 /**
  * The consult options a ratification run adds: a seat must close on one of the
  * record writer's labels, because `abstain` or an invented label is a paid round
- * that yields no record. The same contract closes the final round, and the
- * findings block is dropped, so the seat is handed one closing format instead
- * of three (2026-11-23: the codex seat closed on `REQUEST_CHANGES`).
+ * that yields no record. The same contract closes the final round, so the seat
+ * is handed one closing format (2026-11-23: the codex seat closed on
+ * `REQUEST_CHANGES`); see also `ratificationInlineFindings`.
  */
 export function ratificationRepairOptions(ratification: boolean): {
     stance_repair_contract: string | null;
     stance_label_accepted: ((label: string) => boolean) | null;
-    inline_findings?: false;
 } {
     if (!ratification) return { stance_repair_contract: null, stance_label_accepted: null };
     return {
-        inline_findings: false,
         stance_repair_contract: RATIFICATION_STANCE_CONTRACT,
         stance_label_accepted: (label) => (RATIFICATION_LABELS as readonly string[]).includes(label.trim().toLowerCase()),
     };
+}
+
+/**
+ * The one inline-findings predicate for a run: the prompt asks for the block
+ * and the harvest reads it exactly when this is true. A ratification run drops
+ * the block, which would otherwise be a second closing format after the stance.
+ */
+export function ratificationInlineFindings(active: boolean, ratification: boolean): boolean {
+    return active && !ratification;
 }

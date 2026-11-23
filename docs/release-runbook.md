@@ -274,9 +274,10 @@ with the files printed — on `main` that same tree still refuses, because there
 it is an operator's unrelated work about to be swept into a release commit.
 Pinned by `tests/scripts/release.test.ts` § `preflightPosition`.
 
-`--resume` is still the right flag when a run left a COMMIT, a PR, a tag or a
-Release behind: those skips are what it is for. It is no longer the difference
-between a re-run working and crashing.
+`--resume` turns on the skips for a COMMIT, a PR, a tag or a Release a run left
+behind. It is no longer the difference between a re-run working and crashing,
+and since the paragraph below it is only needed once the tag is PUBLISHED (the
+in-flight probe then returns nothing) — e.g. a failed Release or cleanup step.
 
 **Since 2026-11-23 an in-flight release resumes without the flag.** When the
 target is the in-flight one (`_detect_in_flight_target`: HEAD on
