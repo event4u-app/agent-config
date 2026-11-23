@@ -192,17 +192,16 @@ const PAST_BEFORE_RE = /\b(?:was|were|had been)(?:\s+[\w'-]+)?\s+$/i;
 // and ends the sentence — "merged upstream but not released" and "fixed in part" do not.
 // A hold with several objects ("the probe and the host, which …") is never released here.
 const RESOLVED_AFTER_RE =
-    /^(?:(?!\b(?:and|or|both)\b)[^,.;:])*,\s*which\s+(?:has|have)\s+(?:since\s+)?(?:been\s+)?(?:shipped|landed|merged|resolved|fixed|cleared|lifted)(?:\s+on\s+20\d\d-\d\d-\d\d)?\s*[.!?]?\s*$/i;
+    /^(?:(?!\b(?:and|or|both|but|while|whereas)\b)[^,.;:])*,\s*which\s+(?:has|have)\s+(?:since\s+)?(?:been\s+)?(?:shipped|landed|merged|resolved|fixed|cleared|lifted)(?:\s+on\s+20\d\d-\d\d-\d\d)?\s*[.!?]?\s*$/i;
 // A hold the owner placed, not a dependency: a resolved blocker never releases it.
 const OWNER_HOLD_RE = /^owner-reserved$/i;
 
 /**
- * "held by blocker `x`", "parked until blocker `x` ships", "blocked on the probe
- * (blocker `x`)", "waiting on it, see blocker `x`": the forms in which a dependency
- * hold CITES its blocker as its whole object. Anything after the citation but the
- * end of the sentence ("… and the probe", "… for the earlier probe") means the hold
- * has another object, so it is not released. A ref that is the subject of its own
- * statement ("blocker `x` has resolved") cites nothing.
+ * "held by blocker `x`", "parked until blocker `x` ships": the forms in which a
+ * dependency hold CITES its blocker as its whole object, directly after the hold
+ * phrase. Anything after the citation but the end of the sentence ("… and the
+ * probe") means another object; a citation set apart ("(blocker `x`)", "see
+ * blocker `x`") does not say what the object is. Neither releases — fail safe.
  */
 function citationRe(ids: readonly string[]): RegExp | null {
     if (ids.length === 0) return null;
@@ -210,9 +209,7 @@ function citationRe(ids: readonly string[]): RegExp | null {
     const end = String.raw`\s*(?:[.,;:]\s*)?$`;
     return new RegExp(
         `^(?:\\s*(?:by|on)?\\s*(?:the\\s+)?blocker\\s+${ref}${end}` +
-            `|\\s*(?:until\\s+)?blocker\\s+${ref}\\s+(?:is\\s+|has\\s+)?[a-z]+${end}` +
-            `|[^.;]*?\\(\\s*blocker\\s+${ref}\\s*\\)${end}` +
-            `|[^.;]*?\\bsee\\s+blocker\\s+${ref}${end})`,
+            `|\\s*(?:until\\s+)?blocker\\s+${ref}\\s+(?:is\\s+|has\\s+)?[a-z]+${end})`,
         'i',
     );
 }

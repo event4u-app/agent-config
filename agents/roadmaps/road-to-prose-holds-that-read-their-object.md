@@ -30,11 +30,16 @@ keeping it once its only object has.
    host, which have since shipped." stays held even when both objects did ship.
    Fails safe; the gap is a step left held after every object resolved.
 2. **A hold whose only object is a resolved blocker stays held in unlisted
-   phrasings.** `citationRe` accepts four exact forms; "Blocked by blocker `a`
-   and blocker `b`." (both resolved), "Blocked by blocker `a` (resolved
-   2026-10-18).", "Waiting on blocker `a` to ship.", "Parked until blocker `a`
-   has been resolved." and "Blocked by blocker `a` — now resolved." stay held.
-   `main` released them. Fails safe (held), never releases a live hold.
+   phrasings.** `citationRe` accepts only a citation directly after the hold
+   phrase ("blocked by blocker `a`", "parked until blocker `a` ships"). "Blocked
+   by blocker `a` and blocker `b`." (both resolved), "Blocked by blocker `a`
+   (resolved 2026-10-18).", "Waiting on blocker `a` to ship.", "Parked until
+   blocker `a` has been resolved.", "Blocked by blocker `a` — now resolved.",
+   "Blocked on the probe (blocker `a`)." and "Waiting on the probe, see blocker
+   `a`." stay held. `main` released them. The parent dropped the parenthetical
+   and `see` forms after R2 round 8 showed they also released holds with a
+   second, unresolved object ("Blocked on the host binary and the probe
+   (blocker `a`)."). Fails safe: no path releases a hold whose object is open.
 
 ## Acceptance criteria
 

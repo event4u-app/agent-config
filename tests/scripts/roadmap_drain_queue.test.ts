@@ -244,6 +244,8 @@ describe('screenRoadmap — holds written in prose', () => {
         // R2 round 7 finding 1 — main held these; a resolution of the last object must not release them.
         ['a resolution of one of two objects', 'It was blocked by the probe and the host, which has since shipped.'],
         ['a resolution of one of "both" objects', 'Was blocked by both the probe and the host binary, which has since landed.'],
+        // R2 round 8 finding 2 — main held this.
+        ['a resolution attached across "but"', 'It was blocked by the probe but the host, which has since shipped.'],
         ['a resolution in another place', 'It was blocked by the fix, which has since merged in staging.'],
         ['a resolution in theory', 'It was blocked by the fix, which has since been fixed in theory.'],
         ['"or not"', 'Whether or not blocked by the probe, the step waits.'],
@@ -265,8 +267,7 @@ describe('screenRoadmap — holds written in prose', () => {
     });
 
     it.each([
-        'Blocked on the probe (blocker `settled`).',
-        'Waiting on the probe, see blocker `settled`.',
+        'Blocked by blocker `settled`.',
         "Isn't blocked by the probe any more.",
         // R2 round 5 finding 1 — main released these; the branch must too.
         'Parked until blocker `settled` ships.',
@@ -287,6 +288,12 @@ describe('screenRoadmap — holds written in prose', () => {
         'Blocked by blocker `settled` and the probe.',
         'Blocked by the probe and blocker `settled`.',
         'Blocked by the host binary, see blocker `settled` for the earlier probe.',
+        // R2 round 8 finding 1 — a citation set apart from the hold phrase does not
+        // say what the hold's object is; fail safe (road-to-prose-holds-that-read-their-object).
+        'Blocked on the host binary and the probe (blocker `settled`).',
+        'Waiting on the host binary for now, see blocker `settled`.',
+        'Blocked on the probe (blocker `settled`).',
+        'Waiting on the probe, see blocker `settled`.',
     ])('keeps a dependency hold the resolved blocker is only reported beside, not cited for: %s', (note) => {
         const text = roadmap({
             done: 1,
