@@ -16,7 +16,10 @@
  * The one reader, `hooks_doctor`, ranks that file against the summary's runs by
  * recorded time, so a later quiet run still reads as the latest.
  */
+import * as path from 'node:path';
+
 import { EXIT_ALLOW } from './exit_codes.js';
+import { update_json_under_lock } from './state_io.js';
 
 /**
  * Runs one diagnostic write so that nothing it throws reaches the caller. The
@@ -35,6 +38,19 @@ export function containFeedback(label: string, write: () => void): void {
             // stderr itself is gone; the verdict still matters more than the report
         }
     }
+}
+
+/**
+ * One concern's own feedback file, written under its lock with
+ * {@link keepNewerOutcome}. A write the lock reports as failed is named on
+ * stderr; the caller wraps this in {@link containFeedback} for anything thrown.
+ */
+export function writeConcernFeedback(fbDir: string, entry: Readonly<Record<string, unknown>>, invocation: string): void {
+    const concern = String(entry['concern']);
+    const written = update_json_under_lock<Record<string, unknown>>(path.join(fbDir, `${concern}.json`), (loaded) =>
+        keepNewerOutcome(loaded, { ...entry, invocation }),
+    );
+    if (written === 'failed') process.stderr.write(`dispatch_hook: feedback write failed for ${concern}\n`);
 }
 
 /** An entry that allowed, was not resolved from a crash, and gave no reason. */

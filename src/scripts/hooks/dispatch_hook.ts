@@ -72,7 +72,7 @@ import { detectSurface } from '../_lib/surface.js';
 import { recordCapture, recordOpportunity } from "../_lib/collector_denominator.js";
 import { EXIT_ALLOW, EXIT_BLOCK, EXIT_WARN, EXIT_USAGE } from './exit_codes.js';
 import { assertConcernEnvRestored, concernSpawnEnv, enterConcernEnv, openConcernEnvScope, recoverConcernEnv } from './concern_env.js';
-import { containFeedback, isQuietAllow, keepNewerOutcome, withLatestRuns } from './feedback_policy.js';
+import { containFeedback, isQuietAllow, withLatestRuns, writeConcernFeedback } from './feedback_policy.js';
 export { EXIT_ALLOW, EXIT_BLOCK, EXIT_WARN };
 export { _fallback_yaml } from './fallback_yaml.js';
 
@@ -893,11 +893,7 @@ function _write_feedback(
   // Quiet allows skip their own file only if the summary carrying them was written (feedback_policy.ts).
   for (const entry of entries) {
     if (summaryWritten && isQuietAllow(entry)) continue;
-    containFeedback(`feedback write for ${String(entry["concern"])}`, () => {
-      const target = path.join(fb_dir, `${entry["concern"]}.json`);
-      const written = update_json_under_lock<FeedbackEntry>(target, (loaded) => keepNewerOutcome(loaded, { ...entry, invocation }));
-      if (written === "failed") process.stderr.write(`dispatch_hook: feedback write failed for ${entry["concern"]}\n`);
-    });
+    containFeedback(`feedback write for ${String(entry["concern"])}`, () => writeConcernFeedback(fb_dir, entry, invocation));
   }
 }
 
@@ -1405,9 +1401,7 @@ export function main(argv?: string[]): number {
   assertConcernEnvRestored(); // a failed restore refuses rather than allowing on a dirty process
   const final_rc = _reduce(rcs);
   // The verdict is computed; no diagnostic write may stop it reaching the host.
-  containFeedback("timing record", () =>
-    writeConcernTimings(String(envelope["event"] ?? ""), String(envelope["platform"] ?? ""), timing_samples),
-  );
+  containFeedback("timing record", () => writeConcernTimings(String(envelope["event"] ?? ""), String(envelope["platform"] ?? ""), timing_samples));
   containFeedback("feedback write", () => _write_feedback(envelope, session_id, feedback_entries, final_rc, started_at));
   containFeedback("rule-trip record", () => _record_rule_trips(envelope, feedback_entries));
 
