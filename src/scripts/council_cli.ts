@@ -1826,10 +1826,17 @@ function _necessity_gate(opts: {
     ai_cfg: Dict;
     stdout?: ((s: string) => void) | null;
     original_ask?: string;
+    ratification?: boolean;
 }): [boolean, number, ClassificationResult | null] {
     const out = opts.stdout ?? _stdout;
     const [enabled, mode] = _resolve_necessity_mode(opts.ai_cfg, opts.lens, opts.invocation);
     if (!enabled || mode === 'off') {
+        return [true, 0, null];
+    }
+    // The kernel-edit ratification gate already decided this run is required —
+    // a prompt-shape verdict cannot overrule it, in any mode or invocation.
+    if (opts.ratification === true) {
+        out('council:necessity · bypassed (ratification prompt — required by the ratification gate)\n');
         return [true, 0, null];
     }
     const result = classify_necessity(opts.prompt, opts.lens, opts.invocation as never, { ratePressure: recentHostMarker(REPO_ROOT) || planWindowHot() });
@@ -2304,6 +2311,7 @@ function cmd_run(
         proceed_anyway: _getattr(args, 'proceed_anyway', false),
         ai_cfg,
         original_ask: _getattr(args, 'original_ask', '') || '',
+        ratification: ratification_prompt,
     });
     if (!proceed) {
         return gate_exit;
@@ -2841,7 +2849,7 @@ function cmd_debate(
         max_bundle_bytes: _getattr<number | null>(args, 'max_bundle_bytes', null),
         prompt_mode_override: 'debate',
     });
-    const debate_problem = readRatificationPrompt(args.input_mode, args.question).problem;
+    const { problem: debate_problem, ratification: debate_ratification } = readRatificationPrompt(args.input_mode, args.question);
     if (debate_problem !== null) return (_stderr(`❌  council:debate: ${debate_problem}.\n`), 2);
     const [proceed, gate_exit] = _necessity_gate({
         prompt: question.user_prompt,
@@ -2850,6 +2858,7 @@ function cmd_debate(
         proceed_anyway: _getattr(args, 'proceed_anyway', false),
         ai_cfg,
         original_ask: _getattr(args, 'original_ask', '') || '',
+        ratification: debate_ratification,
     });
     if (!proceed) {
         return gate_exit;
@@ -3810,5 +3819,6 @@ export {
     // `quorum_out`), and constructing a real roster would spend money.
     _format_quorum_line,
     _size_fit_gate,
+    _necessity_gate,
     CouncilDisabledError,
 };
