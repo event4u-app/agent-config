@@ -571,4 +571,4 @@ if (_invokedDirectly) {
     }
 }
 
-export { main, pack };
+export { main, MAX_UNCONDENSED_BYTES, pack };
