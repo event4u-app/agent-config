@@ -319,6 +319,9 @@ describe('release settings delta — the released surface', () => {
             // repository's shallow flag: a grafted local clone can be shallow
             // and still hold every commit this check reads.
             git(['cat-file', '-e', `${offender}^^{commit}`]);
+            // The object can be present through another ref while HEAD's own
+            // history is grafted short of it — then the log below cannot see it.
+            git(['merge-base', '--is-ancestor', offender, 'HEAD']);
             // `--full-history`: the offender and its repair cancel out, so
             // default history simplification prunes the side branches that
             // carry them — and, behind a merge that is TREESAME on the file,
