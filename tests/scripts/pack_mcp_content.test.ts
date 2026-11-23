@@ -12,6 +12,8 @@ import { tmpdir } from 'node:os';
 import { join, resolve } from 'node:path';
 import { afterEach, beforeEach, describe, expect, it } from 'vitest';
 
+import { MAX_UNCONDENSED_BYTES } from '../../src/scripts/pack_mcp_content.js';
+
 const REPO_ROOT = resolve(import.meta.dirname, '..', '..');
 const TSX_BIN = join(
     REPO_ROOT,
@@ -73,6 +75,25 @@ describe('pack_mcp_content — CLI contract', () => {
             expect(ts.status).toBe(2);
         } finally {
             rmSync(emptyRoot, { recursive: true, force: true });
+        }
+    });
+});
+
+// The uncondensed cap is a PROXY for Cloudflare's 3 MB (free tier) limit on the
+// gzipped bundle. It only does its job while a bundle at the cap would still gz
+// under that limit — otherwise the upload fails before the proxy does.
+describe('pack_mcp_content — the proxy limit stands in for the real one', () => {
+    it('at the measured gz ratio, a bundle at the proxy cap still fits the 3 MB free tier', () => {
+        const out = mkdtempSync(join(tmpdir(), 'pack-ratio-'));
+        try {
+            const ts = spawnSync(TSX_BIN, [TS_SCRIPT, '--out', out, '--quiet'], { cwd: REPO_ROOT, encoding: 'utf8', maxBuffer: 64 * 1024 * 1024 });
+            expect(ts.status, ts.stderr).toBe(0);
+            const raw = readFileSync(join(out, 'content.json')).length;
+            const gz = readFileSync(join(out, 'content.json.gz')).length;
+            expect(raw).toBeLessThanOrEqual(MAX_UNCONDENSED_BYTES);
+            expect(MAX_UNCONDENSED_BYTES * (gz / raw)).toBeLessThan(3_000_000);
+        } finally {
+            rmSync(out, { recursive: true, force: true });
         }
     });
 });
