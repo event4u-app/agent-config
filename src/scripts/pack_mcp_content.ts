@@ -60,7 +60,14 @@ const PACKER_VERSION = '1.0.0';
 // without anyone noticing was that its own justification was never re-measured.
 // If this needs raising again, re-measure BOTH numbers and replace them here;
 // the gz figure against 3 MB is the one that decides whether there is a problem.
-const MAX_UNCONDENSED_BYTES = 6 * 1024 * 1024;
+//
+// Re-measured 2026-11-23 on origin/main eab833e146 (858 entries): uncondensed
+// 6,292,121 B — 665 B over the 6 MiB proxy, which failed Tests on main — and gz
+// 2,191,611 B, 73 % of the 3 MB free tier. Raised to 7 MiB: at the current gz
+// ratio (0.348) that proxy corresponds to ~2.55 MB gz, still under the real
+// limit, so the proxy fails before the upload does. When the gz figure nears
+// 2.7 MB the answer is a smaller bundle, not a higher proxy.
+const MAX_UNCONDENSED_BYTES = 7 * 1024 * 1024;
 
 /** Sentinel for the early-exit paths (`raise SystemExit(n)` in Python). */
 class SystemExit extends Error {
