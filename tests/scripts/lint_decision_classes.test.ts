@@ -1,7 +1,8 @@
-import { describe, expect, it } from 'vitest';
+import { afterEach, beforeEach, describe, expect, it } from 'vitest';
 
-
+import { spawnSync } from 'node:child_process';
 import * as fs from 'node:fs';
+import * as os from 'node:os';
 import * as path from 'node:path';
 import { fileURLToPath } from 'node:url';
 
@@ -14,7 +15,9 @@ import {
     checkUnresolvedMarkers,
     dischargeRanges,
     findDecisionsSection,
+    projectRoot,
     readStatus,
+    resolveTargets,
     tableCells,
 } from '../../src/scripts/lint_decision_classes.js';
 
@@ -212,5 +215,54 @@ describe('lint_decision_classes — the locked-resolver baseline stays addressab
             const ids = decisionRowIds(fs.readFileSync(abs, 'utf-8').split('\n'));
             expect(ids.has(id), `${key}: no Decisions row ${id}`).toBe(true);
         }
+    });
+});
+
+describe('lint_decision_classes — the scanned project is the working directory, not the package', () => {
+    const BAD = table('| D1 | high impact | owner | x | y | z |');
+    let tmp: string;
+
+    beforeEach(() => {
+        tmp = fs.realpathSync(fs.mkdtempSync(path.join(os.tmpdir(), 'ldc-root-')));
+        fs.mkdirSync(path.join(tmp, '.git'));
+        fs.mkdirSync(path.join(tmp, 'agents', 'roadmaps'), { recursive: true });
+        fs.writeFileSync(path.join(tmp, 'agents', 'roadmaps', 'road-to-x.md'), BAD);
+    });
+    afterEach(() => {
+        fs.rmSync(tmp, { recursive: true, force: true });
+    });
+
+    it('resolves the project root from the working directory', () => {
+        const nested = path.join(tmp, 'agents', 'roadmaps');
+        expect(projectRoot(nested)).toBe(tmp);
+        const r = resolveTargets([], nested);
+        expect('error' in r).toBe(false);
+        if (!('error' in r)) expect(r.files).toEqual([path.join(tmp, 'agents', 'roadmaps', 'road-to-x.md')]);
+    });
+
+    it('accepts a project root or a single roadmap file as an argument', () => {
+        const elsewhere = os.tmpdir();
+        const byRoot = resolveTargets([tmp], elsewhere);
+        const byFile = resolveTargets([path.join(tmp, 'agents', 'roadmaps', 'road-to-x.md')], elsewhere);
+        for (const r of [byRoot, byFile]) {
+            expect('error' in r).toBe(false);
+            if (!('error' in r)) expect(r.files).toHaveLength(1);
+        }
+        expect(resolveTargets([path.join(tmp, 'missing.md')], elsewhere)).toEqual({
+            error: expect.stringMatching(/missing\.md/),
+        });
+    });
+
+    it('a run from a consumer project reds on that project, wherever the script lives', () => {
+        const env = { ...process.env };
+        delete env.AGENT_CONFIG_PROJECT_ROOT;
+        delete env.AGENT_CONFIG_ROOT_OVERRIDE;
+        const res = spawnSync(
+            path.join(REPO, 'node_modules', '.bin', 'tsx'),
+            [path.join(REPO, 'src', 'scripts', 'lint_decision_classes.ts')],
+            { cwd: tmp, env, encoding: 'utf-8' },
+        );
+        expect(res.status).toBe(1);
+        expect(res.stderr).toContain(path.join('agents', 'roadmaps', 'road-to-x.md'));
     });
 });
