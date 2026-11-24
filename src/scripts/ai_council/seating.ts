@@ -25,9 +25,9 @@
  */
 import type { MemberConfig } from './config.js';
 
-/** A member's provider family. The map key IS the provider in this config shape. */
+/** A member's provider family. The map key IS the provider in this config shape; a declared seat (`anthropic#architect`, live_table.ts) belongs to its provider's family. */
 export function familyOf(member: MemberConfig): string {
-    return member.name;
+    return member.name.split('#')[0] as string;
 }
 
 /**
