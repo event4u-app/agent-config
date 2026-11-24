@@ -79,21 +79,15 @@ no lane is dispatched onto a `start` entry while a `continue` entry has no lane.
 session holds one lock per lane, so the second lane no longer overwrites the
 first lane's claim, and the queue lists every lane's roadmap as `claimed`.
 
-**A lane that dies keeps its work.** A spend or rate limit or a watchdog
-stops the lane, not its worktree: its commits and edits stay on disk. Before
-re-dispatching, re-run the queue and read its entry. **A halt stops the
-re-dispatch** — under `--json` the entry reads `dispatchable: false` and the
-queue's top-level `dispatch_hold` reads `emergency.orchestration_halt is set`;
-the text output carries a `HALTED —` line directly under its
-`drain queue ·` header. The halt holds every lane, the
-fresh one included, and the worktree waits for the switch to be disarmed.
-Otherwise read
-`salvage: N commit(s) ahead, M uncommitted file(s)`, run
+**A lane that dies keeps its work.** A limit or watchdog stops the lane,
+not its worktree: commits and edits stay on disk. Before re-dispatching,
+re-run the queue; `dispatchable: false` (halt) stops it, else
+`salvage: N commit(s) ahead, M uncommitted file(s)` — run
 `agent-config run:supervise --root <lane worktree> --verify <slug>`, put any
 disagreeing field first in the brief, and send a FRESH lane into the SAME
-worktree; a resumed agent loses its worktree. The same holds when the orchestrator session
-itself dies: its lane locks expire with its register record and the next
-session's queue lists each roadmap as `resume` in the lane's worktree.
+worktree; a resumed agent loses its worktree. Same when the orchestrator dies:
+its lane locks expire with its register record and the next session's queue
+lists each as `resume` in the lane's worktree.
 
 **The orchestrator sends this brief, filling only the two parameters, and adds
 nothing that changes its finish line:**
@@ -142,11 +136,8 @@ the roadmap is dispatched again:
    council takes an irreversible, release- or security-relevant question; the run
    decides the rest and records it in `## Decisions`. A lane's `gated:` return or a
    `council_questions` entry goes to the council by the orchestrator, and the
-   verdict goes back to the SAME lane via its message channel — after re-running
-   the queue: while the emergency halt is armed (`dispatch_hold:
-   emergency.orchestration_halt is set`, text `HALTED —`) the verdict is held and
-   the lane is not resumed, exactly as a re-dispatch is not sent. Ending the lane and
-   dispatching a fresh one later is how one roadmap received nine lanes in eight
+   verdict goes back to the SAME lane via its message channel, unless halted.
+   Ending the lane and dispatching a fresh one later is how one roadmap received nine lanes in eight
    sessions behind an unchanged blocker.
 3. **A `decide` roadmap is never re-dispatched until its blocker changed** —
    the queue reads `Status:` live, so a resolved blocker turns the step runnable

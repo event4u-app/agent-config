@@ -68,10 +68,10 @@ a hold is actually still in force.
 
 ## Phase 1 — Halt covers every dispatch
 
-- [x] **1.1** Test first: settings file with `emergency.orchestration_halt: true`
+- [x] **1.1** Test first: settings file with `emergency.orchestration_halt: true` <!-- receipt: class=R2 · shadow · would-skip=revalidation · bound=production code touched: src/scripts/roadmap_drain_queue.ts -->
   → queue → no entry dispatchable, `next` null, hold named (AC-1, AC-3).
-- [x] **1.2** `buildQueue`: when halted, every entry's `dispatchable` is `false`.
-- [x] **1.3** `process-full-all.md`: the dead-lane re-dispatch reads the queue
+- [x] **1.2** `buildQueue`: when halted, every entry's `dispatchable` is `false`. <!-- receipt: class=R2 · shadow · would-skip=revalidation · bound=production code touched: src/scripts/roadmap_drain_queue.ts -->
+- [x] **1.3** `process-full-all.md`: the dead-lane re-dispatch reads the queue <!-- receipt: class=R2 · shadow · would-skip=revalidation · bound=production code touched: src/scripts/roadmap_drain_queue.ts -->
   entry's `dispatchable` and `dispatch_hold` first and stops on a halt (AC-2);
   `task sync` regenerates the projection.
 
@@ -94,14 +94,19 @@ a hold is actually still in force.
 
 - [~] **2.1** Test first: the four cases of finding 2 as named fixtures (AC-4).
   Carried — `road-to-prose-holds-that-read-their-object` 1.1.
+  <!-- deferred-resolution: carried-to=road-to-prose-holds-that-read-their-object -->
 - [~] **2.2** Negation: strip a negation that governs the hold phrase within the
   same clause, not only when adjacent. Carried — 1.3.
+  <!-- deferred-resolution: carried-to=road-to-prose-holds-that-read-their-object -->
 - [~] **2.3** Past-tense resolution ("was blocked by … has since shipped") is
   not a hold. Carried — 1.3.
+  <!-- deferred-resolution: carried-to=road-to-prose-holds-that-read-their-object -->
 - [~] **2.4** Evaluate prose holds even when a named blocker resolved; the
   resolved name suppresses only the hold that names it (AC-5). Carried — 1.3.
+  <!-- deferred-resolution: carried-to=road-to-prose-holds-that-read-their-object -->
 - [~] **2.5** Before/after classification diff over the live estate; every
   changed step justified in the PR body (AC-6). Carried — 1.4.
+  <!-- deferred-resolution: carried-to=road-to-prose-holds-that-read-their-object -->
 
 ## Not in scope
 
