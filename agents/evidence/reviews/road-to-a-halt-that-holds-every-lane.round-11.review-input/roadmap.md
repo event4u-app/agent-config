@@ -1,3 +1,5 @@
+<!-- check-refs: skip -->
+<!-- verbatim roadmap snapshot for the R2 reviewer; the live roadmap layer is excluded from check_references, and a snapshot must not fail a gate its source is exempt from -->
 ---
 complexity: structural
 status: ready
@@ -14,7 +16,7 @@ relates:
 ---
 # Road to a halt that holds every lane
 
-> **Source:** after-the-fact council review of the #2768 bypass,
+> **Source:** [REDACTED:src-conf]
 > `agents/evidence/council/bypass-2768-review-20261119.md` (2026-11-19, anthropic
 > REJECT, openai REQUEST_CHANGES), findings 1 and 2. Both re-read against
 > `main` at `99d4f7d657` on 2026-11-20 and still present.
@@ -68,24 +70,39 @@ a hold is actually still in force.
 
 ## Phase 1 — Halt covers every dispatch
 
-- [ ] **1.1** Test first: settings file with `emergency.orchestration_halt: true`
+- [x] **1.1** Test first: settings file with `emergency.orchestration_halt: true`
   → queue → no entry dispatchable, `next` null, hold named (AC-1, AC-3).
-- [ ] **1.2** `buildQueue`: when halted, every entry's `dispatchable` is `false`.
-- [ ] **1.3** `process-full-all.md`: the dead-lane re-dispatch reads the queue
+- [x] **1.2** `buildQueue`: when halted, every entry's `dispatchable` is `false`.
+- [x] **1.3** `process-full-all.md`: the dead-lane re-dispatch reads the queue
   entry's `dispatchable` and `dispatch_hold` first and stops on a halt (AC-2);
   `task sync` regenerates the projection.
 
 ## Phase 2 — Prose holds that mean what they say
 
-- [ ] **2.1** Test first: the four cases of finding 2 as named fixtures (AC-4).
-- [ ] **2.2** Negation: strip a negation that governs the hold phrase within the
-  same clause, not only when adjacent.
-- [ ] **2.3** Past-tense resolution ("was blocked by … has since shipped") is
-  not a hold.
-- [ ] **2.4** Evaluate prose holds even when a named blocker resolved; the
-  resolved name suppresses only the hold that names it (AC-5).
-- [ ] **2.5** Before/after classification diff over the live estate; every
-  changed step justified in the PR body (AC-6).
+> **Carried, 2026-11-24.** Ten R2 completion-review rounds on a regex parser for
+> these steps each found new phrasings; several fixes released a hold `main`
+> kept (the Risk Register's rank-2 risk). Options put to the AI council
+> (anthropic + openai, `agents/runtime/council/responses/halt-phase2-disposition.md`,
+> local): (A) narrow the negator set again, (B) revert Phase 2 and carry it,
+> (C) ship with the regression as accepted risk. **Verdict: B** — regex cannot
+> model negation scope, tense and clause boundaries; Phase 1 is separable and
+> ships alone. Dissent: none recorded; openai noted the separability was
+> asserted, not shown (the parser is byte-identical to `main` on this branch, so
+> nothing of Phase 2 ships). **Destination:**
+> `road-to-prose-holds-that-read-their-object` (created in the same change),
+> which carries every step below plus the phrasings of all ten rounds as its
+> fixture list. **Closes when:** that roadmap's AC-1..AC-4 hold.
+
+- [~] **2.1** Test first: the four cases of finding 2 as named fixtures (AC-4).
+  Carried — `road-to-prose-holds-that-read-their-object` 1.1.
+- [~] **2.2** Negation: strip a negation that governs the hold phrase within the
+  same clause, not only when adjacent. Carried — 1.3.
+- [~] **2.3** Past-tense resolution ("was blocked by … has since shipped") is
+  not a hold. Carried — 1.3.
+- [~] **2.4** Evaluate prose holds even when a named blocker resolved; the
+  resolved name suppresses only the hold that names it (AC-5). Carried — 1.3.
+- [~] **2.5** Before/after classification diff over the live estate; every
+  changed step justified in the PR body (AC-6). Carried — 1.4.
 
 ## Not in scope
 

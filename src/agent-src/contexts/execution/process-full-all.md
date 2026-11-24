@@ -42,7 +42,8 @@ command already does.
    **Three limits from the owner directive of 2026-10-24** come out of the same
    command: a `start` entry stays undispatchable while five roadmaps are started
    (pull, not push); `next` is empty while three other sessions are live, and
-   `dispatch_hold` names which cap held it; a step under `timeboxed` is split,
+   `dispatch_hold` names which cap held it — naming the emergency halt, it stops every
+   dispatch, re-dispatch and verdict resume; a step under `timeboxed` is split,
    never dispatched as it stands (§ Timebox).
 
    **An owner's quantity word widens how many roadmaps are FINISHED, never how
@@ -79,15 +80,14 @@ no lane is dispatched onto a `start` entry while a `continue` entry has no lane.
 session holds one lock per lane, so the second lane no longer overwrites the
 first lane's claim, and the queue lists every lane's roadmap as `claimed`.
 
-**A lane that dies keeps its work.** A spend or rate limit or a watchdog
-stops the lane, not its worktree: its commits and edits stay on disk. Before
-re-dispatching, read its queue entry —
+**A lane that dies keeps its work.** A limit or watchdog stops the lane,
+not its worktree: its work stays on disk. Before re-dispatching, read its
+queue entry —
 `salvage: N commit(s) ahead, M uncommitted file(s)` — run
 `agent-config run:supervise --root <lane worktree> --verify <slug>`, put any
 disagreeing field first in the brief, and send a FRESH lane into the SAME
-worktree; a resumed agent loses its worktree. The same holds when the orchestrator session
-itself dies: its lane locks expire with its register record and the next
-session's queue lists each roadmap as `resume` in the lane's worktree.
+worktree; a resumed agent loses its worktree. Same if the orchestrator dies: its locks expire
+with its record and the next queue lists each as `resume` in the lane's worktree.
 
 **The orchestrator sends this brief, filling only the two parameters, and adds
 nothing that changes its finish line:**

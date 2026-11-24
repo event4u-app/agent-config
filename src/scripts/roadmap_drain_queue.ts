@@ -198,6 +198,7 @@ const SHEET_ID_RE = /`([a-z0-9][a-z0-9-]*(?:#[a-z0-9-]+)?)`/g;
 
 export { WIP_CAP };
 export const SESSION_CAP = 3;
+const HALT_HOLD = 'emergency.orchestration_halt is set';
 export const PARTIAL_CAP = 3;
 export const STARTED_DAYS_CAP = 2;
 export const OWNER_SHEET_REL = 'agents/owner-questions.md';
@@ -504,7 +505,9 @@ export function buildQueue(
     const halted = policy.halted === true;
     let dispatch_hold: string | null = null;
     if (halted) {
-        dispatch_hold = 'emergency.orchestration_halt is set';
+        // Per entry, not only `next`: a dead lane's re-dispatch reads its own entry.
+        for (const e of entries) e.dispatchable = false;
+        dispatch_hold = HALT_HOLD;
     } else if (sessionHold && entries.some((e) => e.dispatchable)) {
         dispatch_hold = `session cap (${String(sessionCap)}): ${String(others.size)} other live session(s)`;
     } else if (!entries.some((e) => e.dispatchable) && entries.some((e) => e.bucket === 'start') && started >= wipCap) {
@@ -691,6 +694,7 @@ export function annotateFreshness(entries: QueueEntry[], root: string): void {
 
 export function renderText(q: DrainQueue): string {
     const out: string[] = [`drain queue · ${q.today} · ${q.queue.length} roadmap(s) with open steps`];
+    if (q.dispatch_hold === HALT_HOLD) out.push(`HALTED — ${HALT_HOLD}: no entry below is dispatched, re-dispatch included`);
     for (const e of q.queue) {
         const tail =
             e.bucket === 'claimed'

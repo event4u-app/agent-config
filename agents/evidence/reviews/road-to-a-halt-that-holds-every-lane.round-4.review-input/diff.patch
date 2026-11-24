@@ -1,0 +1,595 @@
+diff --git a/agents/roadmaps-owned.md b/agents/roadmaps-owned.md
+index b9c72f33c5420aed9a844fe0a3936892e33491f7..07ea0035cbc02b11d07a8af67ae9834e817f951b 100644
+--- a/agents/roadmaps-owned.md
++++ b/agents/roadmaps-owned.md
+@@ -10,7 +10,6 @@ and keep the full search — this file only adds candidates to it.
+ | slug | dir | status | owns |
+ |---|---|---|---|
+ | road-to-a-challenge-the-bench-has-measured-carried | active | active | The guardrail trip of the 2026-11-08 honesty run is sized on audited clean labels, and a count of concessions to … |
+-| road-to-a-halt-that-holds-every-lane | active | ready | `emergency.orchestration_halt` stops every dispatch, including the re-dispatch of a dead lane, and the roadmap drain queue classifies a step as … |
+ | road-to-a-language-pin-from-owner-prose-live-wiring | active | ready | The live hooks set the reply-language pin only from owner prose and the turn-end gate refuses on language only behind … |
+ | road-to-a-learning-pipeline-that-yields-lessons | active | ready | A fault that recurs across sessions becomes a lesson without anyone writing it: the intake sees repeated errors and owner … |
+ | road-to-a-link-with-agent-switch | active | ready | When a session nears its plan limit, the user is told in-session and asked whether to move; the same question … |
+diff --git a/agents/roadmaps/archive/road-to-a-halt-that-holds-every-lane.md b/agents/roadmaps/archive/road-to-a-halt-that-holds-every-lane.md
+new file mode 100644
+index 0000000000000000000000000000000000000000..c3a02067d88840f7a956e00e97701e98707b202f
+--- /dev/null
++++ b/agents/roadmaps/archive/road-to-a-halt-that-holds-every-lane.md
+@@ -0,0 +1,100 @@
++---
++complexity: structural
++status: ready
++execution:
++  mode: phase-checkpoints
++owner: maintainer
++review_by: 2026-12-31
++estate_growth_exempt: "+1 active_roadmaps, requested by the owner on 2026-11-20 to carry the two code findings of the after-the-fact council review agents/evidence/council/bypass-2768-review-20261119.md."
++estate_offset_exempt: "Defects in merged code with no active roadmap covering them; the review records them as open and names no other carrier."
++relates:
++  - slug: road-to-a-split-the-task-earns
++    relation: extends
++    note: "Archived by #2768, which shipped the emergency halt and the expanded prose-hold vocabulary; this closes the gaps the after-the-fact review found in both."
++---
++# Road to a halt that holds every lane
++
++> **Source:** after-the-fact council review of the #2768 bypass,
++> `agents/evidence/council/bypass-2768-review-20261119.md` (2026-11-19, anthropic
++> REJECT, openai REQUEST_CHANGES), findings 1 and 2. Both re-read against
++> `main` at `99d4f7d657` on 2026-11-20 and still present.
++
++## Goal
++
++`emergency.orchestration_halt` stops every dispatch, including the re-dispatch
++of a dead lane, and the roadmap drain queue classifies a step as held only when
++a hold is actually still in force.
++
++## Findings, as they stand on `main`
++
++1. **The halt ends at queue selection.** `buildQueue` sets `next: null` and
++   `dispatch_hold` when halted (`src/scripts/roadmap_drain_queue.ts`, the
++   `halted` branch near `dispatch_hold`), but every entry keeps
++   `dispatchable: true`. `process-full-all.md` § "A lane that dies keeps its
++   work" sends a FRESH lane from the queue entry with no halt check. The tests
++   inject `{ halted: true }` into `buildQueue`; the settings → queue →
++   dispatch path is untested.
++2. **The prose-hold parser misreads compound text.**
++   - `NEGATED_HOLD_RE` only strips a negation adjacent to the hold phrase, so
++     "Not currently blocked by the probe" stays held.
++   - "It was blocked by the probe, which has since shipped" reads as held.
++   - "No longer blocked by X but still blocked by Y": the outcome depends on
++     regex order, not on meaning.
++   - `namedAll.length === 0` gates the prose check: a step naming a RESOLVED
++     local blocker skips prose detection entirely, so an independent
++     `Owner-reserved` note in the same continuation is missed.
++
++## Acceptance criteria
++
++- **AC-1** With the halt armed, no queue entry reads `dispatchable: true`, and
++  the JSON and text outputs both say why.
++- **AC-2** The re-dispatch procedure in `process-full-all.md` reads the halt
++  (via the queue) before sending a fresh lane; a halted queue refuses it.
++- **AC-3** One test drives the halt from a real settings file through
++  `roadmap_drain_queue` to the dispatch decision, with no injected flag.
++- **AC-4** Each misread above is a failing test first, then green.
++- **AC-5** A resolved named blocker no longer masks an independent
++  owner-reserved hold in the same step.
++- **AC-6** No step currently classified correctly in the live estate changes
++  class (before/after diff of `roadmap_drain_queue --json` over `agents/roadmaps/`).
++
++## Risk Register
++<!-- risk-review: v1 | reviewed: 2026-11-20 | reviewer: claude/host -->
++
++| Rank | Item | Risk type | Description | Mitigation | Anchored under |
++|------|------|-----------|-------------|------------|----------------|
++| 1 | A halted queue hides why nothing runs | product | Marking every entry non-dispatchable could read as "nothing to do" instead of "halted", so an operator misses the armed switch. | AC-1 requires both outputs to name the halt; the test asserts the reason, not only the flag. | Phase 1 — Halt covers every dispatch |
++| 2 | A looser parser releases real holds | product | Clause-scoped negation or past-tense resolution could read a still-active hold as resolved and dispatch a step the owner reserved. | Failing fixtures first (2.1); the estate-wide before/after diff (2.5) blocks any unexplained class change. | Phase 2 — Prose holds that mean what they say |
++
++## Phase 1 — Halt covers every dispatch
++
++- [x] **1.1** Test first: settings file with `emergency.orchestration_halt: true`
++  → queue → no entry dispatchable, `next` null, hold named (AC-1, AC-3).
++- [x] **1.2** `buildQueue`: when halted, every entry's `dispatchable` is `false`.
++- [x] **1.3** `process-full-all.md`: the dead-lane re-dispatch reads the queue
++  entry's `dispatchable` and `dispatch_hold` first and stops on a halt (AC-2);
++  `task sync` regenerates the projection.
++
++## Phase 2 — Prose holds that mean what they say
++
++- [x] **2.1** Test first: the four cases of finding 2 as named fixtures (AC-4).
++- [x] **2.2** Negation: strip a negation that governs the hold phrase within the
++  same clause, not only when adjacent.
++- [x] **2.3** Past-tense resolution ("was blocked by … has since shipped") is
++  not a hold.
++- [x] **2.4** Evaluate prose holds even when a named blocker resolved; the
++  resolved name suppresses only the hold that names it (AC-5).
++- [x] **2.5** Before/after classification diff over the live estate; every
++  changed step justified in the PR body (AC-6).
++  Result 2026-11-23: `screenEstate` over `agents/roadmaps/` before and after,
++  384 open steps on both sides, zero class or blocker changes; after the R2
++  round-1 parser fixes, `roadmap_drain_queue --json` from `origin/main` and from
++  this branch over the same estate: 31 entries on both sides, zero differences
++  in bucket, dispatchable, runnable or per-class counts, same `next`, same
++  owner/council questions.
++
++## Not in scope
++
++- Finding 3 (tests narrower than step receipts) and finding 4 (the bypass
++  record's missing withdrawal) of the same review.
++- Any change to the ratification mechanism or the bypass record format.
+diff --git a/agents/roadmaps/road-to-a-halt-that-holds-every-lane.md b/agents/roadmaps/road-to-a-halt-that-holds-every-lane.md
+deleted file mode 100644
+index 15d3aee9598289d40001abd1aabe36ef2b7fb379..0000000000000000000000000000000000000000
+--- a/agents/roadmaps/road-to-a-halt-that-holds-every-lane.md
++++ /dev/null
+@@ -1,94 +0,0 @@
+----
+-complexity: structural
+-status: ready
+-execution:
+-  mode: phase-checkpoints
+-owner: maintainer
+-review_by: 2026-12-31
+-estate_growth_exempt: "+1 active_roadmaps, requested by the owner on 2026-11-20 to carry the two code findings of the after-the-fact council review agents/evidence/council/bypass-2768-review-20261119.md."
+-estate_offset_exempt: "Defects in merged code with no active roadmap covering them; the review records them as open and names no other carrier."
+-relates:
+-  - slug: road-to-a-split-the-task-earns
+-    relation: extends
+-    note: "Archived by #2768, which shipped the emergency halt and the expanded prose-hold vocabulary; this closes the gaps the after-the-fact review found in both."
+----
+-# Road to a halt that holds every lane
+-
+-> **Source:** after-the-fact council review of the #2768 bypass,
+-> `agents/evidence/council/bypass-2768-review-20261119.md` (2026-11-19, anthropic
+-> REJECT, openai REQUEST_CHANGES), findings 1 and 2. Both re-read against
+-> `main` at `99d4f7d657` on 2026-11-20 and still present.
+-
+-## Goal
+-
+-`emergency.orchestration_halt` stops every dispatch, including the re-dispatch
+-of a dead lane, and the roadmap drain queue classifies a step as held only when
+-a hold is actually still in force.
+-
+-## Findings, as they stand on `main`
+-
+-1. **The halt ends at queue selection.** `buildQueue` sets `next: null` and
+-   `dispatch_hold` when halted (`src/scripts/roadmap_drain_queue.ts`, the
+-   `halted` branch near `dispatch_hold`), but every entry keeps
+-   `dispatchable: true`. `process-full-all.md` § "A lane that dies keeps its
+-   work" sends a FRESH lane from the queue entry with no halt check. The tests
+-   inject `{ halted: true }` into `buildQueue`; the settings → queue →
+-   dispatch path is untested.
+-2. **The prose-hold parser misreads compound text.**
+-   - `NEGATED_HOLD_RE` only strips a negation adjacent to the hold phrase, so
+-     "Not currently blocked by the probe" stays held.
+-   - "It was blocked by the probe, which has since shipped" reads as held.
+-   - "No longer blocked by X but still blocked by Y": the outcome depends on
+-     regex order, not on meaning.
+-   - `namedAll.length === 0` gates the prose check: a step naming a RESOLVED
+-     local blocker skips prose detection entirely, so an independent
+-     `Owner-reserved` note in the same continuation is missed.
+-
+-## Acceptance criteria
+-
+-- **AC-1** With the halt armed, no queue entry reads `dispatchable: true`, and
+-  the JSON and text outputs both say why.
+-- **AC-2** The re-dispatch procedure in `process-full-all.md` reads the halt
+-  (via the queue) before sending a fresh lane; a halted queue refuses it.
+-- **AC-3** One test drives the halt from a real settings file through
+-  `roadmap_drain_queue` to the dispatch decision, with no injected flag.
+-- **AC-4** Each misread above is a failing test first, then green.
+-- **AC-5** A resolved named blocker no longer masks an independent
+-  owner-reserved hold in the same step.
+-- **AC-6** No step currently classified correctly in the live estate changes
+-  class (before/after diff of `roadmap_drain_queue --json` over `agents/roadmaps/`).
+-
+-## Risk Register
+-<!-- risk-review: v1 | reviewed: 2026-11-20 | reviewer: claude/host -->
+-
+-| Rank | Item | Risk type | Description | Mitigation | Anchored under |
+-|------|------|-----------|-------------|------------|----------------|
+-| 1 | A halted queue hides why nothing runs | product | Marking every entry non-dispatchable could read as "nothing to do" instead of "halted", so an operator misses the armed switch. | AC-1 requires both outputs to name the halt; the test asserts the reason, not only the flag. | Phase 1 — Halt covers every dispatch |
+-| 2 | A looser parser releases real holds | product | Clause-scoped negation or past-tense resolution could read a still-active hold as resolved and dispatch a step the owner reserved. | Failing fixtures first (2.1); the estate-wide before/after diff (2.5) blocks any unexplained class change. | Phase 2 — Prose holds that mean what they say |
+-
+-## Phase 1 — Halt covers every dispatch
+-
+-- [ ] **1.1** Test first: settings file with `emergency.orchestration_halt: true`
+-  → queue → no entry dispatchable, `next` null, hold named (AC-1, AC-3).
+-- [ ] **1.2** `buildQueue`: when halted, every entry's `dispatchable` is `false`.
+-- [ ] **1.3** `process-full-all.md`: the dead-lane re-dispatch reads the queue
+-  entry's `dispatchable` and `dispatch_hold` first and stops on a halt (AC-2);
+-  `task sync` regenerates the projection.
+-
+-## Phase 2 — Prose holds that mean what they say
+-
+-- [ ] **2.1** Test first: the four cases of finding 2 as named fixtures (AC-4).
+-- [ ] **2.2** Negation: strip a negation that governs the hold phrase within the
+-  same clause, not only when adjacent.
+-- [ ] **2.3** Past-tense resolution ("was blocked by … has since shipped") is
+-  not a hold.
+-- [ ] **2.4** Evaluate prose holds even when a named blocker resolved; the
+-  resolved name suppresses only the hold that names it (AC-5).
+-- [ ] **2.5** Before/after classification diff over the live estate; every
+-  changed step justified in the PR body (AC-6).
+-
+-## Not in scope
+-
+-- Finding 3 (tests narrower than step receipts) and finding 4 (the bypass
+-  record's missing withdrawal) of the same review.
+-- Any change to the ratification mechanism or the bypass record format.
+diff --git a/dist/agent-src/contexts/execution/process-full-all.md b/dist/agent-src/contexts/execution/process-full-all.md
+index 52b1e65d5d844d53befc9036b2681c45b053ad1b..b9da2864310822c08336227ab784a0f413a5c52a 100644
+--- a/dist/agent-src/contexts/execution/process-full-all.md
++++ b/dist/agent-src/contexts/execution/process-full-all.md
+@@ -81,8 +81,13 @@ first lane's claim, and the queue lists every lane's roadmap as `claimed`.
+ 
+ **A lane that dies keeps its work.** A spend or rate limit or a watchdog
+ stops the lane, not its worktree: its commits and edits stay on disk. Before
+-re-dispatching, read its queue entry —
+-`salvage: N commit(s) ahead, M uncommitted file(s)` — run
++re-dispatching, re-run the queue and read its entry. **A halt stops the
++re-dispatch** — under `--json` the entry reads `dispatchable: false` and the
++queue's top-level `dispatch_hold` reads `emergency.orchestration_halt is set`;
++the text output opens with a `HALTED —` line. The halt holds every lane, the
++fresh one included, and the worktree waits for the switch to be disarmed.
++Otherwise read
++`salvage: N commit(s) ahead, M uncommitted file(s)`, run
+ `agent-config run:supervise --root <lane worktree> --verify <slug>`, put any
+ disagreeing field first in the brief, and send a FRESH lane into the SAME
+ worktree; a resumed agent loses its worktree. The same holds when the orchestrator session
+diff --git a/src/agent-src/contexts/execution/process-full-all.md b/src/agent-src/contexts/execution/process-full-all.md
+index 6a515114c042fb4d62e21d2f2f1686eaa3308054..e0cedbd084ad5fbce67f2ffc63b91c5247d23cee 100644
+--- a/src/agent-src/contexts/execution/process-full-all.md
++++ b/src/agent-src/contexts/execution/process-full-all.md
+@@ -81,8 +81,13 @@ first lane's claim, and the queue lists every lane's roadmap as `claimed`.
+ 
+ **A lane that dies keeps its work.** A spend or rate limit or a watchdog
+ stops the lane, not its worktree: its commits and edits stay on disk. Before
+-re-dispatching, read its queue entry —
+-`salvage: N commit(s) ahead, M uncommitted file(s)` — run
++re-dispatching, re-run the queue and read its entry. **A halt stops the
++re-dispatch** — under `--json` the entry reads `dispatchable: false` and the
++queue's top-level `dispatch_hold` reads `emergency.orchestration_halt is set`;
++the text output opens with a `HALTED —` line. The halt holds every lane, the
++fresh one included, and the worktree waits for the switch to be disarmed.
++Otherwise read
++`salvage: N commit(s) ahead, M uncommitted file(s)`, run
+ `agent-config run:supervise --root <lane worktree> --verify <slug>`, put any
+ disagreeing field first in the brief, and send a FRESH lane into the SAME
+ worktree; a resumed agent loses its worktree. The same holds when the orchestrator session
+diff --git a/src/scripts/roadmap_drain_queue.ts b/src/scripts/roadmap_drain_queue.ts
+index b1bcbc30f7277765b7780a149c1d43c9bd230908..85e5728842043d99311cb85ff6500e60f7c368ee 100644
+--- a/src/scripts/roadmap_drain_queue.ts
++++ b/src/scripts/roadmap_drain_queue.ts
+@@ -177,12 +177,66 @@ const BLOCKER_HEADING_RE = /^###[ \t]+blocker:[ \t]*([A-Za-z0-9-]+)/i;
+ const BLOCKED_BY_RE = /<!--[ \t]*blocked-by:[ \t]*([a-z0-9-]+(?:#[a-z0-9-]+)?)/i;
+ const PROSE_BLOCKER_RE = /\bblocker[ \t]+`([a-z0-9-]+)`/gi;
+ const PROSE_HOLD_RE =
+-    /\b(held open|still held|on hold|held off|parked until|(?:still |only )?waits on|waiting on|blocked (?:by|on)|owner-reserved)\b/i;
+-// "no longer blocked by", "not owner-reserved": the phrase names a hold that is gone.
+-const NEGATED_HOLD_RE = /\b(?:no longer|not|never)[ \t]+(?:blocked (?:by|on)|owner-reserved|on hold|held)\b/gi;
++    /\b(held open|still held|on hold|held off|parked until|(?:still |only )?waits on|waiting on|blocked (?:by|on)|owner-reserved)\b/gi;
++// A sentence ends at terminal punctuation followed by space, never inside "v1.2".
++const SENTENCE_SPLIT_RE = /(?<=[.!?;:])\s+/;
++// A clause ends at a comma, a dash, or a coordinating conjunction.
++const CLAUSE_SPLIT_RE = /,|\s[—–]\s|\b(?:but|and|while|whereas)\b/i;
++// "not currently blocked by": only an adverb may sit between negator and phrase —
++// "not only / not just / not yet blocked by" still hold.
++const NEGATED_BEFORE_RE =
++    /(?<!\bor )\b(?:no longer|not|never|isn't|aren't|wasn't|weren't|doesn't|is not|no more)(?:\s+(?:currently|presently|actually))?\s+$/i;
++// "was blocked by …": a past-tense hold, released only by RESOLVED_AFTER_RE.
++const PAST_BEFORE_RE = /\b(?:was|were|had been)(?:\s+[\w'-]+)?\s+$/i;
++// "…, which has since shipped.": the resolution attaches to the hold's own object
++// and ends the sentence — "merged upstream but not released" and "fixed in part" do not.
++const RESOLVED_AFTER_RE =
++    /^[^,.;:]*,\s*which\s+(?:has|have)\s+(?:since\s+)?(?:been\s+)?(?:shipped|landed|merged|resolved|fixed|cleared|lifted)(?:\s+(?:on|in)\s+[\w-]+)?\s*[.!?]?\s*$/i;
++// A hold the owner placed, not a dependency: a resolved blocker never releases it.
++const OWNER_HOLD_RE = /^(?:owner-reserved|on hold|parked until)$/i;
+ 
+-function proseHold(text: string): boolean {
+-    return PROSE_HOLD_RE.test(text.replace(NEGATED_HOLD_RE, ''));
++/**
++ * "held by blocker `x`", "blocked on the probe (blocker `x`)", "waiting on it, see
++ * blocker `x`": the forms in which a dependency hold CITES its blocker. A ref that
++ * is the subject of its own statement ("blocker `x` has resolved") cites nothing.
++ */
++function citationRe(ids: readonly string[]): RegExp | null {
++    if (ids.length === 0) return null;
++    const ref = `\`(?:${ids.map((id) => id.toLowerCase()).join('|')})\`(?!\\s+(?:is|has|was|had|are)\\b)`;
++    return new RegExp(
++        `^(?:\\s*(?:by|on)?\\s*(?:the\\s+)?blocker\\s+${ref}|[^.;]*?\\(\\s*blocker\\s+${ref}\\s*\\)|[^.;]*?\\bsee\\s+blocker\\s+${ref})`,
++        'i',
++    );
++}
++
++/**
++ * True when a hold phrase in `text` is still in force. Each phrase is judged in
++ * its own clause, so match order never decides. A dependency hold that cites a
++ * resolved blocker from `resolvedRefs` holds nothing; every other hold — an
++ * owner hold, or a dependency the resolved blocker is merely reported beside —
++ * still does.
++ */
++function proseHold(text: string, resolvedRefs: readonly string[] = []): boolean {
++    const flat = text.replace(/\s+/g, ' ');
++    const cites = citationRe(resolvedRefs);
++    for (const sentence of flat.split(SENTENCE_SPLIT_RE)) {
++        const holds = [...sentence.matchAll(PROSE_HOLD_RE)].map((h) => h.index);
++        let offset = 0;
++        for (const clause of sentence.split(CLAUSE_SPLIT_RE)) {
++            const at = sentence.indexOf(clause, offset);
++            offset = at + clause.length;
++            for (const m of clause.matchAll(PROSE_HOLD_RE)) {
++                const before = clause.slice(0, m.index);
++                const start = at + m.index + m[0].length;
++                const nextHold = holds.find((h) => h >= start) ?? sentence.length;
++                if (cites !== null && !OWNER_HOLD_RE.test(m[0]) && cites.test(sentence.slice(start, nextHold))) continue;
++                if (NEGATED_BEFORE_RE.test(before)) continue;
++                if (PAST_BEFORE_RE.test(before) && RESOLVED_AFTER_RE.test(sentence.slice(at + m.index + m[0].length))) continue;
++                return true;
++            }
++        }
++    }
++    return false;
+ }
+ const ACCEPTANCE_HEADING_RE = /^##[ \t]+acceptance criteria\b/i;
+ const AC_ITEM_RE = /^\s*-\s\[[ xX~-]\]\s*(?:<!--[\s\S]*?-->\s*)?(?:\*\*)?AC-\d+/;
+@@ -198,6 +252,7 @@ const SHEET_ID_RE = /`([a-z0-9][a-z0-9-]*(?:#[a-z0-9-]+)?)`/g;
+ 
+ export { WIP_CAP };
+ export const SESSION_CAP = 3;
++const HALT_HOLD = 'emergency.orchestration_halt is set';
+ export const PARTIAL_CAP = 3;
+ export const STARTED_DAYS_CAP = 2;
+ export const OWNER_SHEET_REL = 'agents/owner-questions.md';
+@@ -293,6 +348,7 @@ export function screenRoadmap(
+     const lines = text.split('\n');
+     const blockers = parseBlockers(text);
+     const local = new Map(blockers.map((b) => [b.id, b]));
++    const resolvedLocal = blockers.filter((b) => !b.open).map((b) => b.id);
+     const counts: Record<StepClass, number> = { runnable: 0, council: 0, owner: 0, time: 0, held: 0 };
+     const steps: OpenStep[] = [];
+     let done = 0;
+@@ -319,7 +375,7 @@ export function screenRoadmap(
+         const m = CHECKBOX_RE.exec(line);
+         if (m === null) {
+             // A blockquote before the first step of a phase speaks for the phase.
+-            if (!checkboxSinceHeading && /^\s*>/.test(line) && proseHold(line)) phaseHeld = true;
++            if (!checkboxSinceHeading && /^\s*>/.test(line) && proseHold(line, resolvedLocal)) phaseHeld = true;
+             continue;
+         }
+         checkboxSinceHeading = true;
+@@ -364,8 +420,8 @@ export function screenRoadmap(
+                 cls = classOfBlocker(named);
+             } else if (isTimeGated(block, today)) {
+                 cls = 'time';
+-            } else if (namedAll.length === 0 && (phaseHeld || proseHold(continuation))) {
+-                // A hold that names a blocker which has since resolved is not a hold.
++            } else if (phaseHeld || proseHold(continuation, namedAll.map((b) => b.id))) {
++                // A resolved named blocker releases only the dependency hold that cites it.
+                 cls = 'held';
+             } else {
+                 cls = 'runnable';
+@@ -504,7 +560,9 @@ export function buildQueue(
+     const halted = policy.halted === true;
+     let dispatch_hold: string | null = null;
+     if (halted) {
+-        dispatch_hold = 'emergency.orchestration_halt is set';
++        // Per entry, not only `next`: a dead lane's re-dispatch reads its own entry.
++        for (const e of entries) e.dispatchable = false;
++        dispatch_hold = HALT_HOLD;
+     } else if (sessionHold && entries.some((e) => e.dispatchable)) {
+         dispatch_hold = `session cap (${String(sessionCap)}): ${String(others.size)} other live session(s)`;
+     } else if (!entries.some((e) => e.dispatchable) && entries.some((e) => e.bucket === 'start') && started >= wipCap) {
+@@ -691,6 +749,7 @@ export function annotateFreshness(entries: QueueEntry[], root: string): void {
+ 
+ export function renderText(q: DrainQueue): string {
+     const out: string[] = [`drain queue · ${q.today} · ${q.queue.length} roadmap(s) with open steps`];
++    if (q.dispatch_hold === HALT_HOLD) out.push(`HALTED — ${HALT_HOLD}: no entry below is dispatched, re-dispatch included`);
+     for (const e of q.queue) {
+         const tail =
+             e.bucket === 'claimed'
+diff --git a/tests/scripts/roadmap_drain_queue.test.ts b/tests/scripts/roadmap_drain_queue.test.ts
+index 5cce65078abd5681ead8d43b19a7a4c6c1939f37..6819d9b436139d01b4c1cc7c90b7170c23811efe 100644
+--- a/tests/scripts/roadmap_drain_queue.test.ts
++++ b/tests/scripts/roadmap_drain_queue.test.ts
+@@ -2,17 +2,20 @@ import * as fs from 'node:fs';
+ import * as os from 'node:os';
+ import * as path from 'node:path';
+ 
+-import { afterEach, beforeEach, describe, expect, it } from 'vitest';
++import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
+ 
+ import {
+     buildQueue,
+     isTimeGated,
+     isTimeboxed,
++    main,
++    renderText,
+     screenEstate,
+     sheetIds,
+     screenRoadmap,
+     WIP_CAP,
+     type ClaimView,
++    type DrainQueue,
+     type RoadmapScreen,
+ } from '../../src/scripts/roadmap_drain_queue.js';
+ 
+@@ -211,6 +214,101 @@ describe('screenRoadmap — holds written in prose', () => {
+         expect(screen('road-to-ph', text).steps.map((x) => x.cls)).toEqual(['runnable', 'held', 'held']);
+     });
+ 
++    // Finding 2 of the after-the-fact #2768 review — each was misread on main.
++    it.each([
++        ['a negation one word away from the phrase', 'Not currently blocked by the probe.'],
++        ['a past-tense hold that has since resolved', 'It was blocked by the probe, which has since shipped.'],
++        ['a past-tense hold resolved across a wrapped line', 'It was blocked by the probe, which\n      has since shipped.'],
++    ])('reads %s as runnable', (_case, note) => {
++        const s = screen('road-to-n2', roadmap({ done: 1, open: [`- [ ] **2.1 Work.**\n      ${note}`] }));
++        expect(s.steps[0]?.cls).toBe('runnable');
++    });
++
++    it.each([
++        ['negated first, live second', 'No longer blocked by the probe but still blocked by the host binary.'],
++        ['live first, negated second', 'Still blocked by the host binary; no longer blocked by the probe.'],
++        ['a negation that governs another verb', 'It is not clear whether this is blocked by the probe.'],
++        ['a past-tense hold nobody says is over', 'It was blocked by the probe.'],
++        ['a resolution that belongs to another sentence', 'It was blocked by the probe. Phase 3 has since shipped.'],
++        // R2 round 1 findings 1-4.
++        ['a "has since" that does not resolve', 'It was blocked by the probe, which has since been reopened.'],
++        ['a resolution of another subject in the same sentence', 'It was blocked by the probe and the doc has since shipped.'],
++        ['"not only"', 'Not only blocked by the probe.'],
++        ['"not just"', 'Not just waiting on the probe.'],
++        ['"not yet"', 'Not yet dispatched, blocked by the probe.'],
++        ['"not yet" directly before the phrase', 'Not yet blocked by the probe; it will be.'],
++        // R2 round 2 findings 1 and 3.
++        ['a resolution qualified away', 'It was blocked by the upstream fix, which has since merged upstream but is not yet released.'],
++        ['a partial resolution', 'It was blocked by the fix, which has since been fixed in part; the rest is pending.'],
++        ['"or not"', 'Whether or not blocked by the probe, the step waits.'],
++        ['a negation in another clause', 'The probe is not shipped, and the step is blocked by it.'],
++    ])('keeps %s held', (_case, note) => {
++        const s = screen('road-to-h2', roadmap({ done: 1, open: [`- [ ] **2.1 Work.**\n      ${note}`] }));
++        expect(s.steps[0]?.cls).toBe('held');
++    });
++
++    it('keeps an independent owner-reserved hold when a named blocker in the same step resolved', () => {
++        const text = roadmap({
++            done: 1,
++            open: [
++                "- [ ] **2.1 Work.**\n      Still held by blocker `settled`.\n      Owner-reserved: the flip is the maintainer's call.",
++            ],
++            blockers: '### blocker: settled\n- **Status:** resolved — 2026-10-18\n- **Owner:** owner',
++        });
++        expect(screen('road-to-r2', text).steps[0]?.cls).toBe('held');
++    });
++
++    it.each([
++        'Blocked on the probe (blocker `settled`).',
++        'Waiting on the probe, see blocker `settled`.',
++        "Isn't blocked by the probe any more.",
++    ])('releases a dependency hold its own sentence ties to the resolved blocker: %s', (note) => {
++        const text = roadmap({
++            done: 1,
++            open: [`- [ ] **2.1 Work.**\n      ${note}`],
++            blockers: '### blocker: settled\n- **Status:** resolved — 2026-10-18\n- **Owner:** owner',
++        });
++        expect(screen('road-to-r4', text).steps[0]?.cls).toBe('runnable');
++    });
++
++    it.each([
++        'Still blocked by the host binary, and blocker `settled` has resolved.',
++        'Blocked by the host binary (blocker `settled` is resolved).',
++    ])('keeps a dependency hold the resolved blocker is only reported beside, not cited for: %s', (note) => {
++        const text = roadmap({
++            done: 1,
++            open: [`- [ ] **2.1 Work.**\n      ${note}`],
++            blockers: '### blocker: settled\n- **Status:** resolved — 2026-10-18\n- **Owner:** owner',
++        });
++        expect(screen('road-to-r5', text).steps[0]?.cls).toBe('held');
++    });
++
++    it('does not let a phase blockquote citing a resolved blocker hold the phase', () => {
++        const text = [
++            '---',
++            'status: ready',
++            '---',
++            '## Phase 5 — Waiting',
++            '> Blocked by blocker `settled`.',
++            '- [ ] **5.1 A.** Uses blocker `settled`.',
++            '- [ ] **5.2 B.**',
++            '',
++            '### blocker: settled',
++            '- **Status:** resolved — 2026-10-18',
++            '- **Owner:** owner',
++        ].join('\n');
++        expect(screen('road-to-ph2', text).steps.map((x) => x.cls)).toEqual(['runnable', 'runnable']);
++    });
++
++    it('releases only the hold phrase that names the resolved blocker, not its whole clause', () => {
++        const text = roadmap({
++            done: 1,
++            open: ['- [ ] **2.1 Work.**\n      Owner-reserved until blocker `settled` is reviewed.'],
++            blockers: '### blocker: settled\n- **Status:** resolved — 2026-10-18\n- **Owner:** owner',
++        });
++        expect(screen('road-to-r3', text).steps[0]?.cls).toBe('held');
++    });
++
+     it('drops a prose hold whose named blocker has resolved', () => {
+         const text = roadmap({
+             done: 1,
+@@ -236,6 +334,77 @@ describe('buildQueue — emergency halt', () => {
+         expect(q.next?.slug).toBe('road-to-a');
+         expect(q.dispatch_hold).toBeNull();
+     });
++
++    it('marks no entry dispatchable while halted — a re-dispatch reads the entry, not `next`', () => {
++        const started = screen('road-to-s', roadmap({ done: 1, open: ['- [ ] **1.1 Work.**'] }));
++        const fresh = screen('road-to-f', roadmap({ done: 0, open: ['- [ ] **1.1 Work.**'] }));
++        const q = buildQueue([started, fresh], none, TODAY, 's1', { halted: true });
++        expect(q.queue.length).toBe(2);
++        expect(q.queue.filter((e) => e.dispatchable)).toEqual([]);
++    });
++
++    it('refuses the dead-lane resume entry while halted — the exact re-dispatch path', () => {
++        const dead: ClaimView = {
++            live: [],
++            dead: [{ session_id: 'gone', roadmap_slug: 'road-to-a', worktree: '/wt/a', branch: 'feat/a' }],
++        };
++        const q = buildQueue([a], dead, TODAY, 's1', { halted: true });
++        expect(q.queue[0]?.bucket).toBe('resume');
++        expect(q.queue[0]?.dispatchable).toBe(false);
++        expect(q.next).toBeNull();
++    });
++
++    it('names the halt at the top of the text output, so an empty queue never reads as nothing to do', () => {
++        const text = renderText(buildQueue([a], none, TODAY, 's1', { halted: true }));
++        expect(text.split('\n')[1]).toMatch(/^HALTED — emergency\.orchestration_halt is set/);
++        expect(text).toContain('next: none — emergency.orchestration_halt is set');
++    });
++});
++
++describe('emergency halt — from a real settings file to the dispatch decision', () => {
++    let root = '';
++    const run = (): { json: DrainQueue; text: string } => {
++        const chunks: string[] = [];
++        const spy = vi.spyOn(process.stdout, 'write').mockImplementation((c: string | Uint8Array) => {
++            chunks.push(String(c));
++            return true;
++        });
++        try {
++            main(['--root', root, '--today', TODAY, '--session', 's-test', '--json']);
++            const json = JSON.parse(chunks.join('')) as DrainQueue;
++            chunks.length = 0;
++            main(['--root', root, '--today', TODAY, '--session', 's-test']);
++            return { json, text: chunks.join('') };
++        } finally {
++            spy.mockRestore();
++        }
++    };
++    beforeEach(() => {
++        root = fs.mkdtempSync(path.join(os.tmpdir(), 'drain-halt-'));
++        const dir = path.join(root, 'agents/roadmaps');
++        fs.mkdirSync(dir, { recursive: true });
++        fs.writeFileSync(path.join(dir, 'road-to-s.md'), roadmap({ done: 1, open: ['- [ ] **1.1 Work.**'] }));
++        fs.writeFileSync(path.join(dir, 'road-to-f.md'), roadmap({ done: 0, open: ['- [ ] **1.1 Work.**'] }));
++    });
++    afterEach(() => fs.rmSync(root, { recursive: true, force: true }));
++
++    it('refuses every entry when .agent-settings.yml arms the halt', () => {
++        fs.writeFileSync(path.join(root, '.agent-settings.yml'), 'emergency:\n  orchestration_halt: true\n');
++        const { json, text } = run();
++        expect(json.queue.length).toBeGreaterThan(0);
++        expect(json.queue.filter((e) => e.dispatchable)).toEqual([]);
++        expect(json.next).toBeNull();
++        expect(json.dispatch_hold).toBe('emergency.orchestration_halt is set');
++        expect(text).toContain('HALTED — emergency.orchestration_halt is set');
++    });
++
++    it('dispatches when the same file disarms it', () => {
++        fs.writeFileSync(path.join(root, '.agent-settings.yml'), 'emergency:\n  orchestration_halt: false\n');
++        const { json, text } = run();
++        expect(json.next?.slug).toBe('road-to-s');
++        expect(json.dispatch_hold).toBeNull();
++        expect(text).not.toContain('HALTED');
++    });
+ });
+ 
+ describe('buildQueue — lanes of one session', () => {

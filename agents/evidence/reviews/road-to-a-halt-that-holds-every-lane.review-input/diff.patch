@@ -1,0 +1,750 @@
+diff --git a/agents/evidence/council/halt-phase2-disposition-20261124.md b/agents/evidence/council/halt-phase2-disposition-20261124.md
+new file mode 100644
+index 0000000000000000000000000000000000000000..1da2c95d6494736fdcc46e5fa212d86063c56c93
+--- /dev/null
++++ b/agents/evidence/council/halt-phase2-disposition-20261124.md
+@@ -0,0 +1,161 @@
++<!-- evidence-type: analysis -->
++
++# Council decision — Phase 2 of road-to-a-halt-that-holds-every-lane
++
++| Field | Value |
++|---|---|
++| Roadmap | `agents/roadmaps/archive/road-to-a-halt-that-holds-every-lane.md` |
++| Seats | anthropic/claude-sonnet-4-5, openai/codex-default (CLI, both concluded) |
++| Rounds | 2 |
++| Date | 2026-11-24 |
++| Verdict | B — revert Phase 2, ship the halt alone, carry Phase 2 with the ten rounds' phrasings as its fixture corpus |
++
++## Question (verbatim)
++
++Decision needed on a pull request for a roadmap with two phases.
++
++Phase 1 (done; no review round found a defect in it): an emergency halt switch now marks every queue entry non-dispatchable, and the dead-lane re-dispatch procedure reads it.
++
++Phase 2: a regex-based prose parser decides whether a roadmap step is "held" by text such as "blocked by X", "not blocked by X", "was blocked by X, which has since shipped". The roadmap asked to fix four misreadings: a negation not adjacent to the hold phrase, a past-tense hold that has since resolved, results depending on match order, and a resolved named blocker masking an independent owner hold.
++
++Ten independent completion-review rounds each found new phrasings. Several fixes introduced or exposed a case where the branch releases a hold that main kept. Releasing a hold means a step is dispatched against the owner's intent, which is the roadmap's rank-2 risk. Round 10 found one again: contractions added to the negator set (wasn't, weren't) release "It wasn't blocked by the probe until today; now it is." Each review round costs about 230k tokens. A follow-up roadmap already exists for an object-list parser that judges each object of a hold instead of matching phrasing patterns.
++
++Options:
++(A) Narrow once more: restrict the negator set to what main had (no longer / not / never) plus a one-adverb window, keep the other Phase 2 fixes, and run one more review.
++(B) Revert Phase 2 entirely in this PR, ship only the halt (Phase 1), carry the Phase 2 steps into the existing follow-up roadmap, and run one review on the reduced diff.
++(C) Ship as is and record the regression as an accepted risk.
++
++Which option, and why? Name what would make the other options better.
++
++## Member responses (verbatim)
++
++### anthropic
++
++## Round 2 Critique
++
++### 1. Agreement with Prior Points
++
++**Fully agree with Reviewers A & B:**
++- **10-round pattern signals architectural mismatch** (A, B): Not a bug pile, but evidence that regex cannot reliably model negation scope, tense, and subordination—linguistic features that require syntactic structure.
++- **Asymmetric risk** (A, B): Releasing a hold dispatches against owner intent (rank-2). False positives (keeping a resolved hold) are annoying; false negatives (releasing an active hold) violate intent.
++- **Phase 1 is ready and separable** (A, B): The halt switch and dead-lane check are defect-free. No reason to block them.
++- **Object-list parser roadmap exists** (A, B): Makes deferral actionable, not speculative.
++
++**Agree with Reviewer A's framing:** "Phase 2's ten rounds weren't wasted—they surfaced the cases the follow-up must handle." This is requirements discovery, not sunk cost.
++
++---
++
++### 2. Disagreement / Refinement
++
++**Reviewer A's "2.3M-token signal"**: Technically correct (10 × 230k), but the framing is misleading. The token count measures *review cost*, not cumulative evidence of a single flaw. Each round found *different* edge cases—the system isn't failing the same way ten times. The real signal is **categorical incompleteness**: each fix exposes new phrase patterns because the regex approach has no way to represent clause boundaries or time reference.
++
++**Reviewer B's blind spot on the object-list parser**: "Lack of evidence about whether the object-list parser can reliably represent temporal changes" is a fair gap, but neither reviewer proposes a mitigation. The 10 rounds' phrasings are a natural test suite—capture them explicitly so the follow-up can prove coverage.
++
++---
++
++### 3. New Points Not Raised in Round 1
++
++1. **The contraction regression reveals the real problem**: The issue isn't "wasn't wasn't in the negator set." It's that "It wasn't blocked by the probe **until today; now it is**" requires understanding that "until today" flips polarity and "now it is" reinstates the hold. No negator tuning fixes that—you need temporal clause parsing.
++
++2. **Option A's one-adverb window is arbitrary linguistics**: Why one adverb? "It was not ever blocked by X" = 3 words between negator and phrase. "It wasn't blocked" = 0 words. The window doesn't map to the phenomenon (negation scope in a clause), it's a parameter tuned to observed failures. Next round finds "It was not, as previously reported, blocked by X" and you need a 4-word window.
++
++3. **Phase 1's urgency is unexamined**: Why does the emergency halt exist? If there's an operational incident driving it, blocking Phase 1 on Phase 2's whack-a-mole has external cost neither reviewer quantified. If Phase 1 is proactive (no incident), the merge pressure is lower but still present.
++
++4. **Testing strategy gap**: Could the 10 rounds' examples become a regression suite? If yes, Phase 2's learnings transfer cleanly to the object-list parser. If no, then even the follow-up will have unknown coverage and you've learned nothing about *how* to test hold detection, only that this implementation is wrong.
++
++5. **Usage data would guide C vs. B**: Neither reviewer asks: "How often do roadmap owners write 'wasn't blocked' vs. 'not blocked'?" If contractions + temporal context are <1% of real holds, Option C's risk is bounded. If they're 15%, C is reckless. The decision is data-informed, not pure architecture.
++
++6. **Merge cost asymmetry**: If the object-list parser is a **rewrite** (not a delta on Phase 2), reverting is cheap—no re-integration later. If it's a **delta** (builds on Phase 2's structure), revert now means duplicating review effort when the follow-up merges. Neither reviewer clarified which architecture the follow-up uses.
++
++---
++
++### 4. Recommendation
++
++**Option B, with refinement: Revert Phase 2, ship Phase 1 only, and extract the 10 rounds' phrasings into an explicit test suite for the object-list parser roadmap.**
++
++**Why:**
++- The contraction regression isn't a bug in the fix—it's a symptom that temporal polarity requires syntactic awareness regex doesn't have.
++- Option A's one-adverb window won't converge because the linguistic phenomenon (negation scope, tense, clause boundaries) is **structural**, not **distance-based**. You're fitting a linear model to a recursive grammar.
++- Option C accepts rank-2 risk with no runtime safeguard (e.g., owner approval gate before dispatch).
++- Phase 1 is ready. Don't hold a defect-free halt switch hostage to a parser that's on its 10th round.
++
++**Additional action before merge:**
++Capture the 10 rounds' phrasings as a **requirements document** with test cases for the object-list parser. Otherwise you're discarding 2.3M tokens of discovery work. The follow-up roadmap should prove it handles all 10 rounds' patterns before claiming coverage.
++
++---
++
++### 5. What Would Make the Other Options Better
++
++**Option A:**
++- If rounds 7–10 found **zero issues** (convergence), not new ones each time.
++- If a **linguistic analysis** proved the one-adverb window captures negation scope in roadmap prose (not just "it fixes this contraction").
++- If the object-list parser roadmap were **speculative/distant**, not already scoped and ready.
++- If you had **usage data** showing multi-word negation gaps are <5% of holds.
++
++**Option C:**
++- If **usage data** showed contractions + temporal context ("wasn't...until...now") <1% of roadmap text.
++- If there's a **runtime safeguard** (e.g., owner must click "Yes, dispatch" before a hold-released step runs).
++- If Phase 1's urgency is **externally driven** (operational incident) and a hotfix path exists for Phase 2 regressions post-ship.
++- If the regression is in a **non-critical path** (e.g., hold detection for dashboards/metrics, not actual dispatch).
++- If you instrument the released holds and **commit to a one-week revert** if real-world usage hits the edge case.
++
++---
++
++**Top-N consensus (what the analysis surfaces):**
++1. Ten review rounds found new phrase patterns each time—Phase 2 hasn't converged.
++2. Latest regression: contractions ("wasn't") release holds with temporal flip ("until today; now it is").
++3. Rank-2 risk: unintended dispatch violates owner intent.
++4. Phase 1 is defect-free, separable, and delivers value (emergency halt).
++5. Object-list parser roadmap already exists as a better-architected successor.
++
++**Strongest blind spot the analysis itself has:**
++No proposal for **capturing the 10 rounds' learnings as a test suite** to prevent regression in the follow-up, and no examination of **Phase 1's urgency** (operational incident vs. proactive feature) to quantify the cost of further delay.
++
++### openai
++
++## Decision
++
++Choose **B: revert Phase 2 from this PR, ship Phase 1, and carry the hold-detection work into the existing follow-up roadmap**. Ten rounds have surfaced new phrasings, including a concrete regression that releases a hold. Narrowing the negator set may address the latest example, but the information provided does not show that it bounds the broader risk. Phase 1 is described as done with no defects found, and Phase 2 can be reviewed separately later.
++
++## Prior points
++
++**Agree**
++
++- **Reviewer A and Reviewer B:** Repeated new cases and hold-release regressions are evidence against shipping the current Phase 2. The specific “wasn’t” example makes the concern concrete.
++- **Reviewer B:** The risk is asymmetric: releasing a hold can dispatch work against the owner’s intent. That supports a higher bar than simply passing another review round.
++- **Reviewer A and Reviewer B:** Phase 1 is separable, and an existing object-list-parser roadmap makes deferral actionable.
++
++**Disagree or qualify**
++
++- **Reviewer A:** “Fundamental coverage holes” and “won’t converge cleanly” go beyond the evidence. Ten rounds found new phrasings, but the prompt does not say whether those cases were increasingly rare or whether the fixes were systematically expanding coverage. The rounds show repeated problems, not proof of non-convergence.
++- **Reviewer A:** “2.3M-token signal” is arithmetically grounded in the stated round cost, but token volume is not itself evidence of defect severity or review effectiveness. The useful evidence is the ten rounds and the regressions they found.
++- **Reviewer A:** Saying the object-list parser is “the correct architecture” is stronger than the prompt supports. It is an existing follow-up plan, but its ability to handle temporal changes and independent holds has not been demonstrated.
++- **Reviewer A and Reviewer B:** Their proposed conditions for choosing A or C are plausible, but several are speculative thresholds. For example, “<1%” usage data or “one more review” providing confidence are not justified by evidence in the prompt.
++- **Reviewer B:** “Phase 1 can ship without Phase 2” is plausible from the description that Phase 1 is done and Phase 2 is separate, but the prompt does not explicitly confirm there are no integration dependencies. Treat separability as an assumption to verify in the reduced diff review.
++
++## Evidence and roadmap readiness
++
++- **Phase 2 has repeated uncovered phrasings and hold-release regressions** — **Confirmed** by the stated ten rounds and regression examples. **Roadmap-ready:** yes, as a decision to defer the regex work and retain the discovered cases as acceptance criteria.
++- **The “wasn’t” contraction releases “It wasn’t blocked by the probe until today; now it is.”** — **Confirmed** by the supplied example. **Roadmap-ready:** yes, as a regression case; fixing it alone does not establish the approach is safe.
++- **Unintended release carries rank-2 risk** — **Confirmed** as a stated project risk. **Roadmap-ready:** yes, as a validation priority and release criterion.
++- **Phase 1 is complete and has had no defects found in review** — **Confirmed** by the prompt. **Roadmap-ready:** yes, subject to the reduced-diff review checking that the revert did not affect it.
++- **The object-list parser is the better or correct architecture** — **Inferred**, not confirmed; the prompt says a follow-up roadmap exists, not that the parser design has been validated. **Needs discovery:** test whether it can model temporal changes, negation, and independent holds.
++- **Regex cannot converge, or the latest contraction is rare** — **Speculative** claims in Reviewer A’s suggested decision conditions. No convergence trend or usage data is given. These should not appear as established findings.
++
++## Follow-up actions, ranked by leverage
++
++1. **Revert Phase 2 and review the reduced diff for Phase 1 interactions.** Supported by the repeated regressions and the stated Phase 1 completion; this preserves the completed halt work while checking the separability assumption.
++2. **Carry the discovered misreadings and release regressions into the object-parser roadmap as explicit cases.** Supported by the confirmed failure examples and existing follow-up plan.
++3. **Run a discovery pass on the object-list parser’s representation of time and independent holds.** Supported by the strongest unresolved design question; the prior reviews correctly identify this as unproven.
++4. **Define a release criterion for hold parsing that prioritizes unintended releases.** Supported by the stated rank-2 risk; a generic “one more review” is not itself a safety criterion.
++
++## Top-N consensus
++
++- **Phase 2 should be deferred:** repeated review rounds found new phrasings, and several fixes introduced or exposed hold-release regressions. *(Confirmed.)*
++- **The latest contraction change has a concrete release regression.** *(Confirmed.)*
++- **An unintended release is the higher-consequence failure mode described.** *(Confirmed.)*
++- **Phase 1 is reported complete and can be reviewed as a reduced diff.** *(Confirmed as reported; independence from Phase 2 should be checked.)*
++- **The follow-up parser is an actionable next direction, but its ability to represent temporal and independent holds remains unverified.** *(Existing roadmap confirmed; suitability inferred.)*
++
++The strongest blind spot is that the analysis gives no evidence that the proposed object-list parser can handle temporal changes and independent holds correctly.
++
+diff --git a/agents/roadmaps-owned.md b/agents/roadmaps-owned.md
+index b9c72f33c5420aed9a844fe0a3936892e33491f7..aed54806e81edbd78b690a3ed8ee814a397305d5 100644
+--- a/agents/roadmaps-owned.md
++++ b/agents/roadmaps-owned.md
+@@ -10,7 +10,6 @@ and keep the full search — this file only adds candidates to it.
+ | slug | dir | status | owns |
+ |---|---|---|---|
+ | road-to-a-challenge-the-bench-has-measured-carried | active | active | The guardrail trip of the 2026-11-08 honesty run is sized on audited clean labels, and a count of concessions to … |
+-| road-to-a-halt-that-holds-every-lane | active | ready | `emergency.orchestration_halt` stops every dispatch, including the re-dispatch of a dead lane, and the roadmap drain queue classifies a step as … |
+ | road-to-a-language-pin-from-owner-prose-live-wiring | active | ready | The live hooks set the reply-language pin only from owner prose and the turn-end gate refuses on language only behind … |
+ | road-to-a-learning-pipeline-that-yields-lessons | active | ready | A fault that recurs across sessions becomes a lesson without anyone writing it: the intake sees repeated errors and owner … |
+ | road-to-a-link-with-agent-switch | active | ready | When a session nears its plan limit, the user is told in-session and asked whether to move; the same question … |
+@@ -30,6 +29,7 @@ and keep the full search — this file only adds candidates to it.
+ | road-to-gates-that-do-not-trap-the-agent | active | ready | Every blockage that made the owner run a command, type a confirmation, or delete something on the agent's behalf is … |
+ | road-to-goal-record-live-wiring | active | ready | The goal record that `src/scripts/_lib/goal_mandate.ts` and `src/scripts/_lib/goal_mandate_store.ts` already implement reaches the live hook path: the `session-register` `user_prompt_submit` beat records the … |
+ | road-to-honest-graph-freshness | active | ready | `graphState` (`src/scripts/code_graph/detect.ts:323-334`) never returns a commit count it did not compute: a native graph built by this release reports `behind:N` … |
++| road-to-prose-holds-that-read-their-object | active | ready | `roadmap_drain_queue`'s prose-hold check decides a hold by the objects it names and the clause that governs it — never by … |
+ | road-to-questions-that-reach-the-right-decider | active | ready | A question reaches the owner only when it belongs to one of four owner classes: changing the purpose, lowering a … |
+ | road-to-release-notes-that-match-the-span | active | ready | The CHANGELOG, `docs/MIGRATION.md` and `BREAKING_CHANGES.md` for a release name every consumer-visible change in the span the release covers. |
+ | road-to-repo-knowledge-generated-not-written | active | ready | In each of the seven repositories named in the retro (galawork-api, galawork-web, javascript, elvau, agent-switch, azeroth-companion, agent-config), a command generates … |
+diff --git a/agents/roadmaps/archive/road-to-a-halt-that-holds-every-lane.md b/agents/roadmaps/archive/road-to-a-halt-that-holds-every-lane.md
+new file mode 100644
+index 0000000000000000000000000000000000000000..cf81d37a5da481082624fe244d24c1d8c3f36fc4
+--- /dev/null
++++ b/agents/roadmaps/archive/road-to-a-halt-that-holds-every-lane.md
+@@ -0,0 +1,118 @@
++---
++complexity: structural
++status: ready
++execution:
++  mode: phase-checkpoints
++owner: maintainer
++review_by: 2026-12-31
++estate_growth_exempt: "+1 active_roadmaps, requested by the owner on 2026-11-20 to carry the two code findings of the after-the-fact council review agents/evidence/council/bypass-2768-review-20261119.md."
++estate_offset_exempt: "Defects in merged code with no active roadmap covering them; the review records them as open and names no other carrier."
++relates:
++  - slug: road-to-a-split-the-task-earns
++    relation: extends
++    note: "Archived by #2768, which shipped the emergency halt and the expanded prose-hold vocabulary; this closes the gaps the after-the-fact review found in both."
++---
++# Road to a halt that holds every lane
++
++> **Source:** after-the-fact council review of the #2768 bypass,
++> `agents/evidence/council/bypass-2768-review-20261119.md` (2026-11-19, anthropic
++> REJECT, openai REQUEST_CHANGES), findings 1 and 2. Both re-read against
++> `main` at `99d4f7d657` on 2026-11-20 and still present.
++
++## Goal
++
++`emergency.orchestration_halt` stops every dispatch, including the re-dispatch
++of a dead lane, and the roadmap drain queue classifies a step as held only when
++a hold is actually still in force.
++
++## Findings, as they stand on `main`
++
++1. **The halt ends at queue selection.** `buildQueue` sets `next: null` and
++   `dispatch_hold` when halted (`src/scripts/roadmap_drain_queue.ts`, the
++   `halted` branch near `dispatch_hold`), but every entry keeps
++   `dispatchable: true`. `process-full-all.md` § "A lane that dies keeps its
++   work" sends a FRESH lane from the queue entry with no halt check. The tests
++   inject `{ halted: true }` into `buildQueue`; the settings → queue →
++   dispatch path is untested.
++2. **The prose-hold parser misreads compound text.**
++   - `NEGATED_HOLD_RE` only strips a negation adjacent to the hold phrase, so
++     "Not currently blocked by the probe" stays held.
++   - "It was blocked by the probe, which has since shipped" reads as held.
++   - "No longer blocked by X but still blocked by Y": the outcome depends on
++     regex order, not on meaning.
++   - `namedAll.length === 0` gates the prose check: a step naming a RESOLVED
++     local blocker skips prose detection entirely, so an independent
++     `Owner-reserved` note in the same continuation is missed.
++
++## Acceptance criteria
++
++- **AC-1** With the halt armed, no queue entry reads `dispatchable: true`, and
++  the JSON and text outputs both say why.
++- **AC-2** The re-dispatch procedure in `process-full-all.md` reads the halt
++  (via the queue) before sending a fresh lane; a halted queue refuses it.
++- **AC-3** One test drives the halt from a real settings file through
++  `roadmap_drain_queue` to the dispatch decision, with no injected flag.
++- **AC-4** Each misread above is a failing test first, then green.
++- **AC-5** A resolved named blocker no longer masks an independent
++  owner-reserved hold in the same step.
++- **AC-6** No step currently classified correctly in the live estate changes
++  class (before/after diff of `roadmap_drain_queue --json` over `agents/roadmaps/`).
++
++## Risk Register
++<!-- risk-review: v1 | reviewed: 2026-11-20 | reviewer: claude/host -->
++
++| Rank | Item | Risk type | Description | Mitigation | Anchored under |
++|------|------|-----------|-------------|------------|----------------|
++| 1 | A halted queue hides why nothing runs | product | Marking every entry non-dispatchable could read as "nothing to do" instead of "halted", so an operator misses the armed switch. | AC-1 requires both outputs to name the halt; the test asserts the reason, not only the flag. | Phase 1 — Halt covers every dispatch |
++| 2 | A looser parser releases real holds | product | Clause-scoped negation or past-tense resolution could read a still-active hold as resolved and dispatch a step the owner reserved. | Failing fixtures first (2.1); the estate-wide before/after diff (2.5) blocks any unexplained class change. | Phase 2 — Prose holds that mean what they say |
++
++## Phase 1 — Halt covers every dispatch
++
++- [x] **1.1** Test first: settings file with `emergency.orchestration_halt: true` <!-- receipt: class=R2 · shadow · would-skip=revalidation · bound=production code touched: src/scripts/roadmap_drain_queue.ts -->
++  → queue → no entry dispatchable, `next` null, hold named (AC-1, AC-3).
++- [x] **1.2** `buildQueue`: when halted, every entry's `dispatchable` is `false`. <!-- receipt: class=R2 · shadow · would-skip=revalidation · bound=production code touched: src/scripts/roadmap_drain_queue.ts -->
++- [x] **1.3** `process-full-all.md`: the dead-lane re-dispatch reads the queue <!-- receipt: class=R2 · shadow · would-skip=revalidation · bound=production code touched: src/scripts/roadmap_drain_queue.ts -->
++  entry's `dispatchable` and `dispatch_hold` first and stops on a halt (AC-2);
++  `task sync` regenerates the projection. As landed: one sentence where the
++  doc explains `dispatch_hold` — naming the emergency halt, it stops every
++  dispatch, re-dispatch and verdict resume (held to the 16,000-char depth
++  ceiling). The receipt is range-wide, so its `bound=` names the code file.
++
++## Phase 2 — Prose holds that mean what they say
++
++> **Carried, 2026-11-24.** Ten R2 completion-review rounds on a regex parser for
++> these steps each found new phrasings; several fixes released a hold `main`
++> kept (the Risk Register's rank-2 risk). Options put to the AI council
++> (anthropic + openai, `agents/evidence/council/halt-phase2-disposition-20261124.md`):
++> (A) narrow the negator set again, (B) revert Phase 2 and carry it,
++> (C) ship with the regression as accepted risk. **Verdict: B**, both members —
++> anthropic: regex cannot model negation scope, tense and clause boundaries;
++> openai: repeated release regressions, Phase 1 separable. Dissent: none on the
++> option; openai qualified that separability was asserted, not shown (the
++> parser is byte-identical to `main` on this branch, so nothing of Phase 2
++> ships), and that the object-list parser is unproven on tense. **Destination:**
++> `road-to-prose-holds-that-read-their-object` (created in the same change),
++> which carries every step below plus the phrasings of all ten rounds as its
++> fixture list. **Closes when:** that roadmap's AC-1..AC-4 hold.
++
++- [~] **2.1** Test first: the four cases of finding 2 as named fixtures (AC-4).
++  Carried — `road-to-prose-holds-that-read-their-object` 1.1.
++  <!-- deferred-resolution: carried-to=road-to-prose-holds-that-read-their-object -->
++- [~] **2.2** Negation: strip a negation that governs the hold phrase within the
++  same clause, not only when adjacent. Carried — 1.3.
++  <!-- deferred-resolution: carried-to=road-to-prose-holds-that-read-their-object -->
++- [~] **2.3** Past-tense resolution ("was blocked by … has since shipped") is
++  not a hold. Carried — 1.3.
++  <!-- deferred-resolution: carried-to=road-to-prose-holds-that-read-their-object -->
++- [~] **2.4** Evaluate prose holds even when a named blocker resolved; the
++  resolved name suppresses only the hold that names it (AC-5). Carried — 1.3.
++  <!-- deferred-resolution: carried-to=road-to-prose-holds-that-read-their-object -->
++- [~] **2.5** Before/after classification diff over the live estate; every
++  changed step justified in the PR body (AC-6). Carried — 1.4.
++  <!-- deferred-resolution: carried-to=road-to-prose-holds-that-read-their-object -->
++
++## Not in scope
++
++- Finding 3 (tests narrower than step receipts) and finding 4 (the bypass
++  record's missing withdrawal) of the same review.
++- Any change to the ratification mechanism or the bypass record format.
+diff --git a/agents/roadmaps/road-to-a-halt-that-holds-every-lane.md b/agents/roadmaps/road-to-a-halt-that-holds-every-lane.md
+deleted file mode 100644
+index 15d3aee9598289d40001abd1aabe36ef2b7fb379..0000000000000000000000000000000000000000
+--- a/agents/roadmaps/road-to-a-halt-that-holds-every-lane.md
++++ /dev/null
+@@ -1,94 +0,0 @@
+----
+-complexity: structural
+-status: ready
+-execution:
+-  mode: phase-checkpoints
+-owner: maintainer
+-review_by: 2026-12-31
+-estate_growth_exempt: "+1 active_roadmaps, requested by the owner on 2026-11-20 to carry the two code findings of the after-the-fact council review agents/evidence/council/bypass-2768-review-20261119.md."
+-estate_offset_exempt: "Defects in merged code with no active roadmap covering them; the review records them as open and names no other carrier."
+-relates:
+-  - slug: road-to-a-split-the-task-earns
+-    relation: extends
+-    note: "Archived by #2768, which shipped the emergency halt and the expanded prose-hold vocabulary; this closes the gaps the after-the-fact review found in both."
+----
+-# Road to a halt that holds every lane
+-
+-> **Source:** after-the-fact council review of the #2768 bypass,
+-> `agents/evidence/council/bypass-2768-review-20261119.md` (2026-11-19, anthropic
+-> REJECT, openai REQUEST_CHANGES), findings 1 and 2. Both re-read against
+-> `main` at `99d4f7d657` on 2026-11-20 and still present.
+-
+-## Goal
+-
+-`emergency.orchestration_halt` stops every dispatch, including the re-dispatch
+-of a dead lane, and the roadmap drain queue classifies a step as held only when
+-a hold is actually still in force.
+-
+-## Findings, as they stand on `main`
+-
+-1. **The halt ends at queue selection.** `buildQueue` sets `next: null` and
+-   `dispatch_hold` when halted (`src/scripts/roadmap_drain_queue.ts`, the
+-   `halted` branch near `dispatch_hold`), but every entry keeps
+-   `dispatchable: true`. `process-full-all.md` § "A lane that dies keeps its
+-   work" sends a FRESH lane from the queue entry with no halt check. The tests
+-   inject `{ halted: true }` into `buildQueue`; the settings → queue →
+-   dispatch path is untested.
+-2. **The prose-hold parser misreads compound text.**
+-   - `NEGATED_HOLD_RE` only strips a negation adjacent to the hold phrase, so
+-     "Not currently blocked by the probe" stays held.
+-   - "It was blocked by the probe, which has since shipped" reads as held.
+-   - "No longer blocked by X but still blocked by Y": the outcome depends on
+-     regex order, not on meaning.
+-   - `namedAll.length === 0` gates the prose check: a step naming a RESOLVED
+-     local blocker skips prose detection entirely, so an independent
+-     `Owner-reserved` note in the same continuation is missed.
+-
+-## Acceptance criteria
+-
+-- **AC-1** With the halt armed, no queue entry reads `dispatchable: true`, and
+-  the JSON and text outputs both say why.
+-- **AC-2** The re-dispatch procedure in `process-full-all.md` reads the halt
+-  (via the queue) before sending a fresh lane; a halted queue refuses it.
+-- **AC-3** One test drives the halt from a real settings file through
+-  `roadmap_drain_queue` to the dispatch decision, with no injected flag.
+-- **AC-4** Each misread above is a failing test first, then green.
+-- **AC-5** A resolved named blocker no longer masks an independent
+-  owner-reserved hold in the same step.
+-- **AC-6** No step currently classified correctly in the live estate changes
+-  class (before/after diff of `roadmap_drain_queue --json` over `agents/roadmaps/`).
+-
+-## Risk Register
+-<!-- risk-review: v1 | reviewed: 2026-11-20 | reviewer: claude/host -->
+-
+-| Rank | Item | Risk type | Description | Mitigation | Anchored under |
+-|------|------|-----------|-------------|------------|----------------|
+-| 1 | A halted queue hides why nothing runs | product | Marking every entry non-dispatchable could read as "nothing to do" instead of "halted", so an operator misses the armed switch. | AC-1 requires both outputs to name the halt; the test asserts the reason, not only the flag. | Phase 1 — Halt covers every dispatch |
+-| 2 | A looser parser releases real holds | product | Clause-scoped negation or past-tense resolution could read a still-active hold as resolved and dispatch a step the owner reserved. | Failing fixtures first (2.1); the estate-wide before/after diff (2.5) blocks any unexplained class change. | Phase 2 — Prose holds that mean what they say |
+-
+-## Phase 1 — Halt covers every dispatch
+-
+-- [ ] **1.1** Test first: settings file with `emergency.orchestration_halt: true`
+-  → queue → no entry dispatchable, `next` null, hold named (AC-1, AC-3).
+-- [ ] **1.2** `buildQueue`: when halted, every entry's `dispatchable` is `false`.
+-- [ ] **1.3** `process-full-all.md`: the dead-lane re-dispatch reads the queue
+-  entry's `dispatchable` and `dispatch_hold` first and stops on a halt (AC-2);
+-  `task sync` regenerates the projection.
+-
+-## Phase 2 — Prose holds that mean what they say
+-
+-- [ ] **2.1** Test first: the four cases of finding 2 as named fixtures (AC-4).
+-- [ ] **2.2** Negation: strip a negation that governs the hold phrase within the
+-  same clause, not only when adjacent.
+-- [ ] **2.3** Past-tense resolution ("was blocked by … has since shipped") is
+-  not a hold.
+-- [ ] **2.4** Evaluate prose holds even when a named blocker resolved; the
+-  resolved name suppresses only the hold that names it (AC-5).
+-- [ ] **2.5** Before/after classification diff over the live estate; every
+-  changed step justified in the PR body (AC-6).
+-
+-## Not in scope
+-
+-- Finding 3 (tests narrower than step receipts) and finding 4 (the bypass
+-  record's missing withdrawal) of the same review.
+-- Any change to the ratification mechanism or the bypass record format.
+diff --git a/agents/roadmaps/road-to-prose-holds-that-read-their-object.md b/agents/roadmaps/road-to-prose-holds-that-read-their-object.md
+new file mode 100644
+index 0000000000000000000000000000000000000000..2f9961f8b137582e5b37d261bc71e838719d7b57
+--- /dev/null
++++ b/agents/roadmaps/road-to-prose-holds-that-read-their-object.md
+@@ -0,0 +1,128 @@
++---
++complexity: structural
++status: ready
++execution:
++  mode: phase-checkpoints
++owner: maintainer
++review_by: 2027-01-31
++relates:
++  - slug: road-to-a-halt-that-holds-every-lane
++    relation: extends
++    note: "Carries that roadmap's Phase 2 (prose-hold parser) after an AI-council verdict on 2026-11-24; its halt half shipped alone."
++---
++# Road to prose holds that read their object
++
++> **Source:** Phase 2 of `road-to-a-halt-that-holds-every-lane` (archived),
++> carried by AI-council verdict B on 2026-11-24
++> (`agents/evidence/council/halt-phase2-disposition-20261124.md`) after ten R2
++> completion-review rounds on the parser (`agents/evidence/reviews/road-to-a-halt-that-holds-every-lane.round-{1..10}.md`;
++> later rounds reviewed the reduced, halt-only diff).
++> A regex parser was tried there and reverted: every round found new phrasings,
++> and several fixes released holds `main` kept. Original findings: finding 2 of
++> the after-the-fact council review of the #2768 bypass
++> (`agents/evidence/council/bypass-2768-review-20261119.md`).
++
++## Goal
++
++`roadmap_drain_queue`'s prose-hold check decides a hold by the objects it names
++and the clause that governs it — never by matching phrasing patterns — and it
++releases a hold only when every object it names has resolved.
++
++## Findings, as they stand on `main`
++
++1. **Negation is only stripped when adjacent** — "Not currently blocked by the
++   probe" stays held.
++2. **Past-tense resolution reads as held** — "It was blocked by the probe, which
++   has since shipped" stays held.
++3. **Order decides compound text** — "No longer blocked by X but still blocked by
++   Y" depends on regex order.
++4. **A resolved named blocker masks independent holds** — `namedAll.length === 0`
++   gates the prose check, so an `Owner-reserved` note beside a resolved blocker
++   is missed.
++
++## Fixture corpus — the ten review rounds
++
++Every phrasing below was raised by a review round; it is the requirement list,
++not a sample. "Blocker `s`" and "blocker `t`" are local blockers with
++`Status: resolved`.
++
++| Phrasing (step continuation) | Expected |
++|---|---|
++| Not currently blocked by the probe. | runnable |
++| It was blocked by the probe, which has since shipped. | runnable |
++| It was blocked by the probe, which has since shipped on 2026-10-30. | runnable |
++| No longer blocked by the probe but still blocked by the host binary. | held |
++| Still blocked by the host binary; no longer blocked by the probe. | held |
++| It is not clear whether this is blocked by the probe. | held |
++| The probe is not shipped, and the step is blocked by it. | held |
++| It was blocked by the probe. | held |
++| It was blocked by the probe. Phase 3 has since shipped. | held |
++| It was blocked by the probe, which has since been reopened. | held |
++| It was blocked by the probe and the doc has since shipped. | held |
++| It was blocked by the upstream fix, which has since merged upstream but is not yet released. | held |
++| It was blocked by the fix, which has since been fixed in part. | held |
++| It was blocked by the fix, which has since merged in staging. | held |
++| It was blocked by the probe and the host, which has since shipped. | held |
++| It was blocked by the probe but the host, which has since shipped. | held |
++| It was blocked by the probe and the host, which have since shipped. | runnable |
++| Not only blocked by the probe. | held |
++| Not only waits on the probe. | held |
++| Not just waiting on the probe. | held |
++| Not yet blocked by the probe; it will be. | held |
++| Not blocked by the probe alone, but also by the host. | held |
++| Whether or not blocked by the probe, the step waits. | held |
++| It wasn't blocked by the probe until today; now it is. | held |
++| Still held by blocker `s`. | runnable |
++| Parked until blocker `s` ships. | runnable |
++| On hold until blocker `s` resolves. | runnable |
++| Blocked on the probe (blocker `s`). | runnable |
++| Blocked by blocker `s` and blocker `t` (both resolved). | runnable |
++| Owner-reserved until blocker `s` is reviewed. | held |
++| Still held by blocker `s`. Owner-reserved: the flip is the maintainer's call. | held |
++| Still blocked by the host binary, and blocker `s` has resolved. | held |
++| Blocked by blocker `s` and the probe. | held |
++| Blocked on the host binary and the probe (blocker `s`). | held |
++| Waiting on the host binary for now, see blocker `s`. | held |
++| On hold until blocker `s` is reverted. | held |
++| Phase blockquote "> Blocked by blocker `s`." over two plain steps | runnable, runnable |
++
++## Acceptance criteria
++
++- **AC-1** Every corpus row is a fixture, red first where `main` disagrees, then
++  green.
++- **AC-2** A hold naming several objects releases only when every named object is
++  resolved — a blocker ref by its status, a prose object by a resolution clause
++  attached to it.
++- **AC-3** A resolved named blocker suppresses only the hold whose object it is;
++  an owner hold beside it still holds.
++- **AC-4** No step currently classified correctly in the live estate changes
++  class (before/after `roadmap_drain_queue --json` over `agents/roadmaps/`) —
++  the parent's AC-6, carried unchanged.
++
++## Risk Register
++<!-- risk-review: v1 | reviewed: 2026-11-24 | reviewer: claude/host -->
++
++| Rank | Item | Risk type | Description | Mitigation | Anchored under |
++|------|------|-----------|-------------|------------|----------------|
++| 1 | A parser that releases a live hold | product | Any loosening can dispatch a step the owner reserved — the failure that sent the parent's attempt back. | The corpus pins every held row; a held row turning runnable fails CI. | Phase 1 — Objects, not phrasings |
++| 2 | Pattern growth without an end | implementation | The parent added one regex per review finding for ten rounds without converging. | Parse the hold's clause and object list once; no phrasing-specific pattern is accepted in review. | Phase 1 — Objects, not phrasings |
++
++## Phase 1 — Objects, not phrasings
++
++- [ ] **1.0** Discovery: show on the tense rows of the corpus ("wasn't … until
++  today; now it is", "which has since been reopened") that an object-list model
++  can represent a hold that resolved and returned — the council named this the
++  unproven half of the design. If it cannot, stop and re-plan before 1.2.
++- [ ] **1.1** Test first: the corpus above as named fixtures (AC-1).
++- [ ] **1.2** Extract each hold's governing clause and its object list (split on
++  `and`, `or`, `,`, parentheses).
++- [ ] **1.3** Judge each object: a blocker ref by its status, a prose object by an
++  attached resolution clause; judge negation and tense from the governing clause,
++  not by distance; release only when all objects resolve (AC-2, AC-3).
++- [ ] **1.4** Before/after `--json` diff over the live estate shows no class
++  change for a correctly classified step (AC-4).
++
++## Not in scope
++
++- The emergency halt (shipped by the parent).
++- Any change to the blocker heading format or the `blocked-by` marker.
+diff --git a/dist/agent-src/contexts/execution/process-full-all.md b/dist/agent-src/contexts/execution/process-full-all.md
+index 52b1e65d5d844d53befc9036b2681c45b053ad1b..1295a43989fa5e6b527db572e97d5b7659ab2b2f 100644
+--- a/dist/agent-src/contexts/execution/process-full-all.md
++++ b/dist/agent-src/contexts/execution/process-full-all.md
+@@ -42,7 +42,8 @@ command already does.
+    **Three limits from the owner directive of 2026-10-24** come out of the same
+    command: a `start` entry stays undispatchable while five roadmaps are started
+    (pull, not push); `next` is empty while three other sessions are live, and
+-   `dispatch_hold` names which cap held it; a step under `timeboxed` is split,
++   `dispatch_hold` names which cap held it — naming the emergency halt, it stops every
++   dispatch, re-dispatch and verdict resume; a step under `timeboxed` is split,
+    never dispatched as it stands (§ Timebox).
+ 
+    **An owner's quantity word widens how many roadmaps are FINISHED, never how
+@@ -79,15 +80,14 @@ no lane is dispatched onto a `start` entry while a `continue` entry has no lane.
+ session holds one lock per lane, so the second lane no longer overwrites the
+ first lane's claim, and the queue lists every lane's roadmap as `claimed`.
+ 
+-**A lane that dies keeps its work.** A spend or rate limit or a watchdog
+-stops the lane, not its worktree: its commits and edits stay on disk. Before
+-re-dispatching, read its queue entry —
++**A lane that dies keeps its work.** A limit or watchdog stops the lane,
++not its worktree: its work stays on disk. Before re-dispatching, read its
++queue entry —
+ `salvage: N commit(s) ahead, M uncommitted file(s)` — run
+ `agent-config run:supervise --root <lane worktree> --verify <slug>`, put any
+ disagreeing field first in the brief, and send a FRESH lane into the SAME
+-worktree; a resumed agent loses its worktree. The same holds when the orchestrator session
+-itself dies: its lane locks expire with its register record and the next
+-session's queue lists each roadmap as `resume` in the lane's worktree.
++worktree; a resumed agent loses its worktree. Same if the orchestrator dies: its locks expire
++with its record and the next queue lists each as `resume` in the lane's worktree.
+ 
+ **The orchestrator sends this brief, filling only the two parameters, and adds
+ nothing that changes its finish line:**
+diff --git a/src/agent-src/contexts/execution/process-full-all.md b/src/agent-src/contexts/execution/process-full-all.md
+index 6a515114c042fb4d62e21d2f2f1686eaa3308054..1c824922f90053791f61a22d820524cbae393aab 100644
+--- a/src/agent-src/contexts/execution/process-full-all.md
++++ b/src/agent-src/contexts/execution/process-full-all.md
+@@ -42,7 +42,8 @@ command already does.
+    **Three limits from the owner directive of 2026-10-24** come out of the same
+    command: a `start` entry stays undispatchable while five roadmaps are started
+    (pull, not push); `next` is empty while three other sessions are live, and
+-   `dispatch_hold` names which cap held it; a step under `timeboxed` is split,
++   `dispatch_hold` names which cap held it — naming the emergency halt, it stops every
++   dispatch, re-dispatch and verdict resume; a step under `timeboxed` is split,
+    never dispatched as it stands (§ Timebox).
+ 
+    **An owner's quantity word widens how many roadmaps are FINISHED, never how
+@@ -79,15 +80,14 @@ no lane is dispatched onto a `start` entry while a `continue` entry has no lane.
+ session holds one lock per lane, so the second lane no longer overwrites the
+ first lane's claim, and the queue lists every lane's roadmap as `claimed`.
+ 
+-**A lane that dies keeps its work.** A spend or rate limit or a watchdog
+-stops the lane, not its worktree: its commits and edits stay on disk. Before
+-re-dispatching, read its queue entry —
++**A lane that dies keeps its work.** A limit or watchdog stops the lane,
++not its worktree: its work stays on disk. Before re-dispatching, read its
++queue entry —
+ `salvage: N commit(s) ahead, M uncommitted file(s)` — run
+ `agent-config run:supervise --root <lane worktree> --verify <slug>`, put any
+ disagreeing field first in the brief, and send a FRESH lane into the SAME
+-worktree; a resumed agent loses its worktree. The same holds when the orchestrator session
+-itself dies: its lane locks expire with its register record and the next
+-session's queue lists each roadmap as `resume` in the lane's worktree.
++worktree; a resumed agent loses its worktree. Same if the orchestrator dies: its locks expire
++with its record and the next queue lists each as `resume` in the lane's worktree.
+ 
+ **The orchestrator sends this brief, filling only the two parameters, and adds
+ nothing that changes its finish line:**
+diff --git a/src/scripts/roadmap_drain_queue.ts b/src/scripts/roadmap_drain_queue.ts
+index b1bcbc30f7277765b7780a149c1d43c9bd230908..581924758fd43f00e28cb8730233e8087641e2b8 100644
+--- a/src/scripts/roadmap_drain_queue.ts
++++ b/src/scripts/roadmap_drain_queue.ts
+@@ -198,6 +198,7 @@ const SHEET_ID_RE = /`([a-z0-9][a-z0-9-]*(?:#[a-z0-9-]+)?)`/g;
+ 
+ export { WIP_CAP };
+ export const SESSION_CAP = 3;
++const HALT_HOLD = 'emergency.orchestration_halt is set';
+ export const PARTIAL_CAP = 3;
+ export const STARTED_DAYS_CAP = 2;
+ export const OWNER_SHEET_REL = 'agents/owner-questions.md';
+@@ -504,7 +505,9 @@ export function buildQueue(
+     const halted = policy.halted === true;
+     let dispatch_hold: string | null = null;
+     if (halted) {
+-        dispatch_hold = 'emergency.orchestration_halt is set';
++        // Per entry, not only `next`: a dead lane's re-dispatch reads its own entry.
++        for (const e of entries) e.dispatchable = false;
++        dispatch_hold = HALT_HOLD;
+     } else if (sessionHold && entries.some((e) => e.dispatchable)) {
+         dispatch_hold = `session cap (${String(sessionCap)}): ${String(others.size)} other live session(s)`;
+     } else if (!entries.some((e) => e.dispatchable) && entries.some((e) => e.bucket === 'start') && started >= wipCap) {
+@@ -691,6 +694,7 @@ export function annotateFreshness(entries: QueueEntry[], root: string): void {
+ 
+ export function renderText(q: DrainQueue): string {
+     const out: string[] = [`drain queue · ${q.today} · ${q.queue.length} roadmap(s) with open steps`];
++    if (q.dispatch_hold === HALT_HOLD) out.push(`HALTED — ${HALT_HOLD}: no entry below is dispatched, re-dispatch included`);
+     for (const e of q.queue) {
+         const tail =
+             e.bucket === 'claimed'
+diff --git a/tests/scripts/roadmap_drain_queue.test.ts b/tests/scripts/roadmap_drain_queue.test.ts
+index 5cce65078abd5681ead8d43b19a7a4c6c1939f37..533da0fe3b0237d7644d718fcb5dddfd246e4784 100644
+--- a/tests/scripts/roadmap_drain_queue.test.ts
++++ b/tests/scripts/roadmap_drain_queue.test.ts
+@@ -2,17 +2,20 @@ import * as fs from 'node:fs';
+ import * as os from 'node:os';
+ import * as path from 'node:path';
+ 
+-import { afterEach, beforeEach, describe, expect, it } from 'vitest';
++import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
+ 
+ import {
+     buildQueue,
+     isTimeGated,
+     isTimeboxed,
++    main,
++    renderText,
+     screenEstate,
+     sheetIds,
+     screenRoadmap,
+     WIP_CAP,
+     type ClaimView,
++    type DrainQueue,
+     type RoadmapScreen,
+ } from '../../src/scripts/roadmap_drain_queue.js';
+ 
+@@ -236,6 +239,77 @@ describe('buildQueue — emergency halt', () => {
+         expect(q.next?.slug).toBe('road-to-a');
+         expect(q.dispatch_hold).toBeNull();
+     });
++
++    it('marks no entry dispatchable while halted — a re-dispatch reads the entry, not `next`', () => {
++        const started = screen('road-to-s', roadmap({ done: 1, open: ['- [ ] **1.1 Work.**'] }));
++        const fresh = screen('road-to-f', roadmap({ done: 0, open: ['- [ ] **1.1 Work.**'] }));
++        const q = buildQueue([started, fresh], none, TODAY, 's1', { halted: true });
++        expect(q.queue.length).toBe(2);
++        expect(q.queue.filter((e) => e.dispatchable)).toEqual([]);
++    });
++
++    it('refuses the dead-lane resume entry while halted — the exact re-dispatch path', () => {
++        const dead: ClaimView = {
++            live: [],
++            dead: [{ session_id: 'gone', roadmap_slug: 'road-to-a', worktree: '/wt/a', branch: 'feat/a' }],
++        };
++        const q = buildQueue([a], dead, TODAY, 's1', { halted: true });
++        expect(q.queue[0]?.bucket).toBe('resume');
++        expect(q.queue[0]?.dispatchable).toBe(false);
++        expect(q.next).toBeNull();
++    });
++
++    it('names the halt at the top of the text output, so an empty queue never reads as nothing to do', () => {
++        const text = renderText(buildQueue([a], none, TODAY, 's1', { halted: true }));
++        expect(text.split('\n')[1]).toMatch(/^HALTED — emergency\.orchestration_halt is set/);
++        expect(text).toContain('next: none — emergency.orchestration_halt is set');
++    });
++});
++
++describe('emergency halt — from a real settings file to the dispatch decision', () => {
++    let root = '';
++    const run = (): { json: DrainQueue; text: string } => {
++        const chunks: string[] = [];
++        const spy = vi.spyOn(process.stdout, 'write').mockImplementation((c: string | Uint8Array) => {
++            chunks.push(String(c));
++            return true;
++        });
++        try {
++            main(['--root', root, '--today', TODAY, '--session', 's-test', '--json']);
++            const json = JSON.parse(chunks.join('')) as DrainQueue;
++            chunks.length = 0;
++            main(['--root', root, '--today', TODAY, '--session', 's-test']);
++            return { json, text: chunks.join('') };
++        } finally {
++            spy.mockRestore();
++        }
++    };
++    beforeEach(() => {
++        root = fs.mkdtempSync(path.join(os.tmpdir(), 'drain-halt-'));
++        const dir = path.join(root, 'agents/roadmaps');
++        fs.mkdirSync(dir, { recursive: true });
++        fs.writeFileSync(path.join(dir, 'road-to-s.md'), roadmap({ done: 1, open: ['- [ ] **1.1 Work.**'] }));
++        fs.writeFileSync(path.join(dir, 'road-to-f.md'), roadmap({ done: 0, open: ['- [ ] **1.1 Work.**'] }));
++    });
++    afterEach(() => fs.rmSync(root, { recursive: true, force: true }));
++
++    it('refuses every entry when .agent-settings.yml arms the halt', () => {
++        fs.writeFileSync(path.join(root, '.agent-settings.yml'), 'emergency:\n  orchestration_halt: true\n');
++        const { json, text } = run();
++        expect(json.queue.length).toBeGreaterThan(0);
++        expect(json.queue.filter((e) => e.dispatchable)).toEqual([]);
++        expect(json.next).toBeNull();
++        expect(json.dispatch_hold).toBe('emergency.orchestration_halt is set');
++        expect(text).toContain('HALTED — emergency.orchestration_halt is set');
++    });
++
++    it('dispatches when the same file disarms it', () => {
++        fs.writeFileSync(path.join(root, '.agent-settings.yml'), 'emergency:\n  orchestration_halt: false\n');
++        const { json, text } = run();
++        expect(json.next?.slug).toBe('road-to-s');
++        expect(json.dispatch_hold).toBeNull();
++        expect(text).not.toContain('HALTED');
++    });
+ });
+ 
+ describe('buildQueue — lanes of one session', () => {
