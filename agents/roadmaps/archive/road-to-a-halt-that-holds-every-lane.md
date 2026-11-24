@@ -80,13 +80,14 @@ a hold is actually still in force.
 > **Carried, 2026-11-24.** Ten R2 completion-review rounds on a regex parser for
 > these steps each found new phrasings; several fixes released a hold `main`
 > kept (the Risk Register's rank-2 risk). Options put to the AI council
-> (anthropic + openai, `agents/runtime/council/responses/halt-phase2-disposition.md`,
-> local): (A) narrow the negator set again, (B) revert Phase 2 and carry it,
-> (C) ship with the regression as accepted risk. **Verdict: B** — regex cannot
-> model negation scope, tense and clause boundaries; Phase 1 is separable and
-> ships alone. Dissent: none recorded; openai noted the separability was
-> asserted, not shown (the parser is byte-identical to `main` on this branch, so
-> nothing of Phase 2 ships). **Destination:**
+> (anthropic + openai, `agents/evidence/council/halt-phase2-disposition-20261124.md`):
+> (A) narrow the negator set again, (B) revert Phase 2 and carry it,
+> (C) ship with the regression as accepted risk. **Verdict: B**, both members —
+> anthropic: regex cannot model negation scope, tense and clause boundaries;
+> openai: repeated release regressions, Phase 1 separable. Dissent: none on the
+> option; openai qualified that separability was asserted, not shown (the
+> parser is byte-identical to `main` on this branch, so nothing of Phase 2
+> ships), and that the object-list parser is unproven on tense. **Destination:**
 > `road-to-prose-holds-that-read-their-object` (created in the same change),
 > which carries every step below plus the phrasings of all ten rounds as its
 > fixture list. **Closes when:** that roadmap's AC-1..AC-4 hold.

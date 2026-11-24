@@ -13,8 +13,9 @@ relates:
 # Road to prose holds that read their object
 
 > **Source:** Phase 2 of `road-to-a-halt-that-holds-every-lane` (archived),
-> carried by AI-council verdict B on 2026-11-24 after ten R2 completion-review
-> rounds (`agents/evidence/reviews/road-to-a-halt-that-holds-every-lane.round-*.md`).
+> carried by AI-council verdict B on 2026-11-24
+> (`agents/evidence/council/halt-phase2-disposition-20261124.md`) after ten R2
+> completion-review rounds (`agents/evidence/reviews/road-to-a-halt-that-holds-every-lane.round-*.md`).
 > A regex parser was tried there and reverted: every round found new phrasings,
 > and several fixes released holds `main` kept. Original findings: finding 2 of
 > the after-the-fact council review of the #2768 bypass
@@ -41,7 +42,8 @@ releases a hold only when every object it names has resolved.
 ## Fixture corpus — the ten review rounds
 
 Every phrasing below was raised by a review round; it is the requirement list,
-not a sample. "Blocker `s`" is a local blocker with `Status: resolved`.
+not a sample. "Blocker `s`" and "blocker `t`" are local blockers with
+`Status: resolved`.
 
 | Phrasing (step continuation) | Expected |
 |---|---|
@@ -92,9 +94,9 @@ not a sample. "Blocker `s`" is a local blocker with `Status: resolved`.
   attached to it.
 - **AC-3** A resolved named blocker suppresses only the hold whose object it is;
   an owner hold beside it still holds.
-- **AC-4** No step in the live estate changes class (before/after
-  `roadmap_drain_queue --json` over `agents/roadmaps/`), or every change is
-  justified in the PR body.
+- **AC-4** No step currently classified correctly in the live estate changes
+  class (before/after `roadmap_drain_queue --json` over `agents/roadmaps/`) —
+  the parent's AC-6, carried unchanged.
 
 ## Risk Register
 <!-- risk-review: v1 | reviewed: 2026-11-24 | reviewer: claude/host -->
@@ -106,14 +108,18 @@ not a sample. "Blocker `s`" is a local blocker with `Status: resolved`.
 
 ## Phase 1 — Objects, not phrasings
 
+- [ ] **1.0** Discovery: show on the tense rows of the corpus ("wasn't … until
+  today; now it is", "which has since been reopened") that an object-list model
+  can represent a hold that resolved and returned — the council named this the
+  unproven half of the design. If it cannot, stop and re-plan before 1.2.
 - [ ] **1.1** Test first: the corpus above as named fixtures (AC-1).
 - [ ] **1.2** Extract each hold's governing clause and its object list (split on
   `and`, `or`, `,`, parentheses).
 - [ ] **1.3** Judge each object: a blocker ref by its status, a prose object by an
   attached resolution clause; judge negation and tense from the governing clause,
   not by distance; release only when all objects resolve (AC-2, AC-3).
-- [ ] **1.4** Before/after `--json` diff over the live estate; every changed step
-  justified in the PR body (AC-4).
+- [ ] **1.4** Before/after `--json` diff over the live estate shows no class
+  change for a correctly classified step (AC-4).
 
 ## Not in scope
 
