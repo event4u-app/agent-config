@@ -475,6 +475,8 @@ export function prune_all_council_artifacts(
     const sessions = path.join(root, 'agents', 'runtime', 'council', 'sessions');
     const questions = path.join(root, 'agents', 'runtime', 'council', 'questions');
     const responses = path.join(root, 'agents', 'runtime', 'council', 'responses');
+    // One folder per run with its live log and inbox (live_table.ts); same retention as the response it shadows.
+    const live = path.join(root, 'agents', 'runtime', 'council', 'live');
     return {
         sessions: [
             ...prune_old_sessions(sessions, days, { now }),
@@ -482,6 +484,7 @@ export function prune_all_council_artifacts(
         ],
         questions: prune_old_artifacts(questions, days, { now }),
         responses: prune_old_artifacts(responses, days, { now }),
+        live: prune_old_artifacts(live, days, { now }),
     };
 }
 

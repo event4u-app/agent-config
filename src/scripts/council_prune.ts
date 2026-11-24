@@ -10,6 +10,7 @@
  *   - agents/runtime/council/sessions/   (timestamp subdirs + root files)
  *   - agents/runtime/council/questions/  (mtime-based)
  *   - agents/runtime/council/responses/  (mtime-based)
+ *   - agents/runtime/council/live/       (mtime-based; one folder per run, live_table.ts)
  *
  * Same logic as the auto-prune that runs on every `council save()`,
  * exposed as a Task target so the user can sweep on demand.

@@ -183,6 +183,7 @@ import { tallyFromResponses } from './ai_council/stance_tally.js';
 import { ratificationInlineFindings, ratificationNecessityBypass, ratificationRepairOptions, readRatificationPrompt } from './ai_council/ratification_prompt.js';
 import { storedStopClass } from './ai_council/stop_class.js';
 import { buildHandoffFromStanceTally, type HandoffEnvelope } from './ai_council/handoff.js';
+import { openLiveTable } from './ai_council/live_table.js';
 
 // ── argparse-style exit plumbing ────────────────────────────────────
 // Mirror CPython argparse: a `prog: error: …` line on stderr + exit 2.
@@ -2294,6 +2295,7 @@ function cmd_run(
         max_bundle_bytes: _getattr<number | null>(args, 'max_bundle_bytes', null),
         prompt_mode_override: _getattr<string | null>(args, 'prompt_mode', null),
     });
+    const live = openLiveTable({ subcommand: 'run', members, output: args.output as string | undefined, root: REPO_ROOT, ask: args.original_ask as string | undefined, configPath: AI_COUNCIL_FILE }); members = live.members as typeof members;
     // A ratification prompt gets the stance contract and one unattended repair (ai_council/ratification_prompt.ts).
     const { problem: ratification_problem, ratification: ratification_prompt } = readRatificationPrompt(args.input_mode, args.question);
     if (ratification_problem !== null) return (_stderr(`❌  council:run: ${ratification_problem}.\n`), 2);
@@ -2642,6 +2644,7 @@ function cmd_run(
     });
     fs.mkdirSync(path.dirname(_resolveTarget(out_path)), { recursive: true });
     fs.writeFileSync(_resolveTarget(out_path), _jsonDumpsIndent2(payload) + '\n', { encoding: 'utf-8' });
+    live.finish('completed', out_path);
     // The trailing note is not decoration. Before 2026-08-27 this line read
     // `actual $0.1055` on a run whose every seat was subscription-authed, two
     // lines below a `TOTAL: $0.0000` from the pre-run path — and an operator
@@ -2840,6 +2843,7 @@ function cmd_debate(
         max_bundle_bytes: _getattr<number | null>(args, 'max_bundle_bytes', null),
         prompt_mode_override: 'debate',
     });
+    const live = openLiveTable({ subcommand: 'debate', members, output: args.output as string | undefined, root: REPO_ROOT, ask: args.original_ask as string | undefined, configPath: AI_COUNCIL_FILE }); members = live.members as typeof members;
     const debate_problem = readRatificationPrompt(args.input_mode, args.question).problem;
     if (debate_problem !== null) return (_stderr(`❌  council:debate: ${debate_problem}.\n`), 2);
     const [proceed, gate_exit] = _necessity_gate({
@@ -3057,6 +3061,7 @@ function cmd_debate(
     );
     const last = all_rounds.length > 0 ? (all_rounds[all_rounds.length - 1] as CouncilResponse[]) : [];
     const errors_last = last.filter((r) => r.error);
+    live.finish(errors_last.length > 0 && errors_last.length === last.length ? 'failed' : 'completed', out_dir);
     return errors_last.length > 0 && errors_last.length === last.length ? 1 : 0;
 }
 
