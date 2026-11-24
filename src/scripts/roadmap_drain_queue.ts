@@ -177,72 +177,12 @@ const BLOCKER_HEADING_RE = /^###[ \t]+blocker:[ \t]*([A-Za-z0-9-]+)/i;
 const BLOCKED_BY_RE = /<!--[ \t]*blocked-by:[ \t]*([a-z0-9-]+(?:#[a-z0-9-]+)?)/i;
 const PROSE_BLOCKER_RE = /\bblocker[ \t]+`([a-z0-9-]+)`/gi;
 const PROSE_HOLD_RE =
-    /\b(held open|still held|on hold|held off|parked until|(?:still |only )?waits on|waiting on|blocked (?:by|on)|owner-reserved)\b/gi;
-// A sentence ends at terminal punctuation followed by space, never inside "v1.2".
-const SENTENCE_SPLIT_RE = /(?<=[.!?;:])\s+/;
-// A clause ends at a comma, a dash, or a coordinating conjunction.
-const CLAUSE_SPLIT_RE = /,|\s[—–]\s|\b(?:but|and|while|whereas)\b/i;
-// "not currently blocked by": only an adverb may sit between negator and phrase —
-// "not only / not just / not yet blocked by" still hold.
-const NEGATED_BEFORE_RE =
-    /(?<!\bor )\b(?:no longer|not|never|isn't|aren't|wasn't|weren't|doesn't|is not|no more)(?:\s+(?:currently|presently|actually))?\s+$/i;
-// "was blocked by …": a past-tense hold, released only by RESOLVED_AFTER_RE.
-const PAST_BEFORE_RE = /\b(?:was|were|had been)(?:\s+[\w'-]+)?\s+$/i;
-// "…, which has since shipped.": the resolution attaches to the hold's own object
-// and ends the sentence — "merged upstream but not released" and "fixed in part" do not.
-// A hold with several objects ("the probe and the host, which …") is never released here.
-const RESOLVED_AFTER_RE =
-    /^(?:(?!\b(?:and|or|both|but|while|whereas)\b)[^,.;:])*,\s*which\s+(?:has|have)\s+(?:since\s+)?(?:been\s+)?(?:shipped|landed|merged|resolved|fixed|cleared|lifted)(?:\s+on\s+20\d\d-\d\d-\d\d)?\s*[.!?]?\s*$/i;
-// A hold the owner placed, not a dependency: a resolved blocker never releases it.
-const OWNER_HOLD_RE = /^owner-reserved$/i;
+    /\b(held open|still held|on hold|held off|parked until|(?:still |only )?waits on|waiting on|blocked (?:by|on)|owner-reserved)\b/i;
+// "no longer blocked by", "not owner-reserved": the phrase names a hold that is gone.
+const NEGATED_HOLD_RE = /\b(?:no longer|not|never)[ \t]+(?:blocked (?:by|on)|owner-reserved|on hold|held)\b/gi;
 
-/**
- * "held by blocker `x`", "parked until blocker `x` ships": the forms in which a
- * dependency hold CITES its blocker as its whole object, directly after the hold
- * phrase. Anything after the citation but the end of the sentence ("… and the
- * probe") means another object; a citation set apart ("(blocker `x`)", "see
- * blocker `x`") does not say what the object is. Neither releases — fail safe.
- */
-function citationRe(ids: readonly string[]): RegExp | null {
-    if (ids.length === 0) return null;
-    const ref = `\`(?:${ids.map((id) => id.toLowerCase()).join('|')})\``;
-    const end = String.raw`\s*(?:[.,;:]\s*)?$`;
-    return new RegExp(
-        `^(?:\\s*(?:by|on)?\\s*(?:the\\s+)?blocker\\s+${ref}${end}` +
-            `|\\s*(?:until\\s+)?blocker\\s+${ref}\\s+(?:is\\s+|has\\s+)?[a-z]+${end})`,
-        'i',
-    );
-}
-
-/**
- * True when a hold phrase in `text` is still in force. Each phrase is judged in
- * its own clause, so match order never decides. A dependency hold that cites a
- * resolved blocker from `resolvedRefs` holds nothing; every other hold — an
- * owner hold, or a dependency the resolved blocker is merely reported beside —
- * still does.
- */
-function proseHold(text: string, resolvedRefs: readonly string[] = []): boolean {
-    const flat = text.replace(/\s+/g, ' ');
-    const cites = citationRe(resolvedRefs);
-    for (const sentence of flat.split(SENTENCE_SPLIT_RE)) {
-        const holds = [...sentence.matchAll(PROSE_HOLD_RE)].map((h) => h.index);
-        let offset = 0;
-        for (const clause of sentence.split(CLAUSE_SPLIT_RE)) {
-            const at = sentence.indexOf(clause, offset);
-            offset = at + clause.length;
-            for (const m of clause.matchAll(PROSE_HOLD_RE)) {
-                const before = clause.slice(0, m.index);
-                const start = at + m.index + m[0].length;
-                const nextHold = holds.find((h) => h >= start) ?? sentence.length;
-                if (cites !== null && !OWNER_HOLD_RE.test(m[0]) && cites.test(sentence.slice(start, nextHold))) continue;
-                // "not only waits on": the "only" belongs to the phrase, so "not" restricts, never negates.
-                if (NEGATED_BEFORE_RE.test(before) && !/^(?:still|only)\s/i.test(m[0])) continue;
-                if (PAST_BEFORE_RE.test(before) && RESOLVED_AFTER_RE.test(sentence.slice(at + m.index + m[0].length))) continue;
-                return true;
-            }
-        }
-    }
-    return false;
+function proseHold(text: string): boolean {
+    return PROSE_HOLD_RE.test(text.replace(NEGATED_HOLD_RE, ''));
 }
 const ACCEPTANCE_HEADING_RE = /^##[ \t]+acceptance criteria\b/i;
 const AC_ITEM_RE = /^\s*-\s\[[ xX~-]\]\s*(?:<!--[\s\S]*?-->\s*)?(?:\*\*)?AC-\d+/;
@@ -354,7 +294,6 @@ export function screenRoadmap(
     const lines = text.split('\n');
     const blockers = parseBlockers(text);
     const local = new Map(blockers.map((b) => [b.id, b]));
-    const resolvedLocal = blockers.filter((b) => !b.open).map((b) => b.id);
     const counts: Record<StepClass, number> = { runnable: 0, council: 0, owner: 0, time: 0, held: 0 };
     const steps: OpenStep[] = [];
     let done = 0;
@@ -381,7 +320,7 @@ export function screenRoadmap(
         const m = CHECKBOX_RE.exec(line);
         if (m === null) {
             // A blockquote before the first step of a phase speaks for the phase.
-            if (!checkboxSinceHeading && /^\s*>/.test(line) && proseHold(line, resolvedLocal)) phaseHeld = true;
+            if (!checkboxSinceHeading && /^\s*>/.test(line) && proseHold(line)) phaseHeld = true;
             continue;
         }
         checkboxSinceHeading = true;
@@ -426,8 +365,8 @@ export function screenRoadmap(
                 cls = classOfBlocker(named);
             } else if (isTimeGated(block, today)) {
                 cls = 'time';
-            } else if (phaseHeld || proseHold(continuation, namedAll.map((b) => b.id))) {
-                // A resolved named blocker releases only the dependency hold that cites it.
+            } else if (namedAll.length === 0 && (phaseHeld || proseHold(continuation))) {
+                // A hold that names a blocker which has since resolved is not a hold.
                 cls = 'held';
             } else {
                 cls = 'runnable';

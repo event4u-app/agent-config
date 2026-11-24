@@ -142,7 +142,10 @@ the roadmap is dispatched again:
    council takes an irreversible, release- or security-relevant question; the run
    decides the rest and records it in `## Decisions`. A lane's `gated:` return or a
    `council_questions` entry goes to the council by the orchestrator, and the
-   verdict goes back to the SAME lane via its message channel. Ending the lane and
+   verdict goes back to the SAME lane via its message channel — after re-running
+   the queue: while the emergency halt is armed (`dispatch_hold:
+   emergency.orchestration_halt is set`, text `HALTED —`) the verdict is held and
+   the lane is not resumed, exactly as a re-dispatch is not sent. Ending the lane and
    dispatching a fresh one later is how one roadmap received nine lanes in eight
    sessions behind an unchanged blocker.
 3. **A `decide` roadmap is never re-dispatched until its blocker changed** —
