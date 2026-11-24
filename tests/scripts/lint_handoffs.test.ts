@@ -142,13 +142,24 @@ describe('lint_handoffs — ported pytest suite', () => {
         expect(lint(skills).some((v) => v.code === 'handoff_dangling')).toBe(true);
     });
 
-    it('tier mismatch — senior may not link to a non-senior peer', () => {
+    it('tier mismatch — senior may not link to a peer declaring a non-senior tier', () => {
+        makeSkill(tmp, 'alpha', {
+            tier: 'senior',
+            related_links: [['legacy', '../legacy/SKILL.md']],
+        });
+        makeSkill(tmp, 'legacy', { tier: 'core', related_links: [] });
+        expect(lint(skills).some((v) => v.code === 'handoff_tier_mismatch')).toBe(true);
+    });
+
+    // AI council 2026-11-24 (option A): an unset tier is undeclared, not
+    // non-senior — only an explicit non-senior declaration is a mismatch.
+    it('no tier mismatch when the link target declares no tier', () => {
         makeSkill(tmp, 'alpha', {
             tier: 'senior',
             related_links: [['legacy', '../legacy/SKILL.md']],
         });
         makeSkill(tmp, 'legacy', { tier: null, related_links: [] });
-        expect(lint(skills).some((v) => v.code === 'handoff_tier_mismatch')).toBe(true);
+        expect(lint(skills).some((v) => v.code === 'handoff_tier_mismatch')).toBe(false);
     });
 
     it('valid cross-wing chain — no violations', () => {
