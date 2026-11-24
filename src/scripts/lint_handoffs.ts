@@ -96,14 +96,6 @@ export function parse_frontmatter_tier(text: string): string | null {
     return null;
 }
 
-/**
- * A missing `tier` is undeclared, not non-senior: only a target that names a
- * tier other than `senior` weakens the authoring floor (AI council 2026-11-24).
- */
-export function is_tier_mismatch(target_tier: string | undefined): boolean {
-    return target_tier !== undefined && target_tier !== '' && target_tier !== 'senior';
-}
-
 /** Python str.strip(chars) — strip leading/trailing chars (whitespace if undefined). */
 function _strip(s: string, chars?: string): string {
     if (chars === undefined) {
@@ -293,7 +285,7 @@ export function lint(skills_dir: string): Violation[] {
                 });
                 continue;
             }
-            if (is_tier_mismatch(all_skills.get(target))) {
+            if (!['', 'senior'].includes(all_skills.get(target) ?? '')) {
                 violations.push({
                     file: skill_path,
                     line: lineno,
@@ -318,7 +310,7 @@ export function lint(skills_dir: string): Violation[] {
                 });
                 continue;
             }
-            if (is_tier_mismatch(all_skills.get(target))) {
+            if (!['', 'senior'].includes(all_skills.get(target) ?? '')) {
                 violations.push({
                     file: skill_path,
                     line: lineno,
