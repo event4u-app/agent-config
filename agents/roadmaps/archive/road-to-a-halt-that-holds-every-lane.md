@@ -73,7 +73,10 @@ a hold is actually still in force.
 - [x] **1.2** `buildQueue`: when halted, every entry's `dispatchable` is `false`. <!-- receipt: class=R2 · shadow · would-skip=revalidation · bound=production code touched: src/scripts/roadmap_drain_queue.ts -->
 - [x] **1.3** `process-full-all.md`: the dead-lane re-dispatch reads the queue <!-- receipt: class=R2 · shadow · would-skip=revalidation · bound=production code touched: src/scripts/roadmap_drain_queue.ts -->
   entry's `dispatchable` and `dispatch_hold` first and stops on a halt (AC-2);
-  `task sync` regenerates the projection.
+  `task sync` regenerates the projection. As landed: one sentence where the
+  doc explains `dispatch_hold` — naming the emergency halt, it stops every
+  dispatch, re-dispatch and verdict resume (held to the 16,000-char depth
+  ceiling). The receipt is range-wide, so its `bound=` names the code file.
 
 ## Phase 2 — Prose holds that mean what they say
 

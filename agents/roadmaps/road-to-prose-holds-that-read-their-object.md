@@ -15,7 +15,8 @@ relates:
 > **Source:** Phase 2 of `road-to-a-halt-that-holds-every-lane` (archived),
 > carried by AI-council verdict B on 2026-11-24
 > (`agents/evidence/council/halt-phase2-disposition-20261124.md`) after ten R2
-> completion-review rounds (`agents/evidence/reviews/road-to-a-halt-that-holds-every-lane.round-*.md`).
+> completion-review rounds on the parser (`agents/evidence/reviews/road-to-a-halt-that-holds-every-lane.round-{1..10}.md`;
+> later rounds reviewed the reduced, halt-only diff).
 > A regex parser was tried there and reverted: every round found new phrasings,
 > and several fixes released holds `main` kept. Original findings: finding 2 of
 > the after-the-fact council review of the #2768 bypass
