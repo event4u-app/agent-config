@@ -176,10 +176,10 @@ Evidence (read): `src/scripts/decision_memo.ts:106`; `src/rules/decision-revisit
 
 Evidence (read): `src/scripts/ai_council/ownership_classes.ts:35`.
 
-- [~] **4.1 OD1-OD4 recorded as owner intent** in an owner-authored settings file with
+- [ ] **4.1 OD1-OD4 recorded as owner intent** in an owner-authored settings file with
       `authority_basis: owner_intent`; dependency reach, module boundary and one-source are
-      standing criteria ranked by the owner. The file is the only place the ranking is stated.
-      <!-- blocked-by: standing-criteria-ranking -->
+      standing criteria in the PD19 order (owner-delegated panel, 2026-11-24). The file is the
+      only place the ranking is stated; PD19 here is its provenance, not a second copy.
       verify: `grep -c 'authority_basis: owner_intent' agents/settings/decision-criteria.yml` -> 1
 - [ ] **4.2 Rank-order weights**, deterministic; no model emits a weight.
       verify: `npx vitest run tests/scripts/decision_matrix.test.ts -t rank-order` -> 0
@@ -240,6 +240,18 @@ Evidence (read): `src/skills/decision-record/evals/evals.json:6-7`.
 | PD6 | contested-technical | proposed | Agent self-resolves only on Pareto dominance with no assumed or unknown hinge cell | F1, F3 | the sample shows such rows the agent got wrong |
 | PD10 | deterministic | proposed | No kernel-rule edit, no preamble growth | `road-to-questions-that-reach-the-right-decider` AC-6 | — |
 | PD14 | contested-technical | open — council in 0.3 | Numeric thresholds K1-K6, stated in the vocabulary file only | must precede the data | — |
+| PD19 | business-owned | owner-delegated panel 2026-11-24, `/panel decide` shape (10 seats, 5 on the session model, 5 on sonnet, blind, lens-diverse) | Standing criteria rank: dependency reach > one source > module boundary > delivery speed > token cost | Borda 39 / 29 / 19 / 12 / 1; the Condorcet order is identical; dependency reach first on 9 of 10 seats, beating every other criterion pairwise 9-10 to 0-1; one source beats module boundary 9-1 | K3 fires, or the owner overrides the order |
+
+## Dissent
+
+PD19 panel, 2026-11-24:
+- **DDD-architect seat** ranked module boundary first: a boundary is what makes reach knowable.
+  Its own counter-argument, which the majority shares: the owner limited modularity with "geht
+  nicht immer", and most consumer codebases are legacy code without a boundary.
+- **Three seats** (product/delivery and two others) put delivery speed above module boundary:
+  small, quick diffs keep reach low in an untested monolith, and a module extraction widens reach
+  at first. Recorded as the revisit signal for PD19 if K3 fires on module-boundary sheets.
+- **One seat** put token cost above delivery speed.
 
 ## Risk Register
 <!-- risk-review: v1 | reviewed: 2026-11-24 | reviewer: claude/host -->
@@ -254,7 +266,7 @@ Evidence (read): `src/skills/decision-record/evals/evals.json:6-7`.
 ## Blockers
 
 ### blocker: standing-criteria-ranking
-- **Status:** open
+- **Status:** resolved 2026-11-24 — the owner delegated the ranking to ten agents ("entscheide das in einer 10 agenten arena"); it ran as a `/panel decide`-shaped panel, not an `/arena` bracket, because a criteria ranking is a decision, not competing solutions; result recorded as PD19, dissent under `## Dissent`.
 - **Owner:** owner
 - **Class:** 2
 - **Ownership:** business-owned
