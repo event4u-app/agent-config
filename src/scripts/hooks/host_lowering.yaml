@@ -377,13 +377,25 @@ hosts:
         # as well, and says the CLI no longer reads hooks from
         # `~/.copilot/config.json`. Verification metadata refreshed; no slots
         # enabled.
+        #
+        # RE-READ 2026-11-25 after the digest watch flagged a changed body again
+        # (issue #3028). The page still documents the eight events above,
+        # `~/.copilot/hooks/` as the default user-level directory on macOS and
+        # Linux, and the same `preToolUse` refusal contract: exit 2, a crash or
+        # any other non-zero exit denies the tool call even over a stdout
+        # `allow`; a command-hook timeout is always fail-open; an HTTP
+        # `preToolUse` hook is fail-open on a network error, timeout or non-2xx
+        # response. It now also names an inline `hooks` block in
+        # `~/.copilot/settings.json` as a user-level source, and says
+        # repository and inherited-agent hooks require workspace admission.
+        # Verification metadata refreshed; no slots enabled.
         verified:
-          docs_at: 2026-11-11
+          docs_at: 2026-11-25
           docs_url: https://docs.github.com/en/copilot/reference/hooks-reference.md
-          docs_digest: 09bfeebbddfe6fce6e49fd9eec180d40409311f5bc62ed97374dfc37b7201f7e
+          docs_digest: 6ddad1a9c73ba0d51ba3673fbb0b4d3e0dc0b7772d109b4a2746cce2fe9c6135
           probe_at: null
           host_version: null
-          expires: 2027-11-11
+          expires: 2027-11-25
         slots: {}
 
   codex:
@@ -446,11 +458,25 @@ hosts:
         # twelve events listed above, `~/.codex/hooks.json`, and exit 2 with the
         # reason on stderr; it adds `PreModelRequest` / `PostModelRequest`.
         # Re-dated only: the probe above is unchanged and still the gate.
+        #
+        # RE-READ 2026-11-25 after the digest watch flagged a changed body
+        # (issue #3028). The page still documents all twelve events listed
+        # above plus `PreModelRequest` / `PostModelRequest`,
+        # `~/.codex/hooks.json` as the user file when `CODEX_HOME` is unset, and
+        # exit 2 with the reason on stderr. It now also documents hook trust:
+        # a non-managed hook runs only after its exact definition is reviewed
+        # and trusted, trust is recorded against the hook's hash, and a new or
+        # changed hook is skipped until trusted. That is a THIRD unexcluded
+        # explanation for the 2026-10-01 probe — the hook may have been skipped
+        # as untrusted — though this tree has not established that the trust
+        # gate existed in 0.148.0. It is recorded, not acted on: the probe is
+        # unchanged and still the gate. Verification metadata refreshed; no
+        # slots enabled.
         verified:
-          docs_at: 2026-11-07
+          docs_at: 2026-11-25
           docs_url: https://learn.chatgpt.com/docs/hooks.md
-          docs_digest: a50c60b697d8df62e2f907adbb18b2f5a1a25cd3360e7b843cde25f18ab6d782
+          docs_digest: 37cdbfc3b9d19925f88af3e680399fd61bd3d15979961302160f97698cc5a841
           probe_at: 2026-10-01
           host_version: 0.148.0
-          expires: 2027-11-07
+          expires: 2027-11-25
         slots: {}
