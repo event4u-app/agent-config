@@ -165,6 +165,29 @@ const BLOCKING_ALLOWLIST = new Set([
     // closing a turn (verify-before-complete § turn-completion) and a reply
     // in the wrong language (language-and-tone Iron Law).
     'turn-end-gate',
+    // 2026-11-25, session 58d6a4d2. It refuses ONE thing: a Workflow call whose
+    // script `meta` names an arena, bracket or tournament as a word while the
+    // script never references the bracket engine. The three questions, on this
+    // concern's own terms:
+    //
+    //   · SCOPE. Filtered by the manifest's `tools: [Workflow]`, so it never
+    //     sees any other call; within a Workflow call it reads only the `name`
+    //     and `description` of `meta` for the trigger, and any reference to
+    //     `agents/runtime/bracket/` or `agent-config bracket` in the script
+    //     lets it through. Measured against 19 real scripts: 6/6 hand-rolled
+    //     arenas refused, 9/9 engine carriers allowed.
+    //   · fail_closed: FALSE. An unreadable `scriptPath`, a saved workflow by
+    //     name, a malformed envelope: the concern returns allow. Every read is
+    //     inside a try, so the crash branch (rc >= 3 refuses) is not the path
+    //     an ordinary unreadable input takes.
+    //   · WHY REFUSAL RATHER THAN A NUDGE. A hand-rolled arena is a whole fan-out
+    //     of paid agents that, once dispatched, has produced no bracket state:
+    //     nothing Agent Switch can show as one, no appeals, no scored matches.
+    //     A warning arrives after the spend. The deny message names the engine
+    //     commands, so the retry is the right run rather than the same one.
+    //
+    // Kill switch: AGENT_CONFIG_ALLOW_HANDROLLED_ARENA=1.
+    'arena-route',
 ]);
 
 interface Concern {

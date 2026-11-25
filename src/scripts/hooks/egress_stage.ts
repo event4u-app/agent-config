@@ -40,6 +40,7 @@ export const EGRESS_STAGE_KILL_SWITCH = "AGENT_CONFIG_NO_EGRESS_STAGE";
  * what stops a manifest entry from borrowing a guard's name to read raw values.
  */
 export const EXECUTION_VIEW_GRANTS: ReadonlyMap<string, string> = new Map([
+  ["arena-route", "src/scripts/hooks/arena_route_hook.ts"],
   ["block-config-weakening", "src/scripts/hooks/block_config_weakening.ts"],
   ["block-credential-reads", "src/scripts/hooks/block_credential_reads.ts"],
   ["block-kernel-rule-writes", "src/scripts/hooks/block_kernel_rule_writes.ts"],
