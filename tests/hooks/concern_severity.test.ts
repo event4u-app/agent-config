@@ -167,15 +167,15 @@ const BLOCKING_ALLOWLIST = new Set([
     'turn-end-gate',
     // 2026-11-25, session 58d6a4d2. It refuses ONE thing: a Workflow call whose
     // script `meta` names an arena, bracket or tournament as a word while the
-    // script never references the bracket engine. The three questions, on this
-    // concern's own terms:
+    // script carries no run the bracket engine wrote. The three questions, on
+    // this concern's own terms:
     //
     //   · SCOPE. Filtered by the manifest's `tools: [Workflow]`, so it never
     //     sees any other call; within a Workflow call it reads only the `name`
-    //     and `description` of `meta` for the trigger, and any reference to
-    //     `agents/runtime/bracket/` or `agent-config bracket` in the script
-    //     lets it through. Measured against 19 real scripts: 6/6 hand-rolled
-    //     arenas refused, 9/9 engine carriers allowed.
+    //     and `description` of `meta` for the trigger, and a named run whose
+    //     `bracket.json` exists lets it through — a mention alone does not.
+    //     Measured against the 19 real scripts with their sessions' cwd: 7/7
+    //     hand-written arenas refused, 8/8 carriers of engine runs allowed.
     //   · fail_closed: FALSE. An unreadable `scriptPath`, a saved workflow by
     //     name, a malformed envelope: the concern returns allow. Every read is
     //     inside a try, so the crash branch (rc >= 3 refuses) is not the path

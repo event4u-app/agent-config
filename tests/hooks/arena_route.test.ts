@@ -5,14 +5,34 @@
 // The deny cases come first: a guard never seen refuse has unknown sensitivity.
 // The allow cases include the real carrier shapes the engine's own procedure
 // produces, because a guard that blocks the engine it routes to is worse than
-// none.
+// none. The release is engine STATE: a run whose bracket.json exists.
 import * as fs from 'node:fs';
 import * as os from 'node:os';
 import * as path from 'node:path';
-import { describe, expect, it } from 'vitest';
+import { afterAll, beforeAll, describe, expect, it } from 'vitest';
 
-import { extractWorkflowCall, main, selfTest, verdict } from '../../src/scripts/hooks/arena_route_hook.js';
+import { extractWorkflowCall, main, runDirs, selfTest, verdict } from '../../src/scripts/hooks/arena_route_hook.js';
 import { clearHookStdinOverride, setHookStdinOverride } from '../../src/scripts/hooks/hook_stdin.js';
+
+let repo = '';
+let elsewhere = '';
+
+beforeAll(() => {
+    repo = fs.mkdtempSync(path.join(os.tmpdir(), 'arena-route-repo-'));
+    fs.mkdirSync(path.join(repo, 'agents/runtime/bracket/tcc-signing'), { recursive: true });
+    fs.writeFileSync(path.join(repo, 'agents/runtime/bracket/tcc-signing/bracket.json'), '{"runId":"tcc-signing"}');
+    // The shape of the real imitation: a run folder the engine never wrote.
+    fs.mkdirSync(path.join(repo, 'agents/runtime/bracket/vertrag-01/lines'), { recursive: true });
+    fs.writeFileSync(path.join(repo, 'agents/runtime/bracket/vertrag-01/ergebnis.json'), '{}');
+    elsewhere = fs.mkdtempSync(path.join(os.tmpdir(), 'arena-route-other-'));
+    fs.mkdirSync(path.join(elsewhere, 'agents/runtime/bracket/abs-run'), { recursive: true });
+    fs.writeFileSync(path.join(elsewhere, 'agents/runtime/bracket/abs-run/bracket.json'), '{}');
+});
+
+afterAll(() => {
+    fs.rmSync(repo, { recursive: true, force: true });
+    fs.rmSync(elsewhere, { recursive: true, force: true });
+});
 
 function run(envelope: unknown): number {
     setHookStdinOverride(JSON.stringify(envelope));
@@ -39,16 +59,15 @@ const carrier = `export const meta = {
 const RUN = \`\${REPO}/agents/runtime/bracket/tcc-signing\`
 const results = await parallel(args.matches.map(m => () => agent(\`judge \${RUN}/lines/\${m.a}.md\`, { label: \`judge:\${m.id}\` })))`;
 
-const workflow = (input: Record<string, unknown>) => ({ tool_name: 'Workflow', tool_input: input });
+const workflow = (input: Record<string, unknown>) => ({ tool_name: 'Workflow', tool_input: input, cwd: repo });
 
 describe('arena-route — the deny path', () => {
-    it('blocks a Workflow whose meta names an arena and that never touches the bracket engine', () => {
+    it('blocks a Workflow whose meta names an arena and that carries no engine run', () => {
         expect(run(workflow({ script: handRolled }))).toBe(1);
     });
 
     it('blocks the same script passed by path, so a saved script cannot route around it', () => {
-        const dir = fs.mkdtempSync(path.join(os.tmpdir(), 'arena-route-'));
-        const file = path.join(dir, 'pr-gate-arena.js');
+        const file = path.join(elsewhere, 'pr-gate-arena.js');
         fs.writeFileSync(file, handRolled);
         expect(run(workflow({ scriptPath: file }))).toBe(1);
     });
@@ -58,20 +77,36 @@ describe('arena-route — the deny path', () => {
         expect(verdict(extractWorkflowCall(workflow({ script: s }))).block).toBe(true);
     });
 
-    it('names /arena and the engine in the refusal', () => {
+    it('blocks a mention of the engine path in a comment — text is not a run', () => {
+        const s = `${handRolled}\n// see agents/runtime/bracket/fake for how the engine does it`;
+        expect(run(workflow({ script: s }))).toBe(1);
+    });
+
+    it('blocks a run folder the engine never wrote (no bracket.json), as the real vertrags-arena did', () => {
+        const s = `export const meta = { name: 'vertrags-arena', description: 'contract arena' }\nconst B = '${repo}/agents/runtime/bracket/vertrag-01'`;
+        expect(run(workflow({ script: s }))).toBe(1);
+    });
+
+    it('names /arena, the engine and /panel in the refusal', () => {
         const v = verdict(extractWorkflowCall(workflow({ script: handRolled })));
         expect(v.reason).toMatch(/\/arena/);
         expect(v.reason).toMatch(/agent-config bracket/);
+        expect(v.reason).toMatch(/\/panel/);
     });
 });
 
 describe('arena-route — the allow path', () => {
-    it('allows a real bracket carrier that names the run folder with no trailing slash', () => {
+    it('allows a real bracket carrier that names its run relative to the session cwd', () => {
         expect(run(workflow({ script: carrier }))).toBe(0);
     });
 
-    it('allows a carrier that drives the CLI', () => {
-        const s = `export const meta = { name: 'x-arena-lines', description: 'arena lines' }\n// then: agent-config bracket scan --run x`;
+    it('allows a carrier that names its run by an absolute path outside the cwd', () => {
+        const s = `export const meta = { name: 'x-arena-lines' }\nconst B = '${elsewhere}/agents/runtime/bracket/abs-run'`;
+        expect(run(workflow({ script: s }))).toBe(0);
+    });
+
+    it('allows a carrier that drives the CLI for a live run', () => {
+        const s = `export const meta = { name: 'x-arena-lines', description: 'arena lines' }\n// then: agent-config bracket scan --run tcc-signing`;
         expect(run(workflow({ script: s }))).toBe(0);
     });
 
@@ -111,6 +146,14 @@ describe('arena-route — the allow path', () => {
 
     it('a named saved workflow is not a script and is allowed', () => {
         expect(run(workflow({ name: 'review-changes' }))).toBe(0);
+    });
+});
+
+describe('arena-route — run references', () => {
+    it('reads a `${REPO}/` prefix as the cwd and an absolute prefix as itself', () => {
+        expect(runDirs('`${REPO}/agents/runtime/bracket/a`', '/w')).toEqual(['/w/agents/runtime/bracket/a']);
+        expect(runDirs("'/x/y/agents/runtime/bracket/b'", '/w')).toEqual(['/x/y/agents/runtime/bracket/b', '/w/agents/runtime/bracket/b']);
+        expect(runDirs('agent-config bracket advance --run c', '/w')).toEqual(['/w/agents/runtime/bracket/c']);
     });
 });
 

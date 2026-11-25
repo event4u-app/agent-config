@@ -16,11 +16,15 @@
  * not in the model-visible listing (only `judge:bracket` is).
  *
  * The Workflow call is the one point every path to a hand-rolled arena passes.
- * The verdict is literal: the script's `meta` names an arena, bracket or
- * tournament as a word, and the script never references the engine
- * (`agents/runtime/bracket/` or `agent-config bracket`). Measured against the
- * real scripts on the author's machine on 2026-11-25: every hand-rolled arena
- * denied, every engine carrier allowed (tcc-signing, arena-visibility).
+ * The trigger is literal: the script's `meta` names an arena, bracket or
+ * tournament as a word. The release is STATE, not text: the script must name a
+ * run whose `bracket.json` exists — through a path `…/agents/runtime/bracket/<run>`
+ * (absolute, or relative to the session's cwd) or `agent-config bracket … --run
+ * <run>`. A mention alone, in a comment or of a folder the engine never wrote,
+ * releases nothing: ratification round 1 refused the earlier substring release
+ * on exactly that ground, and a real case confirmed it (a hand-written
+ * `vertrags-arena` named `agents/runtime/bracket/vertrag-01`, a folder holding
+ * its own `ergebnis.json` and no `bracket.json`).
  *
  * A script passed by `scriptPath` is read (bounded); an unreadable one, a
  * named saved workflow, or a malformed envelope is ALLOWED — this guards a
@@ -33,6 +37,8 @@
  *   1 — block (a hand-rolled arena)
  */
 import * as fs from 'node:fs';
+import * as os from 'node:os';
+import * as path from 'node:path';
 import { fileURLToPath, pathToFileURL } from 'node:url';
 
 import { readHookStdin } from './hook_stdin.js';
@@ -42,8 +48,12 @@ const _HERE = fileURLToPath(import.meta.url);
 const KILL_SWITCH = 'AGENT_CONFIG_ALLOW_HANDROLLED_ARENA';
 const SCRIPT_MAX_BYTES = 256 * 1024;
 const META_WINDOW = 2000;
+const MAX_RUN_REFS = 32;
 const ARENA_WORD = /(^|[^A-Za-z0-9])(arena|bracket|tournament)s?($|[^A-Za-z0-9])/i;
-const ENGINE = /agents\/runtime\/bracket\/|agent-config\s+bracket\b/;
+const RUN_ID = '[A-Za-z0-9][A-Za-z0-9._-]*';
+// An absolute prefix, when the script spells one out; a `${REPO}/` prefix is left to the cwd.
+const PATH_REF = new RegExp(`(/[^\\s'"\`$\\{\\}/][^\\s'"\`$\\{\\}]*/)?agents/runtime/bracket/(${RUN_ID})`, 'g');
+const CLI_REF = new RegExp(`agent-config\\s+bracket\\b[^\\n]*?--run[=\\s]+(${RUN_ID})`, 'g');
 
 type JsonObject = Record<string, unknown>;
 
@@ -55,6 +65,8 @@ export interface WorkflowCall {
     readonly tool: string;
     /** The script text, '' when there is none or it could not be read. */
     readonly script: string;
+    /** The session's working directory: where a relative run folder lives. */
+    readonly cwd: string;
 }
 
 function readBounded(file: string): string {
@@ -72,7 +84,7 @@ function readBounded(file: string): string {
     }
 }
 
-/** Read (tool name, script text) off a PreToolUse envelope. */
+/** Read (tool name, script text, cwd) off a PreToolUse envelope. */
 export function extractWorkflowCall(envelope: JsonObject): WorkflowCall {
     const payload = _isObject(envelope['payload']) ? envelope['payload'] : envelope;
     const nameVal = payload['tool_name'] ?? payload['toolName'] ?? payload['tool'] ?? envelope['tool_name'] ?? envelope['tool'];
@@ -80,7 +92,9 @@ export function extractWorkflowCall(envelope: JsonObject): WorkflowCall {
     const ti = _isObject(payload['tool_input']) ? payload['tool_input'] : _isObject(envelope['tool_input']) ? envelope['tool_input'] : {};
     const inline = typeof ti['script'] === 'string' ? ti['script'] : '';
     const scriptPath = typeof ti['scriptPath'] === 'string' ? ti['scriptPath'] : '';
-    return { tool, script: inline || (scriptPath ? readBounded(scriptPath) : '') };
+    const cwdVal = payload['cwd'] ?? envelope['cwd'];
+    const cwd = typeof cwdVal === 'string' && cwdVal !== '' ? cwdVal : process.cwd();
+    return { tool, script: inline || (scriptPath ? readBounded(scriptPath) : ''), cwd };
 }
 
 /** The `name` and `description` strings of the script's `export const meta`. Pure. */
@@ -92,20 +106,47 @@ export function metaText(script: string): string {
     return `${field('name')} ${field('description')}`;
 }
 
+/** Every run folder the script names, as candidate directories. Pure. */
+export function runDirs(script: string, cwd: string): string[] {
+    const out = new Set<string>();
+    for (const m of script.matchAll(PATH_REF)) {
+        const id = m[2] as string;
+        if (m[1]) out.add(path.join(m[1], 'agents/runtime/bracket', id));
+        out.add(path.join(cwd, 'agents/runtime/bracket', id));
+        if (out.size >= MAX_RUN_REFS) break;
+    }
+    for (const m of script.matchAll(CLI_REF)) {
+        out.add(path.join(cwd, 'agents/runtime/bracket', m[1] as string));
+        if (out.size >= MAX_RUN_REFS) break;
+    }
+    return [...out].slice(0, MAX_RUN_REFS);
+}
+
+/** Whether the engine wrote this run: its `bracket.json` exists. */
+function engineRun(dir: string): boolean {
+    try {
+        return fs.statSync(path.join(dir, 'bracket.json')).isFile();
+    } catch {
+        return false;
+    }
+}
+
 /** The verdict, separated from I/O so the fixtures exercise the decision itself. */
 export function verdict(call: WorkflowCall): { block: boolean; reason: string } {
     if (call.tool !== 'Workflow') return { block: false, reason: 'not a Workflow call' };
     if (!call.script) return { block: false, reason: 'no readable script — allowed, never guessed' };
     if (!ARENA_WORD.test(metaText(call.script))) return { block: false, reason: 'not an arena' };
-    if (ENGINE.test(call.script)) return { block: false, reason: 'drives the bracket engine' };
+    if (runDirs(call.script, call.cwd).some(engineRun)) return { block: false, reason: 'carries a bracket run the engine wrote' };
     return {
         block: true,
         reason:
-            'This Workflow is named an arena but never touches the bracket engine. An arena here is ' +
-            '/arena (= /judge bracket): `agent-config bracket plan`, then `agent-config bracket init --run <id> ' +
-            '--task <file> --tier S1` under agents/runtime/bracket/<id>/, then dispatch the lines, scan, ' +
-            'advance, collect, appeals. Workflow agents may carry the lines and judges — reference the run ' +
-            'folder in the script. A design panel that is not an arena must not be named one.',
+            'This Workflow is named an arena but carries no bracket run the engine wrote (no ' +
+            'agents/runtime/bracket/<run>/bracket.json it names exists). An arena here is /arena ' +
+            '(= /judge bracket): `agent-config bracket plan`, then `agent-config bracket init --run <id> ' +
+            '--task <file> --tier S1`, then dispatch the lines, scan, advance, collect, appeals. Workflow ' +
+            'agents may carry the lines and judges once the run exists — name its folder in the script. ' +
+            'A comparison of options by independent judges that is not a bracket is a panel ' +
+            '(`/panel decide|review`) and must not be named an arena.',
     };
 }
 
@@ -131,23 +172,33 @@ export function main(argv?: string[]): number {
 }
 
 export function selfTest(): number {
-    const wf = (script: string): WorkflowCall => ({ tool: 'Workflow', script });
+    const root = fs.mkdtempSync(path.join(os.tmpdir(), 'arena-route-self-'));
+    fs.mkdirSync(path.join(root, 'agents/runtime/bracket/live'), { recursive: true });
+    fs.writeFileSync(path.join(root, 'agents/runtime/bracket/live/bracket.json'), '{}');
+    fs.mkdirSync(path.join(root, 'agents/runtime/bracket/imitation'), { recursive: true });
+    const wf = (script: string): WorkflowCall => ({ tool: 'Workflow', script, cwd: root });
     const cases: Array<[string, WorkflowCall, boolean]> = [
         ['a hand-rolled arena is denied', wf("export const meta = { name: 'pr-gate-arena', description: 'x' }"), true],
         ['a tournament bracket in the description is denied', wf("export const meta = { name: 'pick', description: 'Tournament of designs' }"), true],
-        ['an engine carrier is allowed', wf("export const meta = { name: 'a-arena-judge' }\nconst RUN = '/r/agents/runtime/bracket/a'"), false],
-        ['a CLI-driving carrier is allowed', wf("export const meta = { name: 'a-arena' }\n// agent-config bracket scan --run a"), false],
+        ['a carrier of a run the engine wrote is allowed', wf("export const meta = { name: 'a-arena-judge' }\nconst RUN = `${REPO}/agents/runtime/bracket/live`"), false],
+        ['a CLI-driving carrier of a live run is allowed', wf("export const meta = { name: 'a-arena' }\n// agent-config bracket scan --run live"), false],
+        ['a mention of a run the engine never wrote is denied', wf("export const meta = { name: 'x-arena' }\n// agents/runtime/bracket/nothing-here"), true],
+        ['a folder without bracket.json is denied', wf("export const meta = { name: 'x-arena' }\nconst B = 'agents/runtime/bracket/imitation'"), true],
         ['an ordinary workflow is allowed', wf("export const meta = { name: 'find-bugs', description: 'find bugs' }"), false],
         ['a longer identifier is not the word', wf("export const meta = { name: 'map-arenaview' }"), false],
-        ['another tool is never seen', { tool: 'Bash', script: "export const meta = { name: 'arena' }" }, false],
+        ['another tool is never seen', { tool: 'Bash', script: "export const meta = { name: 'arena' }", cwd: root }, false],
         ['an empty script is allowed', wf(''), false],
     ];
     let failed = 0;
-    for (const [name, call, want] of cases) {
-        const got = verdict(call).block;
-        const ok = got === want;
-        process.stdout.write(`${ok ? '✅' : '❌'}  ${name} — block=${String(got)}${ok ? '\n' : ` (wanted ${String(want)})\n`}`);
-        if (!ok) failed += 1;
+    try {
+        for (const [name, call, want] of cases) {
+            const got = verdict(call).block;
+            const ok = got === want;
+            process.stdout.write(`${ok ? '✅' : '❌'}  ${name} — block=${String(got)}${ok ? '\n' : ` (wanted ${String(want)})\n`}`);
+            if (!ok) failed += 1;
+        }
+    } finally {
+        fs.rmSync(root, { recursive: true, force: true });
     }
     process.stdout.write(`\narena_route --self-test: ${String(cases.length - failed)}/${String(cases.length)} case(s) behaved\n`);
     return failed > 0 ? 1 : 0;

@@ -330,17 +330,26 @@ concerns:
   # An arena is the bracket engine (`/arena` = `/judge bracket`, state in
   # agents/runtime/bracket/<run>/bracket.json), never a hand-written Workflow
   # named after one. Refuses a Workflow call whose script `meta` names an
-  # arena, bracket or tournament as a word and whose script never references
-  # the engine (`agents/runtime/bracket/` or `agent-config bracket`); the deny
-  # message says how to run the real one. Engine carriers pass: they name the
-  # run folder. A `scriptPath` script is read (bounded to 256 KB). Measured on
-  # 2026-11-25 against 19 real scripts: 6/6 hand-rolled arenas refused, 9/9
-  # engine carriers allowed. Bound on claude only — the one host that honours a
-  # deny and has a Workflow tool. fail_closed: false — an unreadable script, a
-  # saved workflow by name or a malformed envelope ALLOWS; this guards a
-  # routing mistake, not a safety boundary. The script is read only on a
-  # Workflow call (`tools:`), and the body ships in its own lazy chunk.
-  # Kill switch: AGENT_CONFIG_ALLOW_HANDROLLED_ARENA=1.
+  # arena, bracket or tournament as a word unless the script names a run whose
+  # bracket.json EXISTS (`…/agents/runtime/bracket/<run>`, absolute or under the
+  # session cwd, or `agent-config bracket … --run <run>`) — engine state, not a
+  # mention, releases it. The deny message names /arena, the engine commands and
+  # /panel for a non-bracket comparison. A `scriptPath` script is read (bounded
+  # to 256 KB). Measured on 2026-11-25 against the 19 Workflow scripts on the
+  # author's machine, each with its own session's cwd: 7/7 hand-written
+  # arena-named workflows refused (one of them named an engine path whose folder
+  # holds no bracket.json), 8/8 carriers of engine runs allowed, 4/4 others
+  # allowed. Bound on claude only — the one host that honours a deny and has a
+  # Workflow tool. fail_closed: false — an unreadable script, a saved workflow
+  # by name or a malformed envelope ALLOWS; a crash refuses, as for every
+  # blocking concern. The script is read only on a Workflow call (`tools:`),
+  # and the body ships in its own lazy chunk.
+  # Kill switch: AGENT_CONFIG_ALLOW_HANDROLLED_ARENA=1 (per session, allows
+  # every call while the concern stays bound). Rollback: revert the change by
+  # pull request (the owner or a maintainer; the revert touches this file and
+  # carries its own ratification record). Rollback trigger: one verified refusal
+  # of a Workflow carrying a run whose bracket.json existed at the call, or the
+  # owner naming a refused workflow as one that should have run.
   arena-route:
     script: src/scripts/hooks/arena_route_hook.ts
     args: []
