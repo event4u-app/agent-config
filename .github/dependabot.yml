@@ -64,12 +64,6 @@ updates:
       # is the gate that catches it. Bump both packages together,
       # deliberately, never via a scheduled group PR.
       - dependency-name: web-tree-sitter
-      # execa 10 raises the dependency's Node floor to >=22 while this
-      # package supports and CI-tests Node 20 (engines >=20.11.0). Taking
-      # it is a Node-baseline decision, not a dependency bump — lift this
-      # ignore when the package raises its Node floor (PR #1115).
-      - dependency-name: execa
-        update-types: ["version-update:semver-major"]
       # Toolchain majors are migration projects, not dependency bumps —
       # each below broke the 2026-08-03 npm-majors group PR (#1141, 35 red
       # checks) and needs its own planned upgrade with config/API work.

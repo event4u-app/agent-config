@@ -866,11 +866,12 @@ jobs:
 
       - uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1  # v7.1.0
         with:
-          # Node 24, not the repo-wide 20: the suite opens `node:sqlite`, which does
-          # not exist before 22.5 and carries an ExperimentalWarning on 22. On 20
-          # `isStoreAvailable()` is false, `describe.runIf(STORE)` skips all seven
-          # cases, and `run_lifecycle_suite` reds on the skip — so as first authored
-          # this job could never execute the properties it exists to certify.
+          # Node 24, not the repo-wide 22: the suite opens `node:sqlite`, which
+          # carries an ExperimentalWarning on 22 and does not exist before 22.5.
+          # Where it is absent `isStoreAvailable()` is false, `describe.runIf(STORE)`
+          # skips all seven cases, and `run_lifecycle_suite` reds on the skip — so
+          # as first authored (on 20) this job could never execute the properties
+          # it exists to certify.
           node-version: '24'
           cache: 'npm'
 
