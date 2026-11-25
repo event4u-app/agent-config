@@ -327,6 +327,40 @@ concerns:
     severity: blocking
     effect: permission
     needs_payload_bodies: [input]
+  # An arena is the bracket engine (`/arena` = `/judge bracket`, state in
+  # agents/runtime/bracket/<run>/bracket.json), never a hand-written Workflow
+  # named after one. Refuses a Workflow call whose script `meta` names an
+  # arena or a bracket as a word unless the script names a run
+  # (`…/agents/runtime/bracket/<run>`, absolute or under the session cwd, or
+  # `agent-config bracket … --run <run>`) whose bracket.json meets the engine's
+  # own invariants: version 1, runId equal to the folder, taskHash equal to the
+  # sha-256 of its task.md, lines/matches/log arrays. A mention, a foreign
+  # folder or a bare bracket.json releases nothing. The engine signs nothing, so
+  # a writer who reproduces those invariants on purpose passes. The deny
+  # message names /arena, the engine commands and /panel for a non-bracket
+  # comparison. A `scriptPath` script is read (bounded to 256 KB). Measured on 2026-11-25 against the 19 Workflow scripts on the
+  # author's machine, each with its own session's cwd: 7/7 hand-written
+  # arena-named workflows refused (one of them named an engine path whose folder
+  # holds no bracket.json), 8/8 carriers of engine runs allowed, 4/4 others
+  # allowed. Bound on claude only — the one host that honours a deny and has a
+  # Workflow tool. fail_closed: false — an unreadable script, a saved workflow
+  # by name or a malformed envelope ALLOWS; a crash refuses, as for every
+  # blocking concern. The script is read only on a Workflow call (`tools:`),
+  # and the body ships in its own lazy chunk.
+  # Kill switch: AGENT_CONFIG_ALLOW_HANDROLLED_ARENA=1 (per session, allows
+  # every call while the concern stays bound). Rollback: revert the change by
+  # pull request (the owner or a maintainer; the revert touches this file and
+  # carries its own ratification record). Rollback trigger: one verified refusal
+  # of a Workflow carrying a run whose bracket.json existed at the call, or the
+  # owner naming a refused workflow as one that should have run.
+  arena-route:
+    script: src/scripts/hooks/arena_route_hook.ts
+    args: []
+    fail_closed: false
+    severity: blocking
+    effect: permission
+    needs_payload_bodies: [input]
+    tools: [Workflow]
   # road-to-renewal-leverage Phase 2 — "fix the code, not the config".
   # PreToolUse guard over the recorded allowlist-growth antipattern
   # (autonomous-execution § Antipattern): warns as an allowlist grows within a
@@ -1793,7 +1827,7 @@ platforms:
     # (+16,329 GPT tok, +69 % on the thin rule layer) are in
     # `project_thin_rules.path_only_ids`; the receiver is
     # `agents/roadmaps/stubs/road-to-a-path-route-under-delivery.md`.
-    pre_tool_use:     [block-no-verify, evidence-independence, block-kernel-rule-writes, block-plumbing-writes, block-config-weakening, block-speaking-inbox-dir, block-credential-reads, one-question-per-ask, rtk-wrap, design-slop, ui-route-nudge, code-graph-context, chain-nudge, ship-diff-volume, reread-guard, spawn-guard-shadow, metered-spawn-ask, source-first-gate, memory-recall, memory-audience-shadow]
+    pre_tool_use:     [block-no-verify, evidence-independence, block-kernel-rule-writes, block-plumbing-writes, block-config-weakening, block-speaking-inbox-dir, block-credential-reads, arena-route, one-question-per-ask, rtk-wrap, design-slop, ui-route-nudge, code-graph-context, chain-nudge, ship-diff-volume, reread-guard, spawn-guard-shadow, metered-spawn-ask, source-first-gate, memory-recall, memory-audience-shadow]
     post_tool_use:    [chat-history, roadmap-progress, context-hygiene, verify-before-complete, minimal-safe-diff, injection-scan, pr-url-reminder, push-settle, orchestration-record, telemetry-usage, mcp-usage-observation, tool-result-bytes, edit-shape, comment-discipline, language-mirror, design-pass, journal-record, spawn-guard-shadow, metered-spawn-ask, reread-guard]
     # `language-mirror` — round-5 § 6.1. `pre_compact` sets a pin-lost marker;
     # the `post_tool_use` entry above re-emits the pin exactly once while that

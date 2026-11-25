@@ -1,6 +1,7 @@
 ---
 complexity: lightweight
 review_by: 2026-12-31
+estate_growth_exempt: "+1 concern_count for arena-route (2026-11-25), the sibling bracket guard: it refuses a Workflow named an arena or bracket that carries no engine run, so a request for an arena reaches the bracket engine. Owner-ordered in session f084d3f6 and landed over a split council by owner decision, recorded in agents/evidence/ratifications/arena-route-20261125.md. This write-scope guard stays a stub."
 ---
 
 # Stub: a write-scope guard for bracket lines

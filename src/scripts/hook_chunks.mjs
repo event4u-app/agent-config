@@ -118,6 +118,11 @@ export const HOOK_CHUNKS = Object.freeze([
         entry: 'src/scripts/hooks/intake_pass_hook.ts',
         outfile: 'dist/hooks/intake_pass.chunk.cjs',
     }),
+    // `arena-route` on claude `pre_tool_use`, Workflow calls only; reads no YAML.
+    Object.freeze({
+        entry: 'src/scripts/hooks/arena_route_hook.ts',
+        outfile: 'dist/hooks/arena_route.chunk.cjs',
+    }),
     Object.freeze({
         entry: 'src/scripts/hooks/web_launch_rows.ts',
         outfile: 'dist/hooks/web_launch_rows.chunk.cjs',

@@ -31,6 +31,7 @@ somewhere in `tests/`" because the looser form hides exactly the gap below.
 
 | guard | concern script | verdict | driving tests |
 |---|---|---|---|
+| `arena-route` | `src/scripts/hooks/arena_route_hook.ts` | covered | 1 |
 | `block-config-weakening` | `src/scripts/hooks/block_config_weakening.ts` | covered | 1 |
 | `block-credential-reads` | `src/scripts/hooks/block_credential_reads.ts` | covered | 1 |
 | `block-kernel-rule-writes` | `src/scripts/hooks/block_kernel_rule_writes.ts` | covered | 4 |
