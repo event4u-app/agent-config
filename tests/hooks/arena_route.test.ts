@@ -11,7 +11,7 @@ import * as os from 'node:os';
 import * as path from 'node:path';
 import { afterAll, beforeAll, describe, expect, it } from 'vitest';
 
-import { extractWorkflowCall, main, runDirs, selfTest, verdict } from '../../src/scripts/hooks/arena_route_hook.js';
+import { engineRun, extractWorkflowCall, main, runDirs, selfTest, verdict, writeEngineRun } from '../../src/scripts/hooks/arena_route_hook.js';
 import { clearHookStdinOverride, setHookStdinOverride } from '../../src/scripts/hooks/hook_stdin.js';
 
 let repo = '';
@@ -19,14 +19,22 @@ let elsewhere = '';
 
 beforeAll(() => {
     repo = fs.mkdtempSync(path.join(os.tmpdir(), 'arena-route-repo-'));
-    fs.mkdirSync(path.join(repo, 'agents/runtime/bracket/tcc-signing'), { recursive: true });
-    fs.writeFileSync(path.join(repo, 'agents/runtime/bracket/tcc-signing/bracket.json'), '{"runId":"tcc-signing"}');
+    writeEngineRun(repo, 'tcc-signing');
     // The shape of the real imitation: a run folder the engine never wrote.
     fs.mkdirSync(path.join(repo, 'agents/runtime/bracket/vertrag-01/lines'), { recursive: true });
     fs.writeFileSync(path.join(repo, 'agents/runtime/bracket/vertrag-01/ergebnis.json'), '{}');
+    // A bare bracket.json: exists, carries nothing the engine holds a run to.
+    fs.mkdirSync(path.join(repo, 'agents/runtime/bracket/bare'), { recursive: true });
+    fs.writeFileSync(path.join(repo, 'agents/runtime/bracket/bare/bracket.json'), '{}');
+    fs.writeFileSync(path.join(repo, 'agents/runtime/bracket/bare/task.md'), 'x');
+    // An engine run whose task.md changed after init: the engine's own task-drift refusal.
+    const drifted = writeEngineRun(repo, 'drifted');
+    fs.writeFileSync(path.join(drifted, 'task.md'), 'edited after init');
+    // A copied run: valid state under another folder name.
+    const copied = writeEngineRun(repo, 'original');
+    fs.cpSync(copied, path.join(repo, 'agents/runtime/bracket/copied'), { recursive: true });
     elsewhere = fs.mkdtempSync(path.join(os.tmpdir(), 'arena-route-other-'));
-    fs.mkdirSync(path.join(elsewhere, 'agents/runtime/bracket/abs-run'), { recursive: true });
-    fs.writeFileSync(path.join(elsewhere, 'agents/runtime/bracket/abs-run/bracket.json'), '{}');
+    writeEngineRun(elsewhere, 'abs-run');
 });
 
 afterAll(() => {
@@ -60,6 +68,7 @@ const RUN = \`\${REPO}/agents/runtime/bracket/tcc-signing\`
 const results = await parallel(args.matches.map(m => () => agent(\`judge \${RUN}/lines/\${m.a}.md\`, { label: \`judge:\${m.id}\` })))`;
 
 const workflow = (input: Record<string, unknown>) => ({ tool_name: 'Workflow', tool_input: input, cwd: repo });
+const run_ = (script: string) => run(workflow({ script }));
 
 describe('arena-route — the deny path', () => {
     it('blocks a Workflow whose meta names an arena and that carries no engine run', () => {
@@ -72,9 +81,16 @@ describe('arena-route — the deny path', () => {
         expect(run(workflow({ scriptPath: file }))).toBe(1);
     });
 
-    it('blocks a bracket or tournament named in the description only', () => {
+    it('blocks a bracket named in the description only', () => {
         const s = `export const meta = { name: 'pick-design', description: 'Tournament bracket of 8 designs' }`;
         expect(verdict(extractWorkflowCall(workflow({ script: s }))).block).toBe(true);
+    });
+
+    it('blocks a run whose bracket.json the engine would not accept: bare, drifted or copied', () => {
+        for (const run of ['bare', 'drifted', 'copied']) {
+            const s = `export const meta = { name: 'x-arena' }\nconst B = \`\${REPO}/agents/runtime/bracket/${run}\``;
+            expect(run_(s), run).toBe(1);
+        }
     });
 
     it('blocks a mention of the engine path in a comment — text is not a run', () => {
@@ -113,6 +129,10 @@ describe('arena-route — the allow path', () => {
     it('allows a Workflow that is not an arena', () => {
         const s = `export const meta = { name: 'find-flaky-tests', description: 'Find flaky tests and propose fixes' }`;
         expect(run(workflow({ script: s }))).toBe(0);
+    });
+
+    it('allows a tournament that names no arena or bracket (tournament selection is an algorithm)', () => {
+        expect(run_(`export const meta = { name: 'tournament-selection', description: 'genetic algorithm tuning' }`)).toBe(0);
     });
 
     it('allows a word inside a longer identifier (arenas of the codebase, not an arena run)', () => {
@@ -154,6 +174,17 @@ describe('arena-route — run references', () => {
         expect(runDirs('`${REPO}/agents/runtime/bracket/a`', '/w')).toEqual(['/w/agents/runtime/bracket/a']);
         expect(runDirs("'/x/y/agents/runtime/bracket/b'", '/w')).toEqual(['/x/y/agents/runtime/bracket/b', '/w/agents/runtime/bracket/b']);
         expect(runDirs('agent-config bracket advance --run c', '/w')).toEqual(['/w/agents/runtime/bracket/c']);
+    });
+});
+
+describe('arena-route — what counts as an engine run', () => {
+    it('accepts the state `bracket init` leaves and refuses each broken invariant', () => {
+        expect(engineRun(path.join(repo, 'agents/runtime/bracket/tcc-signing'))).toBe(true);
+        expect(engineRun(path.join(repo, 'agents/runtime/bracket/vertrag-01'))).toBe(false);
+        expect(engineRun(path.join(repo, 'agents/runtime/bracket/bare'))).toBe(false);
+        expect(engineRun(path.join(repo, 'agents/runtime/bracket/drifted'))).toBe(false);
+        expect(engineRun(path.join(repo, 'agents/runtime/bracket/copied'))).toBe(false);
+        expect(engineRun(path.join(repo, 'agents/runtime/bracket/missing'))).toBe(false);
     });
 });
 

@@ -330,12 +330,15 @@ concerns:
   # An arena is the bracket engine (`/arena` = `/judge bracket`, state in
   # agents/runtime/bracket/<run>/bracket.json), never a hand-written Workflow
   # named after one. Refuses a Workflow call whose script `meta` names an
-  # arena, bracket or tournament as a word unless the script names a run whose
-  # bracket.json EXISTS (`…/agents/runtime/bracket/<run>`, absolute or under the
-  # session cwd, or `agent-config bracket … --run <run>`) — engine state, not a
-  # mention, releases it. The deny message names /arena, the engine commands and
-  # /panel for a non-bracket comparison. A `scriptPath` script is read (bounded
-  # to 256 KB). Measured on 2026-11-25 against the 19 Workflow scripts on the
+  # arena or a bracket as a word unless the script names a run
+  # (`…/agents/runtime/bracket/<run>`, absolute or under the session cwd, or
+  # `agent-config bracket … --run <run>`) whose bracket.json meets the engine's
+  # own invariants: version 1, runId equal to the folder, taskHash equal to the
+  # sha-256 of its task.md, lines/matches/log arrays. A mention, a foreign
+  # folder or a bare bracket.json releases nothing. The engine signs nothing, so
+  # a writer who reproduces those invariants on purpose passes. The deny
+  # message names /arena, the engine commands and /panel for a non-bracket
+  # comparison. A `scriptPath` script is read (bounded to 256 KB). Measured on 2026-11-25 against the 19 Workflow scripts on the
   # author's machine, each with its own session's cwd: 7/7 hand-written
   # arena-named workflows refused (one of them named an engine path whose folder
   # holds no bracket.json), 8/8 carriers of engine runs allowed, 4/4 others

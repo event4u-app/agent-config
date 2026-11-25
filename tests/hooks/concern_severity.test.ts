@@ -166,14 +166,15 @@ const BLOCKING_ALLOWLIST = new Set([
     // in the wrong language (language-and-tone Iron Law).
     'turn-end-gate',
     // 2026-11-25, session 58d6a4d2. It refuses ONE thing: a Workflow call whose
-    // script `meta` names an arena, bracket or tournament as a word while the
-    // script carries no run the bracket engine wrote. The three questions, on
+    // script `meta` names an arena or a bracket as a word while the script
+    // carries no run that meets the bracket engine's own invariants. The three questions, on
     // this concern's own terms:
     //
     //   · SCOPE. Filtered by the manifest's `tools: [Workflow]`, so it never
     //     sees any other call; within a Workflow call it reads only the `name`
     //     and `description` of `meta` for the trigger, and a named run whose
-    //     `bracket.json` exists lets it through — a mention alone does not.
+    //     `bracket.json` meets the engine's invariants (runId, taskHash of
+    //     task.md) lets it through — a mention or a bare file does not.
     //     Measured against the 19 real scripts with their sessions' cwd: 7/7
     //     hand-written arenas refused, 8/8 carriers of engine runs allowed.
     //   · fail_closed: FALSE. An unreadable `scriptPath`, a saved workflow by

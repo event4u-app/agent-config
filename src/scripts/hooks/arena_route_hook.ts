@@ -16,15 +16,21 @@
  * not in the model-visible listing (only `judge:bracket` is).
  *
  * The Workflow call is the one point every path to a hand-rolled arena passes.
- * The trigger is literal: the script's `meta` names an arena, bracket or
- * tournament as a word. The release is STATE, not text: the script must name a
- * run whose `bracket.json` exists — through a path `…/agents/runtime/bracket/<run>`
- * (absolute, or relative to the session's cwd) or `agent-config bracket … --run
- * <run>`. A mention alone, in a comment or of a folder the engine never wrote,
- * releases nothing: ratification round 1 refused the earlier substring release
- * on exactly that ground, and a real case confirmed it (a hand-written
- * `vertrags-arena` named `agents/runtime/bracket/vertrag-01`, a folder holding
- * its own `ergebnis.json` and no `bracket.json`).
+ * The trigger is literal: the script's `meta` names an arena or a bracket as a
+ * word. The release is a RUN, not text: the script must name a run — through a
+ * path `…/agents/runtime/bracket/<run>` (absolute, or relative to the session's
+ * cwd) or `agent-config bracket … --run <run>` — whose `bracket.json` passes the
+ * invariants the engine itself holds a run to: `version` 1, `runId` equal to
+ * the folder name, `taskHash` equal to the sha-256 of the folder's `task.md`
+ * (the engine's own `task-drift` check in bracket/cli.ts), and `lines`,
+ * `matches` and `log` arrays. A mention alone, a folder the engine never wrote,
+ * or a bare `bracket.json` releases nothing: ratification round 1 refused a
+ * substring release and round 2 an existence-only one, and a real case
+ * confirmed the first (a hand-written `vertrags-arena` named
+ * `agents/runtime/bracket/vertrag-01`, a folder holding its own
+ * `ergebnis.json` and no `bracket.json`). The engine signs nothing, so a local
+ * writer who reproduces these invariants on purpose passes; that is deliberate
+ * evasion of a routing guard, not the mistake this catches.
  *
  * A script passed by `scriptPath` is read (bounded); an unreadable one, a
  * named saved workflow, or a malformed envelope is ALLOWED — this guards a
@@ -36,6 +42,7 @@
  *   0 — allow
  *   1 — block (a hand-rolled arena)
  */
+import { createHash } from 'node:crypto';
 import * as fs from 'node:fs';
 import * as os from 'node:os';
 import * as path from 'node:path';
@@ -49,7 +56,8 @@ const KILL_SWITCH = 'AGENT_CONFIG_ALLOW_HANDROLLED_ARENA';
 const SCRIPT_MAX_BYTES = 256 * 1024;
 const META_WINDOW = 2000;
 const MAX_RUN_REFS = 32;
-const ARENA_WORD = /(^|[^A-Za-z0-9])(arena|bracket|tournament)s?($|[^A-Za-z0-9])/i;
+const STATE_MAX_BYTES = 4 * 1024 * 1024;
+const ARENA_WORD = /(^|[^A-Za-z0-9])(arena|bracket)s?($|[^A-Za-z0-9])/i;
 const RUN_ID = '[A-Za-z0-9][A-Za-z0-9._-]*';
 // An absolute prefix, when the script spells one out; a `${REPO}/` prefix is left to the cwd.
 const PATH_REF = new RegExp(`(/[^\\s'"\`$\\{\\}/][^\\s'"\`$\\{\\}]*/)?agents/runtime/bracket/(${RUN_ID})`, 'g');
@@ -122,13 +130,36 @@ export function runDirs(script: string, cwd: string): string[] {
     return [...out].slice(0, MAX_RUN_REFS);
 }
 
-/** Whether the engine wrote this run: its `bracket.json` exists. */
-function engineRun(dir: string): boolean {
+function readSmall(file: string): string | null {
     try {
-        return fs.statSync(path.join(dir, 'bracket.json')).isFile();
+        const st = fs.statSync(file);
+        return st.isFile() && st.size <= STATE_MAX_BYTES ? fs.readFileSync(file, 'utf8') : null;
+    } catch {
+        return null;
+    }
+}
+
+/** Whether `dir` holds a run the engine would accept: its bracket.json meets the engine's own invariants. */
+export function engineRun(dir: string): boolean {
+    const raw = readSmall(path.join(dir, 'bracket.json'));
+    const task = readSmall(path.join(dir, 'task.md'));
+    if (raw === null || task === null) return false;
+    let s: unknown;
+    try {
+        s = JSON.parse(raw);
     } catch {
         return false;
     }
+    if (!_isObject(s)) return false;
+    return (
+        s['version'] === 1 &&
+        s['runId'] === path.basename(dir) &&
+        typeof s['taskHash'] === 'string' &&
+        s['taskHash'] === createHash('sha256').update(task).digest('hex') &&
+        Array.isArray(s['lines']) &&
+        Array.isArray(s['matches']) &&
+        Array.isArray(s['log'])
+    );
 }
 
 /** The verdict, separated from I/O so the fixtures exercise the decision itself. */
@@ -171,19 +202,30 @@ export function main(argv?: string[]): number {
     return 0;
 }
 
+/** Write a run as `agent-config bracket init` leaves it: task.md and a bracket.json bound to it. Test support. */
+export function writeEngineRun(root: string, run: string, task = 'the task'): string {
+    const dir = path.join(root, 'agents/runtime/bracket', run);
+    fs.mkdirSync(dir, { recursive: true });
+    fs.writeFileSync(path.join(dir, 'task.md'), task);
+    const taskHash = createHash('sha256').update(task).digest('hex');
+    fs.writeFileSync(path.join(dir, 'bracket.json'), JSON.stringify({ version: 1, runId: run, taskHash, lines: [], matches: [], log: [] }));
+    return dir;
+}
+
 export function selfTest(): number {
     const root = fs.mkdtempSync(path.join(os.tmpdir(), 'arena-route-self-'));
-    fs.mkdirSync(path.join(root, 'agents/runtime/bracket/live'), { recursive: true });
-    fs.writeFileSync(path.join(root, 'agents/runtime/bracket/live/bracket.json'), '{}');
+    writeEngineRun(root, 'live');
     fs.mkdirSync(path.join(root, 'agents/runtime/bracket/imitation'), { recursive: true });
+    fs.writeFileSync(path.join(root, 'agents/runtime/bracket/imitation/bracket.json'), '{}');
     const wf = (script: string): WorkflowCall => ({ tool: 'Workflow', script, cwd: root });
     const cases: Array<[string, WorkflowCall, boolean]> = [
         ['a hand-rolled arena is denied', wf("export const meta = { name: 'pr-gate-arena', description: 'x' }"), true],
-        ['a tournament bracket in the description is denied', wf("export const meta = { name: 'pick', description: 'Tournament of designs' }"), true],
+        ['a bracket in the description is denied', wf("export const meta = { name: 'pick', description: 'A bracket of designs' }"), true],
         ['a carrier of a run the engine wrote is allowed', wf("export const meta = { name: 'a-arena-judge' }\nconst RUN = `${REPO}/agents/runtime/bracket/live`"), false],
         ['a CLI-driving carrier of a live run is allowed', wf("export const meta = { name: 'a-arena' }\n// agent-config bracket scan --run live"), false],
         ['a mention of a run the engine never wrote is denied', wf("export const meta = { name: 'x-arena' }\n// agents/runtime/bracket/nothing-here"), true],
-        ['a folder without bracket.json is denied', wf("export const meta = { name: 'x-arena' }\nconst B = 'agents/runtime/bracket/imitation'"), true],
+        ['a bare bracket.json the engine did not write is denied', wf("export const meta = { name: 'x-arena' }\nconst B = 'agents/runtime/bracket/imitation'"), true],
+        ['tournament alone is not the trigger', wf("export const meta = { name: 'tournament-selection', description: 'genetic algorithm' }"), false],
         ['an ordinary workflow is allowed', wf("export const meta = { name: 'find-bugs', description: 'find bugs' }"), false],
         ['a longer identifier is not the word', wf("export const meta = { name: 'map-arenaview' }"), false],
         ['another tool is never seen', { tool: 'Bash', script: "export const meta = { name: 'arena' }", cwd: root }, false],
