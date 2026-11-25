@@ -17,3 +17,5 @@
 {"mechanism_id":"script-enforced-skill-step-order","verdict":"adapt","realised_in":["agents/roadmaps/archive/road-to-steps-the-skill-cannot-skip.md"],"decided_at":"2026-10-14"}
 {"mechanism_id":"reference-file-table-of-contents","verdict":"adapt","realised_in":["agents/roadmaps/archive/road-to-steps-the-skill-cannot-skip.md"],"decided_at":"2026-10-14"}
 {"mechanism_id":"evidence-authority-coverage-and-obligation-ledger","verdict":"adapt","realised_in":["docs/contracts/reconstruction-obligations.md"],"decided_at":"2026-10-29"}
+{"mechanism_id":"arena-dealt-approach-angles","verdict":"adapt","realised_in":["src/domains/engineering-base/judge/bracket/command.md"],"decided_at":"2026-11-25"}
+{"mechanism_id":"bracket-rubric-anchors","verdict":"adapt","realised_in":["src/domains/engineering-base/judge/bracket/command.md"],"decided_at":"2026-11-25"}
