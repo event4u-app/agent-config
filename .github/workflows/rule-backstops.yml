@@ -175,9 +175,10 @@ jobs:
           # 22 — the package floor since 17.0.0 (`engines: >=22.6.0`, ADR-290),
           # and the line Vitest 5 needs (`engines: ^22.12.0 || ^24.0.0 || >=26.0.0`);
           # '22' resolves to the newest 22.x, which clears both. Every job pins
-          # 22 except the `node:sqlite` leg in `tests.yml` (24), and
-          # `consumer-matrix.yml` measures the packed tarball on 22, so the floor
-          # is MEASURED rather than merely asserted.
+          # 22 except the `node:sqlite` leg in `tests.yml` (24). Note what that
+          # does NOT measure: every pin, `consumer-matrix.yml`'s tarball legs
+          # included, resolves to the NEWEST 22.x, so the `>=22.6.0` floor
+          # itself is asserted, not run — no job installs 22.6.
           node-version: '22'
           cache: 'npm'
 
