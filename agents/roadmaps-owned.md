@@ -29,6 +29,7 @@ and keep the full search — this file only adds candidates to it.
 | road-to-gates-that-do-not-trap-the-agent | active | ready | Every blockage that made the owner run a command, type a confirmation, or delete something on the agent's behalf is … |
 | road-to-goal-record-live-wiring | active | ready | The goal record that `src/scripts/_lib/goal_mandate.ts` and `src/scripts/_lib/goal_mandate_store.ts` already implement reaches the live hook path: the `session-register` `user_prompt_submit` beat records the … |
 | road-to-honest-graph-freshness | active | ready | `graphState` (`src/scripts/code_graph/detect.ts:323-334`) never returns a commit count it did not compute: a native graph built by this release reports `behind:N` … |
+| road-to-owner-overrides-that-do-not-block-releases | active | ready | An owner override of a refused or non-convergent ratification is recorded when the merge happens. |
 | road-to-prose-holds-that-read-their-object | active | ready | `roadmap_drain_queue`'s prose-hold check decides a hold by the objects it names and the clause that governs it — never by … |
 | road-to-questions-that-reach-the-right-decider | active | ready | A question reaches the owner only when it belongs to one of four owner classes: changing the purpose, lowering a … |
 | road-to-release-notes-that-match-the-span | active | ready | The CHANGELOG, `docs/MIGRATION.md` and `BREAKING_CHANGES.md` for a release name every consumer-visible change in the span the release covers. |
