@@ -802,15 +802,58 @@ export function derive_head_prefill(
         const existing = out[KNOWN_LIMITATIONS_LABEL];
         out[KNOWN_LIMITATIONS_LABEL] = existing ? `${existing} ${override}` : override;
     }
-    // Same shape for the breaking-changes index: a Pending row has landed, so
-    // whatever this release is, it ships it — and no commit subject carries the
-    // row's wording, so the span classifier above cannot derive it.
-    const pending = pendingBreakingLine(readIndex(cwd), (sha) => from !== null && commitInTag(sha, from, cwd));
-    if (pending !== null) {
-        const existing = out[MIGRATION_LABEL];
-        out[MIGRATION_LABEL] = existing ? `${existing} ${pending}` : pending;
-    }
+    appendIndexBreakingLines(out, readIndex(cwd), version ?? null, (sha) => from !== null && commitInTag(sha, from, cwd));
     return out;
+}
+
+/**
+ * Append what `BREAKING_CHANGES.md` says this release breaks to the migration
+ * label: for a major with a filed by-major row, that row (it names the Pending
+ * rows the major carries); otherwise every Pending row no earlier tag already
+ * ships (`isShipped`). No commit subject carries the
+ * rows' wording, so the span classifier cannot derive either, and the
+ * generated `### BREAKING CHANGES` section lists only commits with a breaking
+ * marker: 17.0.0's row named six breaks while one commit carried the marker.
+ */
+export function appendIndexBreakingLines(
+    out: Record<string, string>,
+    index: string,
+    version: string | null,
+    isShipped: (sha: string) => boolean = () => false,
+): void {
+    // `BREAKING_CHANGES.md` § Pending: the release that carries a Pending row
+    // names it in its own by-major row. So once that row is filed it is the
+    // whole account of the major's breaks, and adding the Pending rows beside it
+    // would announce each of them twice; without it, the Pending rows are all
+    // the index says.
+    const line = releasedBreakingLine(index, version) ?? pendingBreakingLine(index, isShipped);
+    if (line === null) return;
+    const existing = out[MIGRATION_LABEL];
+    out[MIGRATION_LABEL] = existing ? `${existing} ${line}` : line;
+}
+
+/**
+ * The `What broke` cells of the by-major rows for `version` (a major may have
+ * more than one), as one head value; null for a non-major, or a major the
+ * index has no row for.
+ */
+export function releasedBreakingLine(index: string, version: string | null): string | null {
+    if (version === null || !/^\d+\.0\.0$/u.test(version)) return null;
+    const broke: string[] = [];
+    for (const line of index.split('\n')) {
+        if (!line.startsWith('|')) continue;
+        // `\|` is a literal pipe inside a cell (the 4.0.0 row's `curl \| bash`),
+        // not a column break.
+        const cells = line.split(/(?<!\\)\|/u);
+        if ((cells[1] ?? '').replace(/\*/gu, '').trim() !== version) continue;
+        const cell = (cells[3] ?? '').trim();
+        if (cell !== '') broke.push(cell);
+    }
+    if (broke.length === 0) return null;
+    return (
+        `Breaking in ${version}, as indexed in \`BREAKING_CHANGES.md\`: ${broke.join(' ')} ` +
+        `Migration: [docs/MIGRATION.md § ${version}](docs/MIGRATION.md).`
+    );
 }
 
 const MIGRATION_LABEL = 'Default changes + migration';

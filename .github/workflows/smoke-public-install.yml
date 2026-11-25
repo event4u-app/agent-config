@@ -9,7 +9,7 @@ name: Public Install Smoke
 #   - tests.yml runs Linux + macOS only. Windows regressions slip
 #     through.
 #   - tests.yml uses the repo's default Node version. Consumers run
-#     Node 20 / 22 — both need a green leg.
+#     Node 22 or newer — the engines floor since 17.0.0 (ADR-290).
 #   - Weekly cron catches drift introduced by upstream registry
 #     changes even when no PR touched our installer.
 #

@@ -25,7 +25,7 @@
  * council refused.
  *
  * WHY THE PATH COMES FROM A HELPER AND NOT A LITERAL.
- * `statePathFor` below is the same shape as `before_complete_hook.ts:128` —
+ * `statePathFor` below is the same shape as `_lib/turn_run_state.ts` § `statePathFor` —
  * `session_state_file(<dir>, session_id)` — and shares that function rather
  * than reimplementing it. The digest keying matters: it removes the
  * filename-length failure mode for long ids, and it is the property an
