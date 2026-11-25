@@ -842,7 +842,9 @@ export function releasedBreakingLine(index: string, version: string | null): str
     const broke: string[] = [];
     for (const line of index.split('\n')) {
         if (!line.startsWith('|')) continue;
-        const cells = line.split('|');
+        // `\|` is a literal pipe inside a cell (the 4.0.0 row's `curl \| bash`),
+        // not a column break.
+        const cells = line.split(/(?<!\\)\|/u);
         if ((cells[1] ?? '').replace(/\*/gu, '').trim() !== version) continue;
         const cell = (cells[3] ?? '').trim();
         if (cell !== '') broke.push(cell);

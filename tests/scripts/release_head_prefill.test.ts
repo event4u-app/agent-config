@@ -314,6 +314,15 @@ describe("the cut major's own index row reaches the curated head", () => {
         expect(releasedBreakingLine(index, '6.0.0')).toMatch(/Tree moved\. Key renamed\./u);
     });
 
+    it('keeps an escaped pipe inside the What-broke cell (the 4.0.0 row)', () => {
+        const real = fs.readFileSync(path.join(import.meta.dirname, '..', '..', 'BREAKING_CHANGES.md'), 'utf-8');
+        const row = real.split('\n').find((l) => l.startsWith('| **4.0.0**')) ?? '';
+        expect(row).toContain('`curl \\| bash`');
+        const line = releasedBreakingLine(real, '4.0.0') ?? '';
+        expect(line).toContain('`curl \\| bash` fallback only.');
+        expect(line).not.toContain('First `install` run');
+    });
+
     it('is null for a minor, a patch, an absent version and a major with no row', () => {
         expect(releasedBreakingLine(index, '17.1.0')).toBeNull();
         expect(releasedBreakingLine(index, '17.0.1')).toBeNull();
