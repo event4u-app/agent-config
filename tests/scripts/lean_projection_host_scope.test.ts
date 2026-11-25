@@ -31,6 +31,7 @@ import { thinnedTreeFindings } from '../../src/scripts/check_rule_projection_int
 import {
     compareTrees,
     generateParityFixtures,
+    parityPrecondition,
     parityScopeNotice,
 } from '../../src/scripts/check_host_tree_parity.js';
 
@@ -439,5 +440,31 @@ describe('the parity gate drives its fixtures from the form record, never from s
         seed(root, 'lean_projection:\n  mode: delivery\n  hosts: [cursor, cline]\n');
         const fx = generateParityFixtures(root, path.join(tmp, 'parity-none'));
         expect(fx.configured).toEqual([]);
+    });
+
+    // Without the record both fixtures project eager-all, so the comparison has
+    // no subject and would print the same green line as a real pass.
+    it('refuses to run without a form record instead of comparing two eager-all trees', () => {
+        const root = path.join(tmp, 'no-record-gate');
+        seed(root, '');
+        const pre = parityPrecondition(root, []);
+        expect(pre?.exit).toBe(2);
+        expect(pre?.message).toContain('project-tree-form.json');
+    });
+
+    it('names a record that resolves to no delivery host as a vacuous run, not a pass', () => {
+        const root = path.join(tmp, 'eager-record');
+        seed(root, '');
+        seedForm(root, { 'claude-code': 'eager-all' });
+        const pre = parityPrecondition(root, []);
+        expect(pre?.exit).toBe(0);
+        expect(pre?.message).toContain('NOTHING COMPARED');
+    });
+
+    it('lets a record with a delivery host through', () => {
+        const root = path.join(tmp, 'delivery-record');
+        seed(root, '');
+        seedForm(root, { 'claude-code': 'delivery' });
+        expect(parityPrecondition(root, ['claude-code'])).toBeNull();
     });
 });

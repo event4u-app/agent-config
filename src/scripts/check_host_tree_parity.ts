@@ -178,6 +178,41 @@ export function parityScopeNotice(configured: readonly string[]): string | null 
     );
 }
 
+/**
+ * Why this run cannot assert anything, or `null` when it can.
+ *
+ * The thinning fixture is driven by the form record alone. Without the record
+ * — or with one that resolves no host to a thinning form — both fixtures
+ * project eager-all, `compareTrees` compares a tree with itself, and the gate
+ * would print the same green sentence as a real pass. A missing record is a
+ * could-not-run (exit 2): the input the gate exists to exercise is absent. A
+ * record with no delivery host is a legitimate configuration (or the kill
+ * switch), so it is named as a vacuous run and exits 0.
+ */
+export function parityPrecondition(
+    root: string,
+    configured: readonly string[],
+): { exit: 0 | 2; message: string } | null {
+    if (!fs.existsSync(path.join(root, PROJECT_TREE_FORM_REL))) {
+        return {
+            exit: 2,
+            message:
+                `❌  check_host_tree_parity: no form record at ${PROJECT_TREE_FORM_REL} — without it ` +
+                `both fixtures project eager-all and the comparison has no subject.\n`,
+        };
+    }
+    if (configured.length === 0) {
+        return {
+            exit: 0,
+            message:
+                `⚠️  check_host_tree_parity: NOTHING COMPARED — ${PROJECT_TREE_FORM_REL} resolves no host ` +
+                `to a thinning form, so both fixtures project eager-all and this gate asserts nothing ` +
+                `about this configuration.\n`,
+        };
+    }
+    return null;
+}
+
 /** The two generated fixture roots and the delivery hosts the test run was built for. */
 export interface ParityFixtures {
     readonly eagerRoot: string;
@@ -225,6 +260,12 @@ export function main(argv: readonly string[] = []): number {
             `❌  check_host_tree_parity: no rule corpus at dist/agent-src/rules — run \`task sync\` first.\n`,
         );
         return 2;
+    }
+
+    const pre = parityPrecondition(root, shippedProjection(root).hosts);
+    if (pre !== null) {
+        process.stderr.write(pre.message);
+        return pre.exit;
     }
 
     const tmp = fs.mkdtempSync(path.join(os.tmpdir(), 'host-parity-'));
