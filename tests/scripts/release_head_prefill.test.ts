@@ -352,7 +352,7 @@ describe("the cut major's own index row reaches the curated head", () => {
         expect(shipped['Default changes + migration']).toBeUndefined();
     });
 
-    it('names every 17.0.0 break from the real index in the rendered head, within the cap', () => {
+    it('names every 17.0.0 break from the real index in the rendered head', () => {
         const real = fs.readFileSync(path.join(import.meta.dirname, '..', '..', 'BREAKING_CHANGES.md'), 'utf-8');
         const out: Record<string, string> = {};
         appendIndexBreakingLines(out, real, '17.0.0', () => true);
@@ -363,10 +363,14 @@ describe("the cut major's own index row reaches the curated head", () => {
         for (const broke of ['>=22.6.0', 'lean_projection.mode', 'lean_projection.hosts', 'projection.rule_workspaces', 'fail_closed', '--purge', ...commands]) {
             expect(head.join('\n')).toContain(broke);
         }
-        expect(release_head_line_count(head)).toBeLessThanOrEqual(RELEASE_HEAD_CAP_LINES);
     });
 
-    it('keeps the head within the cap for every released major, the long rows included', () => {
+    // The head cap (`RELEASE_HEAD_CAP_LINES`) counts LINES, and there is no
+    // character bound on a label's value. What an index row could do to the cap
+    // is therefore only to smuggle in a line break, so that is what is pinned:
+    // every major's value stays on one line, and the head keeps exactly the
+    // line count of a head with no value at all.
+    it('adds no line to the head for any released major, the long rows included', () => {
         const real = fs.readFileSync(path.join(import.meta.dirname, '..', '..', 'BREAKING_CHANGES.md'), 'utf-8');
         const majors = [...real.matchAll(/^\| \**(\d+\.0\.0)\** \|/gmu)].map((m) => m[1]!);
         expect(majors).toContain('20.0.0');
@@ -375,7 +379,10 @@ describe("the cut major's own index row reaches the curated head", () => {
             appendIndexBreakingLines(out, real, v, () => true);
             const head = render_release_head(out);
             expect(head.join('\n')).toContain(`Breaking in ${v}`);
-            expect(release_head_line_count(head)).toBeLessThanOrEqual(RELEASE_HEAD_CAP_LINES);
+            expect(out['Default changes + migration']).not.toMatch(/[\r\n]/u);
+            // Split the rendered text, not the array: a line break inside one
+            // array entry is a second line on the page but not a second entry.
+            expect(head.join('\n').split('\n').length).toBe(render_release_head({}).length);
         }
     });
 });
