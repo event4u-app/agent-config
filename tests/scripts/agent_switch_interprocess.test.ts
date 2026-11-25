@@ -290,13 +290,24 @@ describe('the lock across an install: the older single lock file', () => {
     it('a hook of the older version, running its whole acquire loop, does not break a holder of this version past two seconds', async () => {
         raised();
         setRequest(APPROVED);
-        const slow = hook({ op: 'stop', holdMs: 3500, label: 'A' });
-        await until(() => writes().includes('A:start'));
-        await new Promise((r) => setTimeout(r, 2300));
-        const older = lockedBeforeTickets(switchRecordPath(hashSessionId(SESSION), stateEnv), () => {
-            fs.appendFileSync(writeLog, 'OLD:entered\n');
-            return true;
-        });
+        const pidFile = path.join(home, 'a.pid');
+        const slow = hook({ op: 'stop', holdMs: 500, label: 'A', pidFile });
+        await until(() => writes().includes('A:start') && fs.existsSync(pidFile));
+        const pid = Number(fs.readFileSync(pidFile, 'utf-8'));
+        // Frozen, not merely slow: a holder that only sleeps released on a loaded
+        // macOS runner before the older loop ran, and the older version then took a
+        // lock that was legitimately free. Stopped, it holds by construction.
+        process.kill(pid, 'SIGSTOP');
+        let older: { value: boolean } | null;
+        try {
+            await new Promise((r) => setTimeout(r, 2300));
+            older = lockedBeforeTickets(switchRecordPath(hashSessionId(SESSION), stateEnv), () => {
+                fs.appendFileSync(writeLog, 'OLD:entered\n');
+                return true;
+            });
+        } finally {
+            process.kill(pid, 'SIGCONT');
+        }
         expect(await slow).toBe(true);
         expect(older).toBeNull();
         expect(writes()).toEqual(['A:start', 'A:written']);

@@ -100,10 +100,11 @@ jobs:
   select-tests:
     # Which Vitest files can this diff reach? (src/scripts/ci_select_tests.ts;
     # contract: docs/contracts/ci-test-selection.md). A pull request is measured
-    # against its base branch, a merge-queue entry against the queue's base SHA —
-    # the merge gate runs only what the change can reach. `push: main`,
-    # workflow_dispatch and the label `ci:full-tests` run the whole suite: the
-    # post-merge run is the net that catches what selection misses.
+    # against its base branch, a merge-queue entry against the queue's base SHA.
+    # Since 2026-11-25 the selection governs the macOS legs only — Linux runs the
+    # whole suite on every PR, so a green PR is green on main for every
+    # single-change break on Linux. `push: main`, workflow_dispatch and the label
+    # `ci:full-tests` run macOS in full too.
     name: Select tests
     runs-on: ubuntu-latest
     outputs:
@@ -313,32 +314,34 @@ jobs:
     # install-bundle, hooks, mcp-bundle, cli-delegate, ui — so the previous
     # explicit build:cli + build:ui + build triple was a no-op duplicate;
     # collapsed to a single build invocation.
-    name: Node Tests (${{ matrix.os }}, shard ${{ matrix.shard }}/${{ needs.select-tests.outputs.node_shard_total }})
-    needs: [platform-scope, select-tests]
-    runs-on: ${{ matrix.os }}
+    #
+    # THE LINUX LEG, AND IT IS NOT SELECTED. Every pull request runs the whole
+    # suite here, exactly as push: main does. Test selection made a PR green
+    # that main then failed: replayed on 2026-11-25, 15 of 19 red push:main runs
+    # failed a suite the PR never ran (tree-wide invariants, subprocess and data
+    # paths the static graph does not follow). Decided by a 10-agent arena the
+    # same day; selection now governs only `node-tests-macos` below
+    # (docs/contracts/ci-test-selection.md).
+    name: Node Tests (ubuntu-latest, shard ${{ matrix.shard }}/4)
+    runs-on: ubuntu-latest
     # Release-PR skip per docs/contracts/release-pr-gating.md § Cut surface.
     # The allowlist DOES admit five paths under src/ — pack and domain
     # metadata, their READMEs, the settings-template pin — but no TypeScript
     # and no test source, so ESLint, tsc, vitest and prepack-check have
     # nothing new to prove. The contract's enumeration is the list; it is
     # deliberately not copied here.
-    # Skipped outright when select-tests reached no node-sharded file.
-    if: ${{ !startsWith(github.head_ref, 'release/') && needs.select-tests.outputs.node_shards != '[]' }}
+    if: ${{ !startsWith(github.head_ref, 'release/') }}
     strategy:
       fail-fast: false
       matrix:
         # Vitest is core-saturated on a single runner (the subprocess suites
         # spawn ./agent-config / tsx heavily), so the wall clock is
         # total-CPU-work ÷ cores. `--shard=N/4` fans the file set across 4
-        # parallel runners per OS. The golden-replay suite — the single
+        # parallel runners. The golden-replay suite — the single
         # heaviest cluster — is pulled into its OWN job (`golden-tests`) and
         # EXCLUDED here, because vitest shards by file COUNT not duration and
         # would otherwise clump the golden files into one > 2 min bucket.
-        # ESLint / typecheck / prepack are whole-tree gates → shard 1 only.
-        os: ${{ fromJSON(needs.platform-scope.outputs.os_list) }}
-        # 1-4 shards: four on a full run, fewer when the selection is small
-        # enough that a shard's fixed setup cost outweighs the parallelism.
-        shard: ${{ fromJSON(needs.select-tests.outputs.node_shards) }}
+        shard: [1, 2, 3, 4]
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1  # v7.0.1
         with:
@@ -398,7 +401,7 @@ jobs:
         # dist/cli/agent-config.js.
         run: npm run build --silent
 
-      - name: Vitest (shard ${{ matrix.shard }}/${{ needs.select-tests.outputs.node_shard_total }}, heavy suites excluded)
+      - name: Vitest (shard ${{ matrix.shard }}/4, heavy suites excluded)
         # `--` forwards flags to vitest; each runner executes a deterministic
         # quarter of the file set. The subprocess-heavy clusters (golden +
         # workspace) hash-clump into one over-budget shard regardless of shard
@@ -425,9 +428,58 @@ jobs:
         # (PR #2577, run 39709319417): ubuntu node-test jobs 5m14s-6m12s, ratio
         # 1.19 against the 2.3 recorded above.
         #
+        env:
+          VITEST_BALANCED_SHARDS: '1'
+          SHARD: ${{ matrix.shard }}/4
+        run: |
+          npm run test:ts --silent -- \
+            --shard="$SHARD" \
+            --exclude 'tests/golden/**' \
+            --exclude 'tests/server/workspace.test.ts' \
+            --exclude 'tests/scripts/collector_lifecycle.test.ts' \
+            --exclude 'tests/scripts/cli/python/**'
+
+  node-tests-macos:
+    # The macOS leg of `node-tests` (steps and exclusions mirror it; a test pins
+    # the Vitest command equal). Selected, because macOS is the long pole and
+    # GitHub-hosted macOS is capped at 5 concurrent jobs: platform scope decides
+    # whether a PR needs macOS at all (council 2026-10-22, decision A), and the
+    # selection decides which files. push: main, workflow_dispatch, `ci:macos`
+    # and `ci:full-tests` run it in full. A macOS-only red that reaches main
+    # after a green PR is the residual this split accepts.
+    name: Node Tests (macos-26, shard ${{ matrix.shard }}/${{ needs.select-tests.outputs.node_shard_total }})
+    needs: [platform-scope, select-tests]
+    runs-on: macos-26
+    if: ${{ !startsWith(github.head_ref, 'release/') && contains(needs.platform-scope.outputs.os_list, 'macos-26') && needs.select-tests.outputs.node_shards != '[]' }}
+    strategy:
+      fail-fast: false
+      matrix:
+        # 1-4 shards: four on a full run, fewer when the selection is small
+        # enough that a shard's fixed setup cost outweighs the parallelism.
+        shard: ${{ fromJSON(needs.select-tests.outputs.node_shards) }}
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1  # v7.0.1
+        with:
+          persist-credentials: false
+
+      - uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1  # v7.1.0
+        with:
+          node-version: '22'
+          cache: 'npm'
+
+      - name: Install dependencies (hoists installer toolchain)
+        run: npm ci --no-audit --no-fund --prefer-offline
+
+      - name: Build discovery manifest (gitignored; cli-e2e reads it)
+        run: ./scripts-run src/scripts/build_discovery_manifest --write --quiet
+
+      - name: Build (dist/cli + UI bundle)
+        run: npm run build --silent
+
+      - name: Vitest (shard ${{ matrix.shard }}/${{ needs.select-tests.outputs.node_shard_total }}, heavy suites excluded)
         # On a targeted run NODE_FILES carries the selected paths (positional
         # filters, word-split on purpose); on a full run it is empty and the
-        # whole file set runs exactly as before.
+        # whole file set runs.
         env:
           VITEST_BALANCED_SHARDS: '1'
           SHARD: ${{ matrix.shard }}/${{ needs.select-tests.outputs.node_shard_total }}
@@ -668,14 +720,17 @@ jobs:
     # Separate from `workspace-tests` on purpose: running both subprocess-heavy
     # clusters in one job oversubscribed the fork pool and produced flaky
     # spawn-timeout failures — each cluster gets its own runner.
+    #
+    # Linux on every PR; macOS only when the selection reaches the golden suite
+    # AND platform scope keeps macOS (the same split as node-tests / node-tests-macos).
     name: Golden Tests (${{ matrix.os }})
     needs: [platform-scope, select-tests]
     runs-on: ${{ matrix.os }}
-    if: ${{ !startsWith(github.head_ref, 'release/') && needs.select-tests.outputs.golden == 'true' }}
+    if: ${{ !startsWith(github.head_ref, 'release/') }}
     strategy:
       fail-fast: false
       matrix:
-        os: ${{ fromJSON(needs.platform-scope.outputs.os_list) }}
+        os: ${{ fromJSON(needs.select-tests.outputs.golden == 'true' && needs.platform-scope.outputs.os_list || '["ubuntu-latest"]') }}
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1  # v7.0.1
         with:
@@ -716,14 +771,17 @@ jobs:
     # Playwright resolves, the manifest reads `unverified` and nothing reports a
     # pass — is covered by `absent-path-reads-unverified`, which needs no
     # browser and therefore stays in the sharded matrix with everything else.
+    #
+    # Linux on every PR; macOS only when the selection reaches a browser suite
+    # AND platform scope keeps macOS (the same split as node-tests / node-tests-macos).
     name: SVG Witness Tests (${{ matrix.os }})
     needs: [platform-scope, select-tests]
     runs-on: ${{ matrix.os }}
-    if: ${{ !startsWith(github.head_ref, 'release/') && needs.select-tests.outputs.browser == 'true' }}
+    if: ${{ !startsWith(github.head_ref, 'release/') }}
     strategy:
       fail-fast: false
       matrix:
-        os: ${{ fromJSON(needs.platform-scope.outputs.os_list) }}
+        os: ${{ fromJSON(needs.select-tests.outputs.browser == 'true' && needs.platform-scope.outputs.os_list || '["ubuntu-latest"]') }}
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1  # v7.0.1
         with:
@@ -909,14 +967,16 @@ jobs:
     # regardless of shard count, so they run on their own DEDICATED runner
     # (~12 s local, ~40 s CI). Separate from `golden-tests` to avoid
     # over-subscribing the fork pool (see the flaky-spawn note there).
+    # Linux on every PR; macOS whenever the selection reaches the workspace
+    # suite (it never followed platform scope).
     name: Workspace Tests (${{ matrix.os }})
     needs: select-tests
     runs-on: ${{ matrix.os }}
-    if: ${{ !startsWith(github.head_ref, 'release/') && needs.select-tests.outputs.workspace == 'true' }}
+    if: ${{ !startsWith(github.head_ref, 'release/') }}
     strategy:
       fail-fast: false
       matrix:
-        os: [ubuntu-latest, macos-26]
+        os: ${{ fromJSON(needs.select-tests.outputs.workspace == 'true' && '["ubuntu-latest","macos-26"]' || '["ubuntu-latest"]') }}
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1  # v7.0.1
         with:
@@ -970,6 +1030,7 @@ jobs:
       - install-tests
       - install-aux-tests
       - node-tests
+      - node-tests-macos
       - static-checks
       - golden-tests
       - svg-witness-tests
