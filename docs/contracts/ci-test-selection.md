@@ -20,19 +20,49 @@ keep-beta-reason: >-
 `tests.yml` used to run all ~2,490 Vitest files on every pull request and every
 merge-queue entry. A new first job, `Select tests`
 (`src/scripts/ci_select_tests.ts`), reads the diff and decides which files the
-change can reach. Every Vitest job then runs only those files, or is skipped.
+change can reach.
+
+**Since 2026-11-25 the selection governs the macOS legs only.** Every pull
+request runs the whole suite on Linux (`node-tests` ×4, `golden-tests`,
+`svg-witness-tests`, `workspace-tests`), exactly as `push: main` does. The macOS
+legs (`node-tests-macos`, and the macOS rows of golden, svg-witness and
+workspace) run the selected files, and only where platform scope keeps macOS.
+§ Why Linux is no longer selected has the measurement and the decision.
 
 | Event | Measured against | Runs |
 |---|---|---|
-| `pull_request` | `origin/<base branch>` (merge base) | selected files |
-| `pull_request` + label `ci:full-tests` | — | whole suite |
+| `pull_request` | `origin/<base branch>` (merge base) | Linux: whole suite · macOS: selected files, if platform scope keeps macOS |
+| `pull_request` + label `ci:full-tests` | — | whole suite (macOS still subject to platform scope) |
 | `merge_group` (merge queue) | `github.event.merge_group.base_sha` | selected files — inert: the queue is off for good since 2026-11-07, so the PR run is the one that gates the merge |
 | `push: main` | — | whole suite (post-merge net) |
 | `workflow_dispatch` | — | whole suite |
 
-`push: main` stays a full run on purpose: it is the instrument that catches what
-selection missed. A red `push: main` run after a green PR run is a selection
-miss and is a defect of this script, not flakiness to re-run.
+`push: main` stays a full run on purpose. With Linux unselected, a red
+`push: main` after a green PR is one of three things, never a Linux selection
+miss: a **composition** (two PRs green on their own bases, red together — strict
+status checks are off by owner ruling), a **macOS gap** (a macOS-only break on a
+PR whose macOS leg was scoped out or selected past it), or a **flake**.
+
+## Why Linux is no longer selected (2026-11-25)
+
+Measured: the `Tests` workflow on `push: main` went red on roughly every second
+merge in November. The selection was replayed against the PR diff behind each
+red run (graph built on the tree of 2026-11-25): in **15 of 19** failing
+suite/merge pairs the suite that failed on main was never selected on its PR.
+The misses were tree-wide invariants (a baseline equal to the live tree total, a
+generated table in sync with the tree census, byte ceilings on globbed files,
+citations resolved against `git ls-files`) and suites reached through subprocess
+or data paths the static graph does not follow. Adding edges one miss at a time
+was rejected: the next unknown path breaks main again.
+
+A 10-agent arena (4 advocates, 5 independent judges, 1 synthesis) chose full
+Linux on every PR, macOS selected and platform-scoped: 4 of 5 judges named it,
+none picked full parity (cost: macOS on every PR against a 5-job cap) or more
+selection heuristics (durability). Linux runner time is free on this public
+repository; the binding cost is wall-clock, about 9-12 min per PR.
+
+What it still leaves open: compositions (above), macOS-only breaks, and new
+flakes on either OS — an Ubuntu flake now blocks the PR instead of main.
 
 ## How a file is selected
 
@@ -117,8 +147,9 @@ the hook dispatcher — that most of the suite imports. Shard *count* stays at 4
 for most runs, so the saving shows up as shorter shards, not fewer runners; the
 per-shard setup (checkout, `npm ci`, `npm run build`) is unchanged.
 
-**Not measured:** the miss rate. It is observable only as `push: main` going
-red after a green PR run; count those before tightening anything further.
+**Measured 2026-11-25:** the miss rate — 15 of 19 red-main suite/merge pairs
+were never selected on the PR (§ Why Linux is no longer selected). That is why
+selection no longer gates Linux.
 
 ## Cost changes besides selection
 
@@ -172,6 +203,13 @@ Re-check with `gh api repos/event4u-app/agent-config/rulesets/17749383`; on any
 change, update the live-state table in `branch-protection-policy.md` from that JSON.
 
 ## Revisit if
+
+- a red `push: main` is a composition twice within 30 days → bring the counts to
+  the strict-status-checks waiver decision (expires 2026-12-09);
+- a red `push: main` is a deterministic macOS-only break → reopen the macOS
+  tier decision (council 2026-10-22, decision A);
+- median PR wall-clock for `Tests` exceeds 15 min over two weeks → move the
+  Linux leg to six shards before reconsidering selection on Linux;
 
 - `push: main` goes red after a green PR run for a reason selection should
   have caught → add the missing edge kind, with a test in

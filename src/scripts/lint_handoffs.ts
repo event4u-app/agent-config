@@ -285,7 +285,7 @@ export function lint(skills_dir: string): Violation[] {
                 });
                 continue;
             }
-            if (all_skills.get(target) !== 'senior') {
+            if (!['', 'senior'].includes(all_skills.get(target) ?? '')) {
                 violations.push({
                     file: skill_path,
                     line: lineno,
@@ -310,7 +310,7 @@ export function lint(skills_dir: string): Violation[] {
                 });
                 continue;
             }
-            if (all_skills.get(target) !== 'senior') {
+            if (!['', 'senior'].includes(all_skills.get(target) ?? '')) {
                 violations.push({
                     file: skill_path,
                     line: lineno,

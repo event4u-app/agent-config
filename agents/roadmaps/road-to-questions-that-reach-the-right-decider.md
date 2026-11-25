@@ -369,7 +369,7 @@ instruction", "owner directive", and their German forms).
 - **Owner:** owner
 - **Class:** 2
 - **Ownership:** business-owned
-- **Routed:** council 2026-11-21 (D6) mapped rows 5, 6 and 7 `outside`; the disposition is the owner's. Removing a reserved row is a governance self-amendment (`decision-revisit-gate.md` reserved row "Governance self-amendment"), which the council cannot clear.
+- **Routed:** council 2026-11-21 ESCALATE — Governance self-amendment. The council (D6) mapped rows 5, 6 and 7 `outside`; the disposition is the owner's. Removing a reserved row is a governance self-amendment (`decision-revisit-gate.md` reserved row "Governance self-amendment"), which the council cannot clear.
 - **Blocks:** Phase 2 — step 2.5
 - **Question:** For each reserved row the council maps `outside` the four owner classes: fold it into one of the four, keep it, or remove it?
 - **Recommendation:** fold or keep every row, remove none, so the reserved set shrinks to the four classes without dropping a protection:

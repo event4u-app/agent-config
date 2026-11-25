@@ -46,9 +46,11 @@ and keep the full search — this file only adds candidates to it.
 | road-to-a-bounded-trial-of-the-user-profile-layer | later | later | Find out whether the global user-profile layer earns its place once it is actually offered. |
 | road-to-a-byte-bound-and-a-public-figure | later | later | Two numbers this tree can now produce and cannot yet bound. |
 | road-to-a-canvas-the-code-owns | later | later | The repository is the only store of the design system. |
+| road-to-a-change-that-knows-its-reach | later | later | Before a change is written, AC can say how far it reaches — through every level of a legacy call … |
 | road-to-a-cold-start-paid-once-carried | later | later | Every step the parent roadmap deferred is either done here or explicitly disposed of — a step that still cannot … |
 | road-to-a-control-that-matches-its-neighbours | later | later | Every UI change — including a one-line follow-up with no command — that adds an interactive control uses the project's … |
 | road-to-a-court-at-the-stops | later | later | The deterministic exhibit check runs automatically at the three moments the tree already stops (plan, roadmap, review); a fresh-subagent prosecutor … |
+| road-to-a-decision-that-shows-its-matrix | later | later | Before AC asks the owner, calls the council, or records a choice, it builds a matrix sized to the decision, … |
 | road-to-a-game-the-agent-can-playtest | later | later | Playtests prove a game done. |
 | road-to-a-graph-that-feeds-the-gate | later | later | The code graph reaches the searches an agent actually runs and feeds a gate decision in shadow. |
 | road-to-a-hard-floor-the-shell-cannot-talk-past | later | later | The one floor the owner kept — irreversible, external, production and out-of-scope destructive actions — gets a mechanism at tool-call … |
@@ -152,6 +154,7 @@ and keep the full search — this file only adds candidates to it.
 | road-to-mission-catalogue | later | later | Mission catalogue — content + catalogue expansion (mission-mode follow-up) |
 | road-to-mixed-trigger-activation-cost | later | later | Road to mixed-trigger activation cost — the 12.0→12.1 behaviour regression, found and priced |
 | road-to-mod-surfaces-that-read-what-ac-knows | later | later | The one AC module grows surfaces for the state AC already measures, and AC can preview and witness destructive or … |
+| road-to-modules-you-can-swap-and-facts-with-one-source | later | later | AC can tell, for a declared module, what would have to change to replace it; it sees coupling through events … |
 | road-to-one-identity-axis | later | later | ADR-010 names `profile.id` as the one answer to "who is the user", and three trees answer it today. |
 | road-to-one-upstream-that-checks-what-leaves-carried | later | later | Every step the parent roadmap deferred is either done here or explicitly disposed of — a step that still cannot … |
 | road-to-opencode-runtime-probe | later | later | the opencode runtime probe |

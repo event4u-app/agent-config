@@ -87,7 +87,7 @@ MUST NOT be flagged.
 |---|---|---|---|
 | **No cycles** | `handoff_cycle` | Composition graph must be a DAG. A→B→A or longer cycles fail. | WHEN-to-use only |
 | **No dangling references** | `handoff_dangling` | Every link must resolve to an existing skill file. | WHEN-to-use **and** WHEN-NOT |
-| **No tier mismatch** | `handoff_tier_mismatch` | A senior skill MAY only reference other senior skills (delegate to OR offer as alternative). | WHEN-to-use **and** WHEN-NOT |
+| **No tier mismatch** | `handoff_tier_mismatch` | A senior skill MAY NOT reference a skill that declares a non-senior `tier` (delegate to OR offer as alternative). A target with no `tier` key is undeclared, not non-senior, and is not a mismatch (AI council 2026-11-24). | WHEN-to-use **and** WHEN-NOT |
 
 Required by § 2 (MUST), **not enforced by anything today**:
 

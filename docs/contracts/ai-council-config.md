@@ -117,6 +117,11 @@ members:                        # per-provider blocks, at least one enabled
     # missing from the DOCUMENT, only from this summary. Stated rather than silently
     # completed, because a reader who trusts a summary block as exhaustive will
     # reject a valid config.
+seats:                          # optional — up to 15 seats, several per provider; see "`seats`" below
+  - member: <provider>                    # required; references members.<provider>
+    role: <string>                        # optional, <= 80 chars — the seat's name and angle
+    model: <string>                       # optional; overrides member.model for this seat
+    brief: <string>                       # optional, <= 600 chars — what this seat argues for
 advisors:                       # Thinking-style replace-mode advisors
   <advisor-key>:
     enabled: <bool>
@@ -1413,6 +1418,34 @@ The light seat launch (`cli_agency_bounds.ts::LIGHT_LAUNCH_PROBES`) uses the
 same version-line rule. It used to require the exact probed version, so the
 first `claude` patch update dropped `--safe-mode` and every seat booted the
 full user environment again (probe: ~146k vs ~2.8k first-call input tokens).
+
+## `seats` — several roles at the table, more than one per provider
+
+Absent `seats:` ⇒ one seat per enabled member, exactly as before. Present ⇒ the
+table is the list, in order, and members without a seat do not sit.
+
+```yaml
+seats:
+  - { member: anthropic, role: Architect }
+  - { member: anthropic, role: Skeptic, model: claude-opus-4-1, brief: "Find the flaw that sinks this." }
+  - { member: openai,    role: Operator }
+```
+
+- A seat is a copy of its member's client — same transport, credentials and
+  cost accounting — named `<provider>#<role-slug>` (`anthropic#skeptic`;
+  `#2`, `#3` without a role; a repeated role gets `-2`). Its family is its
+  provider, so `seat_constraints.min_families` counts providers, not seats.
+- `role` and `brief` become a short preamble on the seat's system prompt.
+  `model` overrides the member's model for that seat only.
+- A seat whose member is disabled or unavailable is **absent**: the live log
+  records it with the reason; it is never silently filled by another member.
+- At most 15 seats. A malformed list fails the run before any seat is called
+  (read time, like `seat_constraints`, for the same source-size reason).
+- Every seat is a full call per turn: six seats cost six calls a round. The
+  cost preview and every cap count seats, not members.
+- Read by `src/scripts/ai_council/live_table.ts`; the live log and the human
+  inbox that come with it are specified in
+  [`council-live-table`](council-live-table.md) (beta).
 
 ## Quota exhaustion carries across rounds
 
