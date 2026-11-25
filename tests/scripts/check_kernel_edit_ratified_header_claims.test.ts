@@ -5,6 +5,7 @@ import { fileURLToPath } from 'node:url';
 import { describe, expect, it } from 'vitest';
 import { parse as parseYaml } from 'yaml';
 
+import { extractWorkflowCall, verdict as arenaRouteVerdict } from '../../src/scripts/hooks/arena_route_hook.js';
 import { verdictFor as credentialReadVerdict } from '../../src/scripts/hooks/block_credential_reads.js';
 import { check_envelope as kernelRuleGuard } from '../../src/scripts/hooks/block_kernel_rule_writes.js';
 import { check_envelope as plumbingGuard } from '../../src/scripts/hooks/block_plumbing_writes.js';
@@ -36,7 +37,10 @@ const REPO = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..', '.
  * `memory-audience-shadow` (bound 2026-11-05) is advisory, `fail_closed: false`,
  * and returns allow on every path (its own tests pin each branch), so it cannot
  * refuse an edit of either path; it records a line only for writes under
- * `agents/memory/`.
+ * `agents/memory/`. `arena-route` (bound 2026-11-25) can deny, and is filtered
+ * to `Workflow` by its manifest `tools:`, so an edit of either path never
+ * reaches it; the case below also sends the three envelopes through its
+ * verdict and asserts no refusal, since its verdict refuses only a Workflow.
  *
  * When the last case fails because a concern was bound: if it can deny (its
  * manifest `severity` is `blocking`), send an edit of both paths through the
@@ -45,6 +49,7 @@ const REPO = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..', '.
  * way, add the concern here, sorted, and say how it was checked above.
  */
 const REVIEWED_PRE_TOOL_USE = [
+    'arena-route',
     'block-config-weakening',
     'block-credential-reads',
     'block-kernel-rule-writes',
@@ -111,6 +116,12 @@ describe('the two guards the gate header names', () => {
         }
         for (const env of envelopes('src/rules/non-destructive-by-default.md')) {
             expect(kernelRuleGuard(env)[0], `kernel-rule guard, ${env.tool_name}`).toBe(true);
+        }
+    });
+
+    it.each(UNGUARDED)('the arena-route guard does not deny an edit of %s', (rel) => {
+        for (const env of envelopes(rel)) {
+            expect(arenaRouteVerdict(extractWorkflowCall(env)).block, env.tool_name).toBe(false);
         }
     });
 
