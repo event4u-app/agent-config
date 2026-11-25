@@ -1,6 +1,6 @@
 #!/usr/bin/env tsx
 /**
- * A host outside `lean_projection.hosts` receives EXACTLY what `eager-all` writes.
+ * A host outside the form record's delivery set receives EXACTLY what `eager-all` writes.
  *
  * `road-to-delivery-for-every-host` step 1.4, and the gate behind its AC-2.
  *
@@ -19,10 +19,10 @@
  *
  * So this gate GENERATES, twice, into a temporary root it owns:
  *
- *   1. `mode: eager-all`            → the reference trees
- *   2. `mode: delivery`, the configured `hosts:` → the trees under test
+ *   1. no form record                       → the reference (eager-all) trees
+ *   2. a copy of `src/config/project-tree-form.json` → the trees under test
  *
- * and requires every tree whose host is NOT in `hosts` to be byte-identical
+ * and requires every tree whose host is NOT a delivery host to be byte-identical
  * across the two runs. It never writes into the repository: the fixture root is
  * a `mkdtemp` directory, seeded from `dist/agent-src/rules`, and removed on exit.
  *
@@ -40,29 +40,12 @@
  * byte-identical` line it printed until 2026-09-08 (R2 finding 12) — a green
  * sentence for an assertion that was never made.
  *
- * IT ALSO DOES NOT CONSULT `lean_projection.mode`, and the divergence from
- * `check_rule_projection_integrity._lean_projection_settings_for` — which
- * checks the mode FIRST so "a `hosts:` list left behind after a rollback
- * exempts nothing" — is deliberate. Recorded 2026-09-08 because R2 finding 13
- * read it as an oversight, and running the mode-first variant here reddens the
- * gate on this repository's own settings, which carry no `lean_projection`
- * block at all.
- *
- * The two gates ask different questions. The sibling asks a question ABOUT THE
- * CURRENT TREE — "is any entry on disk a stub in a tree with no delivery
- * slot?" — so the live mode is part of its subject. This gate asks a
- * COUNTERFACTUAL ABOUT THE PROJECTOR — "under a thinning mode with the
- * configured hosts, would every other host's tree still be byte-identical?" —
- * and supplies `mode: delivery` to its own test fixture to ask it. Reading the
- * live mode would make the exemption set and the fixture disagree: with the
- * mode off, `configured` would be empty while the fixture still thinned, and
- * every stub in the delivery host's tree would be reported as a parity break.
- *
- * The consequence the finding names is real and is not a hole: after a rollback
- * to `eager-all`, a leftover `hosts: [claude-code]` still excludes
- * `.claude/rules` from THIS comparison. Nothing is hidden by that, because
- * under `eager-all` nothing is thinned and the on-disk state is the sibling
- * gate's subject.
+ * NO SETTINGS KEY DRIVES EITHER FIXTURE (ADR-293). Until 2026-10-22 the two
+ * fixtures were seeded with `lean_projection.*` settings and the delivery set
+ * was read from the same key — after `condense` had stopped reading it, so both
+ * fixtures projected eager-all and the gate compared two identical trees. The
+ * delivery set now comes from `shippedProjection`, the reader the projector
+ * uses, and the thinning fixture carries the record itself.
  *
  * It also does not read the repository's own `.claude/rules` etc. Those are
  * gitignored and absent on a fresh CI checkout, and a gate that silently passes
@@ -79,8 +62,7 @@ import * as path from 'node:path';
 import { fileURLToPath, pathToFileURL } from 'node:url';
 
 import { GateLedger, UnaccountedTargetsError } from './_lib/gate_ledger.js';
-import { leanProjectionHostsRaw } from './_lib/hook_settings.js';
-import { resolveLeanProjectionHosts } from './_lib/lean_projection_mode.js';
+import { PROJECT_TREE_FORM_REL, shippedProjection } from './_lib/project_tree_form.js';
 import { reportScanned } from './_lib/scan_scope.js';
 import {
     _getStateForTest,
@@ -114,8 +96,12 @@ export function treeContents(root: string, rel: string): Record<string, string> 
     return out;
 }
 
-/** Copy the rule corpus into a fresh fixture root carrying `settings`. */
-function seedFixture(repoRoot: string, tmp: string, label: string, settings: string): string {
+/**
+ * Copy the rule corpus into a fresh fixture root. `withRecord` also copies the
+ * package-owned form record, which is the only input `condense` reads for the
+ * project-tree form since ADR-293 — without it the fixture projects eager-all.
+ */
+function seedFixture(repoRoot: string, tmp: string, label: string, withRecord: boolean): string {
     const root = path.join(tmp, label);
     const dist = path.join(root, 'dist', 'agent-src', 'rules');
     fs.mkdirSync(dist, { recursive: true });
@@ -123,7 +109,11 @@ function seedFixture(repoRoot: string, tmp: string, label: string, settings: str
     for (const name of fs.readdirSync(src).filter((f) => f.endsWith('.md'))) {
         fs.copyFileSync(path.join(src, name), path.join(dist, name));
     }
-    fs.writeFileSync(path.join(root, '.agent-settings.yml'), settings, 'utf-8');
+    const record = path.join(repoRoot, PROJECT_TREE_FORM_REL);
+    if (withRecord && fs.existsSync(record)) {
+        fs.mkdirSync(path.dirname(path.join(root, PROJECT_TREE_FORM_REL)), { recursive: true });
+        fs.copyFileSync(record, path.join(root, PROJECT_TREE_FORM_REL));
+    }
     return root;
 }
 
@@ -164,7 +154,7 @@ export function compareTrees(
 /**
  * The notice for a comparison with NO SUBJECT, or `null` when there is one.
  *
- * R2 finding 12: with every thinnable host in `lean_projection.hosts` there is
+ * R2 finding 12: with every thinnable host in the delivery set there is
  * no non-delivery tree left, so this gate's assertion is VACUOUS — and it used
  * to say so inside the same `✅ … byte-identical` sentence it prints when the
  * assertion actually held. Zero compared is not a pass; it is an absence of
@@ -181,11 +171,50 @@ export function parityScopeNotice(configured: readonly string[]): string | null 
     if (comparable.length > 0) return null;
     return (
         `⚠️  check_host_tree_parity: NOTHING COMPARED — every thinnable host is in ` +
-        `lean_projection.hosts [${configured.join(', ') || '(none)'}], so no non-delivery tree ` +
+        `the form record's delivery set [${configured.join(', ') || '(none)'}], so no non-delivery tree ` +
         `exists and this gate asserts nothing about this configuration. A stub in a tree with ` +
         `no bound delivery slot is reported by check_rule_projection_integrity's host axis ` +
         `(thinnedTreeFindings); the byte-identity question here has no subject.\n`
     );
+}
+
+/** The two generated fixture roots and the delivery hosts the test run was built for. */
+export interface ParityFixtures {
+    readonly eagerRoot: string;
+    readonly testRoot: string;
+    readonly configured: readonly string[];
+}
+
+/**
+ * Generate the eager-all and the thinning projection of `root`'s rule corpus
+ * under `tmp`, restoring `condense`'s root and `HOME` afterwards.
+ */
+export function generateParityFixtures(root: string, tmp: string): ParityFixtures {
+    // The delivery set is the one the projector itself derives from the record —
+    // never a `lean_projection` settings value, which ADR-293 removed.
+    const configured = shippedProjection(root).hosts;
+    const saved = _getStateForTest();
+    const savedHome = process.env['HOME'];
+    try {
+        // An empty HOME: user-scope dedup must find no twin, or the two runs
+        // would differ for a reason that has nothing to do with the host axis.
+        const home = path.join(tmp, 'home');
+        fs.mkdirSync(home, { recursive: true });
+        process.env['HOME'] = home;
+
+        const eagerRoot = seedFixture(root, tmp, 'eager', false);
+        _pointCondenseAt(eagerRoot);
+        generate_rule_symlinks();
+
+        const testRoot = seedFixture(root, tmp, 'test', true);
+        _pointCondenseAt(testRoot);
+        generate_rule_symlinks();
+        return { eagerRoot, testRoot, configured };
+    } finally {
+        _pointCondenseAt(saved.PROJECT_ROOT);
+        if (savedHome === undefined) delete process.env['HOME'];
+        else process.env['HOME'] = savedHome;
+    }
 }
 
 export function main(argv: readonly string[] = []): number {
@@ -197,36 +226,18 @@ export function main(argv: readonly string[] = []): number {
         );
         return 2;
     }
-    const configured = resolveLeanProjectionHosts(leanProjectionHostsRaw(root)).hosts;
-    const hostList = configured.join(', ') || '(none)';
 
-    const saved = _getStateForTest();
-    const savedHome = process.env['HOME'];
     const tmp = fs.mkdtempSync(path.join(os.tmpdir(), 'host-parity-'));
     let findings: ParityFinding[];
+    let configured: readonly string[];
     try {
-        // An empty HOME: user-scope dedup must find no twin, or the two runs
-        // would differ for a reason that has nothing to do with the host axis.
-        const home = path.join(tmp, 'home');
-        fs.mkdirSync(home, { recursive: true });
-        process.env['HOME'] = home;
-
-        const eagerRoot = seedFixture(root, tmp, 'eager', 'lean_projection:\n  mode: eager-all\n');
-        _pointCondenseAt(eagerRoot);
-        generate_rule_symlinks();
-
-        const hostsBlock = configured.length === 0 ? '' : `  hosts: [${configured.join(', ')}]\n`;
-        const testRoot = seedFixture(root, tmp, 'test', `lean_projection:\n  mode: delivery\n${hostsBlock}`);
-        _pointCondenseAt(testRoot);
-        generate_rule_symlinks();
-
-        findings = compareTrees(eagerRoot, testRoot, configured);
+        const fx = generateParityFixtures(root, tmp);
+        configured = fx.configured;
+        findings = compareTrees(fx.eagerRoot, fx.testRoot, configured);
     } finally {
-        _pointCondenseAt(saved.PROJECT_ROOT);
-        if (savedHome === undefined) delete process.env['HOME'];
-        else process.env['HOME'] = savedHome;
         fs.rmSync(tmp, { recursive: true, force: true });
     }
+    const hostList = configured.join(', ') || '(none)';
 
     const compared = Object.entries(TREES).filter(([, h]) => !configured.includes(h)).length;
     reportScanned({
@@ -261,13 +272,13 @@ export function main(argv: readonly string[] = []): number {
     if (findings.length > 0) {
         process.stderr.write(
             `❌  check_host_tree_parity: ${String(findings.length)} entry(ies) differ between ` +
-                `eager-all and delivery on a host that is NOT in lean_projection.hosts [${hostList}]:\n`,
+                `eager-all and delivery on a host that is NOT in the delivery set [${hostList}]:\n`,
         );
         for (const f of findings) {
             process.stderr.write(`  · ${f.tree}/${f.rule} (${f.host}) — ${f.reason}\n`);
         }
         process.stderr.write(
-            '\nA host outside `lean_projection.hosts` must receive exactly what `eager-all` writes ' +
+            '\nA host outside the delivery set must receive exactly what `eager-all` writes ' +
                 '(K3, and the completeness invariant). Fix the projector, never the expectation.\n',
         );
         return 1;

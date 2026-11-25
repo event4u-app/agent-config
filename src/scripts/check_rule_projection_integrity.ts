@@ -108,12 +108,7 @@ import { fileURLToPath, pathToFileURL } from 'node:url';
 import { GateLedger, UnaccountedTargetsError } from './_lib/gate_ledger.js';
 import { assertScanned, DeadScopeError } from './_lib/scan_scope.js';
 import { _resetStateForTest as _pointCondenseAt, projected_rule_trees } from './condense.js';
-import { leanProjectionHostsRaw, leanProjectionModeRaw } from './_lib/hook_settings.js';
-import {
-    normalizeLeanProjectionMode,
-    resolveLeanProjectionHosts,
-    writesThinFiles,
-} from './_lib/lean_projection_mode.js';
+import { shippedProjection } from './_lib/project_tree_form.js';
 import { is_thin_entry } from './project_thin_rules.js';
 
 const _HERE = path.resolve(fileURLToPath(import.meta.url));
@@ -342,22 +337,18 @@ export function auditRuleProjection(
 }
 
 /**
- * The `lean_projection` block as it stands under `root`.
+ * The hosts whose tree may legitimately hold thin stubs under `root`.
  *
- * Read with the HOOK-side indentation reader rather than a YAML parse, on
- * purpose: this gate runs first in the pre-push chain and on a fresh CI
- * checkout, and a parser failure there must not fail a rule audit for a reason
- * unrelated to rules. `_lib/lean_projection_mode.ts` owns what the values MEAN,
- * so this gate and the projector cannot disagree.
- *
- * `mode` is checked before `hosts`: with the mode off no host is a delivery
- * host, so a `hosts:` list left behind after a rollback exempts nothing and
- * every stub in every tree is reported.
+ * Read from the package-owned record (`src/config/project-tree-form.json`)
+ * through the same `shippedProjection` the projector uses, so this gate and
+ * `condense` cannot disagree about which tree was thinned. NO settings read:
+ * ADR-293 removed `lean_projection.*`, and until 2026-10-22 this gate still
+ * honoured a leftover `<root>/.agent-settings.yml` value, which made the key's
+ * tombstone ("ignored") untrue for it. A tree with no record gets no delivery
+ * host, so every stub in every tree is reported — the full-form direction.
  */
-function _lean_projection_settings_for(root: string): { hosts: readonly string[] } {
-    const mode = normalizeLeanProjectionMode(leanProjectionModeRaw(root));
-    if (!writesThinFiles(mode)) return { hosts: [] };
-    return { hosts: resolveLeanProjectionHosts(leanProjectionHostsRaw(root)).hosts };
+export function _lean_projection_settings_for(root: string): { hosts: readonly string[] } {
+    return { hosts: shippedProjection(root).hosts };
 }
 
 /** Group findings by tree, preserving rule order, for a report a reader can act on. */

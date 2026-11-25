@@ -33,7 +33,12 @@ import { _resetStateForTest, projected_rule_trees } from '../../src/scripts/cond
 import { DeadScopeError } from '../../src/scripts/_lib/scan_scope.js';
 import { PROJECT_RULE_DIRS, globalRuleLayerNames } from '../../src/install/globalRuleLayers.js';
 import { isExclusivelyPackageOnly } from '../../src/install/partitionEligibility.js';
-import { auditRuleProjection, main, renderFindings } from '../../src/scripts/check_rule_projection_integrity.js';
+import {
+    _lean_projection_settings_for,
+    auditRuleProjection,
+    main,
+    renderFindings,
+} from '../../src/scripts/check_rule_projection_integrity.js';
 
 const REPO_ROOT = path.resolve(__dirname, '..', '..');
 const TREE = '.claude/rules';
@@ -274,5 +279,38 @@ describe('the expected set comes from the generator, not from dist/ verbatim', (
         // Not an assertion about the tree — a statement about what this run proved,
         // so a reader can tell a real pass from a vacuous one.
         process.stdout.write(`    (narrowing verified on ${String(checked)} tree(s))\n`);
+    });
+});
+
+// ADR-293 removed `lean_projection.*`. Until 2026-10-22 this gate still read it
+// from `<root>/.agent-settings.yml`, so a leftover value moved which host trees
+// it exempted while the tombstone said the key was ignored (finding
+// 3b0993429472). The delivery hosts must come from the package-owned record the
+// projector reads, and from nothing a consumer can write.
+describe('the delivery-host set ignores a leftover lean_projection key (ADR-293)', () => {
+    function rootWith(settings: string | null, record: boolean): string {
+        const root = fs.mkdtempSync(path.join(os.tmpdir(), 'rpi-adr293-'));
+        if (settings !== null) fs.writeFileSync(path.join(root, '.agent-settings.yml'), settings, 'utf-8');
+        if (record) {
+            const rel = path.join('src', 'config', 'project-tree-form.json');
+            fs.mkdirSync(path.join(root, 'src', 'config'), { recursive: true });
+            fs.copyFileSync(path.join(REPO_ROOT, rel), path.join(root, rel));
+        }
+        return root;
+    }
+
+    it('a hand-written hosts list enrols nobody when no record exists', () => {
+        const root = rootWith('lean_projection:\n  mode: delivery\n  hosts: [cursor, cline]\n', false);
+        expect(_lean_projection_settings_for(root).hosts).toEqual([]);
+    });
+
+    it('a hand-written eager-all does not switch the shipped record off', () => {
+        const root = rootWith('lean_projection:\n  mode: eager-all\n', true);
+        expect(_lean_projection_settings_for(root).hosts).toEqual(['claude-code']);
+    });
+
+    it('a hand-written hosts list does not widen the shipped record', () => {
+        const root = rootWith('lean_projection:\n  mode: delivery\n  hosts: [claude-code, cursor]\n', true);
+        expect(_lean_projection_settings_for(root).hosts).toEqual(['claude-code']);
     });
 });
