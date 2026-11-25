@@ -51,9 +51,12 @@ A row here has shipped in no release. It carries no version, because the
 version it lands in is a release decision and writing a guess would be the
 pinned-release-target this repository refuses elsewhere. The release that
 carries it names the row in its own row of the table below, and the row stays
-here until that release is cut: the cut reads this table into the release's
-highlights (`pendingBreakingLine` in `src/scripts/_lib/release_highlights.ts`),
-so removing it earlier would drop it from the release notes. Once the release
+here until that release is cut: the cut reads the index into the release's
+highlights (`appendIndexBreakingLines` in `src/scripts/_lib/release_highlights.ts`),
+so removing it earlier would drop it from the release notes. A major whose own
+row below is already filed contributes that row instead, because it names the
+Pending rows the major carries and listing both would announce each break
+twice; any other cut contributes this table's unshipped rows. Once the release
 is published the row is deleted from this table. A row that a version row below
 already names is therefore shipping in that version, not still undecided.
 
