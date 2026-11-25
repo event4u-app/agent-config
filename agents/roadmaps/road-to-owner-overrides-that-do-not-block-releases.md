@@ -8,7 +8,7 @@ estate_offset_exempt: "Ordered by the owner on 2026-11-25 after a release of mai
 estate_growth_exempt: "Owner request in session on 2026-11-25: release main, then 'eine Folgeroadmap, dass wir das Problem dauerhaft beheben müssen'. Authorised by agents/evidence/owner-directives/2026-11-25-owner-override-release-roadmap.md"
 relates:
   - slug: road-to-review-loops-that-converge
-    relation: depends-on
+    relation: depends
     note: "Its open owner blocker owner-override-satisfies-ratification-ci decides whether an owner record turns the ratification gate green — the root of this roadmap's defect. Phase 3 here waits for that answer."
   - slug: road-to-gates-that-check-what-they-claim
     relation: extends
@@ -60,8 +60,8 @@ over the override's red check names the record that covers it.
 - [ ] **1.1** Run the after-the-fact council review of the #3037 bypass. Commit
   it under `agents/evidence/council/` citing subject `b961654c…4477`, and set
   `council_review` in `2026-11-25-standing-bypass-3037.md`.
-  verify: `check_platform_anchor` reports no finding for that record. Due by
-  2026-12-09.
+  verify: `grep -c '^council_review: agents/evidence/council/' agents/evidence/bypass-records/2026-11-25-standing-bypass-3037.md` -> /^1$/
+  Due by 2026-12-09.
 
 ## Phase 2 — the record is written with the merge, not after a failed release
 
