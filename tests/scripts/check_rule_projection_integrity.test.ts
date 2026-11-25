@@ -182,6 +182,23 @@ describe('a checkout with every tool deactivated is skipped, not failed', () => 
         expect(code).toBe(0);
         expect(chunks.join('')).toContain('no host rule tree is active');
     });
+
+    it('refuses an unknown flag as a usage error instead of auditing green', () => {
+        const chunks: string[] = [];
+        const original = process.stderr.write.bind(process.stderr);
+        process.stderr.write = ((c: string | Uint8Array) => {
+            chunks.push(String(c));
+            return true;
+        }) as typeof process.stderr.write;
+        let code: number;
+        try {
+            code = main(['--quite']);
+        } finally {
+            process.stderr.write = original;
+        }
+        expect(code).toBe(2);
+        expect(chunks.join('')).toContain("Unknown option '--quite'");
+    });
 });
 
 describe('the expected set comes from the generator, not from dist/ verbatim', () => {

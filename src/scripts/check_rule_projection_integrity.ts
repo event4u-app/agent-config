@@ -106,6 +106,7 @@ import process from 'node:process';
 import { fileURLToPath, pathToFileURL } from 'node:url';
 
 import { GateLedger, UnaccountedTargetsError } from './_lib/gate_ledger.js';
+import { parseGateArgs, USAGE_EXIT } from './_lib/gate_args.js';
 import { assertScanned, DeadScopeError } from './_lib/scan_scope.js';
 import { _resetStateForTest as _pointCondenseAt, projected_rule_trees } from './condense.js';
 import { shippedProjection } from './_lib/project_tree_form.js';
@@ -384,10 +385,16 @@ export function renderFindings(audit: ProjectionAudit): string[] {
 }
 
 export function main(argv?: readonly string[]): number {
-    const args = argv ?? process.argv.slice(2);
-    const quiet = args.includes('--quiet');
-    const idx = args.indexOf('--root');
-    const root = path.resolve(idx !== -1 ? (args[idx + 1] ?? REPO_ROOT) : REPO_ROOT);
+    const parsed = parseGateArgs('check_rule_projection_integrity', argv ?? process.argv.slice(2), {
+        quiet: { type: 'boolean' },
+        root: { type: 'string' },
+    });
+    if (!parsed.ok) {
+        process.stderr.write(`${parsed.message}\n`);
+        return USAGE_EXIT;
+    }
+    const quiet = parsed.values.quiet === true;
+    const root = path.resolve(parsed.values.root ?? REPO_ROOT);
 
     // `condense`'s emit plan reads `MODULE_STATE`, whose only root seam is this
     // reassignment. Repointing it is what makes `--root` mean the same thing for
