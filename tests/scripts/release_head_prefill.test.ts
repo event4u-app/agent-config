@@ -25,9 +25,11 @@ import {
     HEAD_NONE,
     type SpanCommit,
     derive_category_hits,
+    appendIndexBreakingLines,
     pendingBreakingLine,
     pendingRowCommits,
     publication_blockers,
+    releasedBreakingLine,
     render_derived_head_values,
     stale_draft_labels,
 } from '../../src/scripts/_lib/release_highlights.js';
@@ -272,5 +274,84 @@ describe('pending breaking-changes rows reach the curated head', () => {
             if (tags.stdout.trim() !== '') shipped.push(`${sha} (in ${tags.stdout.trim().split('\n')[0]})`);
         }
         expect(shipped).toEqual([]);
+    });
+});
+
+// The generated `### BREAKING CHANGES` section lists only commits carrying a
+// breaking marker, so a major whose index row names several breaks — 17.0.0
+// raised the Node floor, removed three settings keys and armed three guards —
+// published one. The row for the major being cut reaches the curated head, the
+// same way a Pending row already did.
+describe("the cut major's own index row reaches the curated head", () => {
+    const index = [
+        '# Breaking',
+        '',
+        '## Pending — landed on `main`, not yet in a released major',
+        '',
+        '| Landed | What changes | Migration |',
+        '|---|---|---|',
+        '| 2026-10-18 (`aaaaaaa1`) | **Guard A runs.** | Nothing. |',
+        '',
+        '## Breaking changes by major',
+        '',
+        '| Version | Date | What broke | Migration | Consumer impact |',
+        '|---|---|---|---|---|',
+        '| **17.0.0** | 2026-10-21 | Node floor. Keys `a.b` removed. | Upgrade Node. | action |',
+        '| 16.0.0 | 2026-10-01 | **Older row.** | z | z |',
+        '| 6.0.0 | 2026-06-12 | Tree moved. | x | action |',
+        '| 6.0.0 | 2026-06-12 | Key renamed. | y | action |',
+    ].join('\n');
+
+    it('carries the What-broke cell of the row for the version being cut, bold or not', () => {
+        const line = releasedBreakingLine(index, '17.0.0');
+        expect(line).toContain('Node floor. Keys `a.b` removed.');
+        expect(line).toContain('docs/MIGRATION.md');
+        expect(line).not.toContain('Older row');
+        expect(releasedBreakingLine(index, '16.0.0')).toContain('**Older row.**');
+    });
+
+    it('joins every row a major has, in index order', () => {
+        expect(releasedBreakingLine(index, '6.0.0')).toMatch(/Tree moved\. Key renamed\./u);
+    });
+
+    it('is null for a minor, a patch, an absent version and a major with no row', () => {
+        expect(releasedBreakingLine(index, '17.1.0')).toBeNull();
+        expect(releasedBreakingLine(index, '17.0.1')).toBeNull();
+        expect(releasedBreakingLine(index, null)).toBeNull();
+        expect(releasedBreakingLine(index, '18.0.0')).toBeNull();
+    });
+
+    it('is appended to the migration label after any derived value, and keeps the isShipped filter on Pending rows', () => {
+        const out: Record<string, string> = { 'Default changes + migration': 'Derived.' };
+        appendIndexBreakingLines(out, index, '17.0.0', () => true);
+        expect(out['Default changes + migration']).toMatch(/^Derived\. Breaking in 17\.0\.0/u);
+        expect(out['Default changes + migration']).not.toContain('Guard A');
+        const unshipped: Record<string, string> = {};
+        appendIndexBreakingLines(unshipped, index, '17.0.0', () => false);
+        expect(unshipped['Default changes + migration']).toMatch(/Guard A runs\..*Breaking in 17\.0\.0/u);
+    });
+
+    it('names every 17.0.0 break from the real index in the rendered head, within the cap', () => {
+        const real = fs.readFileSync(path.join(import.meta.dirname, '..', '..', 'BREAKING_CHANGES.md'), 'utf-8');
+        const out: Record<string, string> = {};
+        appendIndexBreakingLines(out, real, '17.0.0', () => true);
+        const head = render_release_head(out);
+        for (const broke of ['>=22.6.0', 'lean_projection.mode', 'lean_projection.hosts', 'projection.rule_workspaces', 'fail_closed', '--purge']) {
+            expect(head.join('\n')).toContain(broke);
+        }
+        expect(release_head_line_count(head)).toBeLessThanOrEqual(RELEASE_HEAD_CAP_LINES);
+    });
+
+    it('keeps the head within the cap for every released major, the long rows included', () => {
+        const real = fs.readFileSync(path.join(import.meta.dirname, '..', '..', 'BREAKING_CHANGES.md'), 'utf-8');
+        const majors = [...real.matchAll(/^\| \**(\d+\.0\.0)\** \|/gmu)].map((m) => m[1]!);
+        expect(majors).toContain('20.0.0');
+        for (const v of majors) {
+            const out: Record<string, string> = {};
+            appendIndexBreakingLines(out, real, v, () => true);
+            const head = render_release_head(out);
+            expect(head.join('\n')).toContain(`Breaking in ${v}`);
+            expect(release_head_line_count(head)).toBeLessThanOrEqual(RELEASE_HEAD_CAP_LINES);
+        }
     });
 });
