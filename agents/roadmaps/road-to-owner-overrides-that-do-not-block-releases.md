@@ -13,6 +13,8 @@ relates:
   - slug: road-to-gates-that-check-what-they-claim
     relation: extends
     note: "Its 2.3 reports a red kernel merge without a bypass record and backfills the old ones; #3037 arrives there. This roadmap does not duplicate the detection."
+depends:
+  - road-to-review-loops-that-converge
 ---
 # Road to owner overrides that do not block releases
 
