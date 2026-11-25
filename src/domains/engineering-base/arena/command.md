@@ -41,7 +41,10 @@ driver is `agent-config bracket <sub>`, which works in any project.
 
 **Why it works:** (`outcome-not-steps`) every line solves the same task, so the matches compare
 solutions rather than opinions — and a loss that looks wrong can be appealed
-instead of silently ending a good idea.
+instead of silently ending a good idea. Each line is dealt a distinct approach
+angle, so the field differs in method instead of collapsing into near-duplicates,
+and the driver writes every attack, defence and judge brief, so no match is
+judged on a question the orchestrator improvised.
 
 ## When to use which
 

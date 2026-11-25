@@ -49,11 +49,28 @@ The plan line names the tier, its signal, the line ceiling, the call ceiling
   proven local weights; otherwise 0, and the plan line says so. A free route that
   answers 402 is `NO OUTPUT`, never a silent paid fallback.
 
-### 2. Initialise and generate
+### 2. Write the task file — it is all any line, attacker or judge will see
+
+Subagents do not see this conversation. Write `<file>` to stand on its own: the
+request in the user's words, every requirement and constraint stated anywhere in
+the conversation, the context a stranger needs (absolute paths, pasted data,
+conventions), what "done" means, and — when there is an answer to beat — what the
+user disliked about it. Add no requirement the user never gave, and never your own
+view of the right answer: that steers every line the same way, which is the
+opposite of a bracket. A rejected answer goes verbatim into its own file for § 6.
+
+### 3. Initialise and generate
 
 ```bash
 agent-config bracket init --run <id> --task <file> --tier S1 [--seed N] [--angles <file>]
 ```
+
+Without `--angles`, every line is dealt a **distinct approach angle** from the
+built-in deck — a reasoning mode, a workflow and a trade-off stance; no two lines
+share one, and each axis is spread evenly <!-- harvest:arena-dealt-approach-angles -->.
+`--angles` replaces the deck with your own list, and is refused when it holds fewer
+distinct angles than lines. The angles live in `angles.json`; the judge never sees
+them.
 
 Dispatch one subagent per line in waves of `min(subagents.max_parallel, host cap)`,
 each reading `briefs/<line>.md` and writing **only** `lines/<line>.md` under
@@ -62,22 +79,45 @@ then `scan`. A line missing twice is `NO OUTPUT`. Dedupe near-duplicates into th
 lineage before pairing; when two waves add under 20 % new lines, stop spawning and,
 where allowed, add another model family instead of more of the same.
 
-### 3. Judge matches
+### 4. Judge matches
 
 ```bash
 agent-config bracket advance --run <id>
-agent-config bracket collect --run <id> --match <M> --verdict <file.json>
+agent-config bracket briefs  --run <id> --match <M> --seat-id <X> --seat-family <F> --seat-billing <B>
+agent-config bracket collect --run <id> --match <M>   # reads matches/<M>/verdict.json in the run
 ```
 
-Per match: run the project's own deterministic checks (tests, type-checker, linter)
-on both lines first — a line failing one carries an upheld FATAL, whatever the prose
-says. Then each side attacks the other (FATAL / MAJOR / MINOR), each defends and
-revises, then one **paid** judge returns rubric scores (0–10 per criterion) and a
-pick as JSON. The script decides: an upheld FATAL loses, otherwise points win, and
-a pick that contradicts the points is overruled with a note. A `free-quota` seat's
-verdict is refused. The judge never sees card state, lineage, or model family.
+Per match, `briefs` first copies both lines into the match folder as
+`original-a.md` / `original-b.md` (and `revised-*` as the same text, so an
+undefended solution is judged as first written), records the judge seat in
+`seat.json`, and writes the five match briefs under `matches/<M>/briefs/`. It
+refuses a closed match and a `free-quota` seat. Every role reads only those
+match-local copies, so no brief and no file the judge opens names a line.
 
-### 4. Appeals and the card
+Then run the project's own deterministic checks (tests, type-checker, linter) on
+both revised copies and write their output to `matches/<M>/checks-a.txt` /
+`checks-b.txt`, with line ids and run paths scrubbed — a solution failing one
+carries an upheld FATAL, whatever the prose says. Dispatch each brief as written,
+never edited per agent: `attack-a` + `attack-b` (FATAL / MAJOR / MINOR), then
+`defend-a` + `defend-b` (concede and fix, or rebut with evidence; full revised
+solution), then `judge` on the **paid** seat you named. The judge brief carries the
+rubric with anchors <!-- harvest:bracket-rubric-anchors --> and a verdict skeleton
+of placeholders, so a verdict copied unfilled is refused. `collect` refuses a
+verdict whose seat differs from `seat.json`. The script decides: an upheld FATAL
+loses, otherwise points win, and a pick that contradicts the points is overruled
+with a note. The winner's revision becomes its `lines/<id>.md` for the next round;
+the pre-match text stays beside it as `lines/<id>.before-<M>.md`.
+
+A judge that fails twice gets a third, fresh run on a paid seat — the orchestrator
+never decides a match. A missing attack counts as no attack.
+
+**While it runs:** do not read lines, attacks or verdicts — `next` and `status` are
+all you need, and the state survives compaction. After each `advance`, one line to
+the user ("round 2 done: 5 of 10 left"), nothing more. On a long run, suggest the
+host's accept-edits mode once instead of hundreds of file approvals; never change
+the user's settings yourself.
+
+### 5. Appeals and the card
 
 `next` lists losses with an appeal signal (close gap, pick ≠ points, loser more
 correct, FATAL rebutted, audit sample). For each:
@@ -102,7 +142,7 @@ correct, FATAL rebutted, audit sample). For each:
   subscription seat free) is `--no-jury "<reason>"` — both are logged. The binding form (`agent-config bracket jury`) is
   refused until the claim `paid-appeal-jury` is backed.
 
-### 5. Close honestly
+### 6. Close honestly
 
 At `done`, compare the winner blind against the rejected baseline in **both**
 orders; a verdict that flips is "no clear winner". Report every card (signal,
