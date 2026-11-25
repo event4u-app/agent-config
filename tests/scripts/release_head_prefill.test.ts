@@ -321,14 +321,35 @@ describe("the cut major's own index row reaches the curated head", () => {
         expect(releasedBreakingLine(index, '18.0.0')).toBeNull();
     });
 
-    it('is appended to the migration label after any derived value, and keeps the isShipped filter on Pending rows', () => {
+    it('is appended to the migration label after any derived value', () => {
         const out: Record<string, string> = { 'Default changes + migration': 'Derived.' };
         appendIndexBreakingLines(out, index, '17.0.0', () => true);
         expect(out['Default changes + migration']).toMatch(/^Derived\. Breaking in 17\.0\.0/u);
-        expect(out['Default changes + migration']).not.toContain('Guard A');
-        const unshipped: Record<string, string> = {};
-        appendIndexBreakingLines(unshipped, index, '17.0.0', () => false);
-        expect(unshipped['Default changes + migration']).toMatch(/Guard A runs\..*Breaking in 17\.0\.0/u);
+    });
+
+    // BREAKING_CHANGES.md § Pending: "The release that carries it names the row
+    // in its own row of the table below". A major whose by-major row is filed
+    // therefore already names every Pending row it ships, so emitting both
+    // would announce each pending break twice in one head.
+    it("emits a major's by-major row INSTEAD of the Pending rows it carries — no break twice", () => {
+        const out: Record<string, string> = {};
+        appendIndexBreakingLines(out, index, '17.0.0', () => false);
+        const value = out['Default changes + migration'] ?? '';
+        expect(value).toContain('Breaking in 17.0.0');
+        expect(value).not.toContain('Guard A');
+        expect(value.match(/Breaking/gu)?.length).toBe(1);
+    });
+
+    it('still emits unshipped Pending rows for a minor, a patch, or a major with no row yet', () => {
+        for (const v of ['17.1.0', '17.0.1', '18.0.0']) {
+            const out: Record<string, string> = {};
+            appendIndexBreakingLines(out, index, v, () => false);
+            expect(out['Default changes + migration']).toContain('Guard A runs.');
+            expect(out['Default changes + migration']).not.toContain('Breaking in');
+        }
+        const shipped: Record<string, string> = {};
+        appendIndexBreakingLines(shipped, index, '17.1.0', () => true);
+        expect(shipped['Default changes + migration']).toBeUndefined();
     });
 
     it('names every 17.0.0 break from the real index in the rendered head, within the cap', () => {

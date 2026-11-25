@@ -808,8 +808,9 @@ export function derive_head_prefill(
 
 /**
  * Append what `BREAKING_CHANGES.md` says this release breaks to the migration
- * label: every Pending row no earlier tag already ships (`isShipped`), and —
- * for a major — that major's own by-major row. No commit subject carries the
+ * label: for a major with a filed by-major row, that row (it names the Pending
+ * rows the major carries); otherwise every Pending row no earlier tag already
+ * ships (`isShipped`). No commit subject carries the
  * rows' wording, so the span classifier cannot derive either, and the
  * generated `### BREAKING CHANGES` section lists only commits with a breaking
  * marker: 17.0.0's row named six breaks while one commit carried the marker.
@@ -820,11 +821,15 @@ export function appendIndexBreakingLines(
     version: string | null,
     isShipped: (sha: string) => boolean = () => false,
 ): void {
-    for (const line of [pendingBreakingLine(index, isShipped), releasedBreakingLine(index, version)]) {
-        if (line === null) continue;
-        const existing = out[MIGRATION_LABEL];
-        out[MIGRATION_LABEL] = existing ? `${existing} ${line}` : line;
-    }
+    // `BREAKING_CHANGES.md` § Pending: the release that carries a Pending row
+    // names it in its own by-major row. So once that row is filed it is the
+    // whole account of the major's breaks, and adding the Pending rows beside it
+    // would announce each of them twice; without it, the Pending rows are all
+    // the index says.
+    const line = releasedBreakingLine(index, version) ?? pendingBreakingLine(index, isShipped);
+    if (line === null) return;
+    const existing = out[MIGRATION_LABEL];
+    out[MIGRATION_LABEL] = existing ? `${existing} ${line}` : line;
 }
 
 /**
