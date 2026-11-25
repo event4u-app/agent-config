@@ -28,7 +28,7 @@ What the change does now: a new concern `arena-route` (src/scripts/hooks/arena_r
 
 Tests: 17 cases in tests/hooks/arena_route.test.ts. With the state check replaced by "any folder counts", 3 fail; with the refusal disabled, 6 fail. tests/hooks, tests/scripts/hooks, lint_hook_manifest and the suites reading the touched registries: 2,565 passed. tsc --noEmit and eslint on the touched files: clean.
 
-Scope of what is shown: the full diff against origin/main of every file except two generated ones: the compiled hook_manifest.json is shown as a key-sorted jq -S diff of base against head; docs/enforcement-by-host.md is included in the diff below.
+Scope of what is shown: the full diff against origin/main of every file except two generated ones: the compiled hook_manifest.json is shown as a key-sorted jq -S diff of base against head; docs/enforcement-by-host.md is left out (its three regenerated rows add arena-route on augment, claude and cowork pre_tool_use with the same three outcomes as block-credential-reads: warning-only, refusal, unverified; check_enforcement_matrix confirms the file equals a fresh generation).
 
 diff --git a/agents/decisions/concern-admissions.jsonl b/agents/decisions/concern-admissions.jsonl
 index 102a340319..dd55829057 100644
@@ -51,27 +51,6 @@ index c9d073ed6d..1b3621065b 100644
  | `block-config-weakening` | `src/scripts/hooks/block_config_weakening.ts` | covered | 1 |
  | `block-credential-reads` | `src/scripts/hooks/block_credential_reads.ts` | covered | 1 |
  | `block-kernel-rule-writes` | `src/scripts/hooks/block_kernel_rule_writes.ts` | covered | 4 |
-diff --git a/docs/enforcement-by-host.md b/docs/enforcement-by-host.md
-index 6309e25a1e..ee903f086a 100644
---- a/docs/enforcement-by-host.md
-+++ b/docs/enforcement-by-host.md
-@@ -300,7 +300,7 @@ Projected from `src/scripts/hook_manifest.yaml` (declared severity) and `src/scr
- 
- The manifest declares what a concern is *meant* to do; the lowering table records what the host slot it is bound on *can* do. A `blocking` concern on a slot that cannot refuse still runs and still warns — it is not silent, and it is not a refusal either. These columns say which.
- 
--**23 binding(s) declare `blocking`: 9 refuse, 7 run and warn on a slot verified unable to refuse, 7 sit on a slot with no lowering row, 0 sit on a slot whose proof has lapsed.**
-+**24 binding(s) declare `blocking`: 10 refuse, 7 run and warn on a slot verified unable to refuse, 7 sit on a slot with no lowering row, 0 sit on a slot whose proof has lapsed.**
- 
- | Host | Slot | Concern | Declared severity | Verified enforcement | What that means |
- |---|---|---|---|---|---|
-@@ -311,6 +311,7 @@ The manifest declares what a concern is *meant* to do; the lowering table record
- | `augment` | `pre_tool_use` | `block-plumbing-writes` | `blocking` | `warning-only` | the slot is bound and `block_exit` is null — it runs and warns, it cannot refuse |
- | `augment` | `pre_tool_use` | `block-speaking-inbox-dir` | `blocking` | `warning-only` | the slot is bound and `block_exit` is null — it runs and warns, it cannot refuse |
- | `augment` | `pre_tool_use` | `evidence-independence` | `blocking` | `warning-only` | the slot is bound and `block_exit` is null — it runs and warns, it cannot refuse |
-+| `claude` | `pre_tool_use` | `arena-route` | `blocking` | `refusal` | the slot denies — the concern does what it declares |
- | `claude` | `pre_tool_use` | `block-config-weakening` | `blocking` | `refusal` | the slot denies — the concern does what it declares |
- | `claude` | `pre_tool_use` | `block-credential-reads` | `blocking` | `refusal` | the slot denies — the concern does what it declares |
- | `claude` | `pre_tool_use` | `block-kernel-rule-writes` | `blocking` | `refusal` | the slot denies — the concern does what it declares |
 diff --git a/src/config/hook-latency-budget.json b/src/config/hook-latency-budget.json
 index a9ec567ea9..69c685afe3 100644
 --- a/src/config/hook-latency-budget.json
