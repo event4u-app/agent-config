@@ -16,6 +16,8 @@ import { createHash } from 'node:crypto';
 
 import { judgeBothOrders, type PairwiseJudge } from '../ai_council/judge_position_bias.js';
 import { countsAsPaid, tallyAppealJury, type JurorVote, type JuryRecord } from './appeal_jury.js';
+import { renderAngle, type Angle } from './deck.js';
+import { BracketError } from './errors.js';
 
 export const BILLINGS = ['subscription', 'per-token', 'free-quota', 'self-hosted'] as const;
 export type Billing = (typeof BILLINGS)[number];
@@ -94,14 +96,7 @@ export interface BracketState {
     log: string[];
 }
 
-export class BracketError extends Error {
-    constructor(
-        readonly code: string,
-        message: string,
-    ) {
-        super(message);
-    }
-}
+export { BracketError };
 
 export function sha256(text: string): string {
     return createHash('sha256').update(text).digest('hex');
@@ -150,10 +145,32 @@ export function initState(o: InitOptions): BracketState {
     };
 }
 
-/** The task travels byte-identical; only the header differs per line. */
-export function renderBrief(task: string, id: string, angle: string | null): string {
-    const head = angle === null ? `# Line ${id}\n\n` : `# Line ${id}\n\nApproach: ${angle}\n\n`;
-    return `${head}## Task (verbatim)\n\n${task}`;
+/**
+ * The task travels byte-identical; only the header differs per line. A dealt
+ * angle is the line's whole difference from every other line, so the brief says
+ * to use it for real and to keep it out of the output — the judge scores blind.
+ */
+export function renderBrief(task: string, id: string, angle: string | Angle | null): string {
+    const approach = angle === null ? [] : [typeof angle === 'string' ? `Approach: ${angle}` : `## Your approach\n\n${renderAngle(angle)}`];
+    return [
+        `# Line ${id}`,
+        ...approach,
+        [
+            '## How to work',
+            '',
+            ...(angle === null
+                ? []
+                : [
+                      '- Use the approach for real; a generic answer with the approach named on top loses.',
+                      '- The task is scored as stated, not against your approach — meet every requirement it states.',
+                  ]),
+            '- You cannot ask anything. Where the task is ambiguous, take the most reasonable reading and list it under Assumptions.',
+            '- Your solution will be attacked: close the obvious holes before you write it.',
+            '- Write only your output file. For code, put full files or a unified diff in it; never apply changes.',
+            '- Say nothing about the bracket, your approach or your line id — the judge reads the work blind.',
+        ].join('\n'),
+        `## Task (verbatim)\n\n${task}`,
+    ].join('\n\n');
 }
 
 function line(s: BracketState, id: string): Line {

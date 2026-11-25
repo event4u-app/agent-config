@@ -4,11 +4,17 @@
  *   plan    --n N | --tier S1 [--agent-tier S3] [--security-surface X] [--owner-reserved ROW]
  *           [--content public-artifact|project-content] [--local-proven]
  *   init    --run ID --task FILE (--n N | --tier S1) [--seed S] [--angles FILE]
+ *           without --angles every line is dealt a distinct angle from the built-in deck (deck.ts)
  *   scan    --run ID            mark lines whose output file exists; 2nd miss → NO OUTPUT
  *   dedupe  --run ID            merge near-duplicate lines of the last wave; report the saturation stop
  *   next    --run ID            the one action that is due
  *   advance --run ID            pair the next round
- *   collect --run ID --match M --verdict FILE
+ *   briefs  --run ID --match M --seat-id X --seat-family F --seat-billing B
+ *           write the match's attack / defend / judge briefs under matches/<M>/briefs/
+ *           copies both lines to matches/<M>/original-{a,b}.md (revised-* starts as the same text),
+ *           records the judge seat in seat.json; refuses a closed match and a free-quota seat
+ *   collect --run ID --match M [--verdict FILE]   default FILE: matches/<M>/verdict.json in the run;
+ *           refuses a seat that differs from seat.json; the winner's revision becomes lines/<id>.md
  *   correct --run ID --match M --reason misread-check|unsupported-fatal
  *   card    --run ID --line L --seat-id X --seat-family F --seat-billing B [--new-evidence] [--jury FILE]
  *   decline --run ID --line L [--jury FILE]
@@ -21,7 +27,8 @@
  *   status  --run ID [--json]
  *
  * State lives under `agents/runtime/bracket/<run>/` (gitignored): `bracket.json`,
- * `task.md`, `briefs/<line>.md`, `lines/<line>.md` (written by the line agents).
+ * `task.md`, `angles.json`, `briefs/<line>.md`, `lines/<line>.md` (written by the line
+ * agents), `matches/<M>/` (attacks, defences, revisions, verdict).
  */
 import { existsSync, mkdirSync, readFileSync, renameSync, statSync, writeFileSync } from 'node:fs';
 import * as path from 'node:path';
@@ -30,6 +37,7 @@ import { classifyContentClass } from '../ai_council/content_ceiling.js';
 import { is_near_duplicate } from '../ai_council/debate_gates.js';
 import {
     appealByJury,
+    BILLINGS,
     BracketError,
     collect,
     correct,
@@ -47,6 +55,8 @@ import {
     type NextAction,
 } from './engine.js';
 import { resolveJuryMode, tallyAppealJury, type JurorVote, type JuryRecord } from './appeal_jury.js';
+import { dealAngles, type Angle } from './deck.js';
+import { matchBriefs } from './roles.js';
 import { freeSeatAllowance } from './seats.js';
 import { callsFor, resolveTier, saturationStop, tier, TIER_IDS, type TierId } from './tiers.js';
 
@@ -109,7 +119,7 @@ export function describe(a: NextAction, run: string): string {
         case 'generate':
             return `generate: dispatch ${a.lines.length} line agent(s), each writing lines/<id>.md from briefs/<id>.md, then: scan --run ${run}  [${a.lines.join(' ')}]`;
         case 'judge':
-            return `judge: ${a.matches.length} match(es) — collect --run ${run} --match <id> --verdict <file>  [${a.matches.join(' ')}]`;
+            return `judge: ${a.matches.length} match(es) — per match: briefs --run ${run} --match <id> --seat-… → attack → defend → judge → collect --run ${run} --match <id> [--verdict FILE]  [${a.matches.join(' ')}]`;
         case 'appeal':
             return `appeal: a paid seat reviews each — card --run ${run} --line <id> … | decline --run ${run} --line <id>  [${a.lines.join(' ')}]`;
         case 'advance':
@@ -150,15 +160,20 @@ export function main(argv: string[]): number {
             const n = flag(args, 'n') !== undefined ? Number(flag(args, 'n')) : tier(t).n;
             const anglesFile = flag(args, 'angles');
             const angles = anglesFile ? readFileSync(anglesFile, 'utf8').split('\n').map((x) => x.trim()).filter(Boolean) : [];
+            if (anglesFile && new Set(angles).size < n) {
+                throw new BracketError('angles-short', `${anglesFile} has ${new Set(angles).size} distinct angle(s) for ${n} lines — every line needs its own; add angles or drop --angles to use the deck`);
+            }
             const s = initState({ runId: run, task, n, seed: Number(flag(args, 'seed') ?? 1), tier: t });
+            const dealt: (Angle | string)[] = angles.length > 0 ? s.lines.map((_, i) => angles[i % angles.length] as string) : dealAngles(n, s.seed);
             mkdirSync(path.join(dir, 'briefs'), { recursive: true });
             mkdirSync(path.join(dir, 'lines'), { recursive: true });
             writeFileSync(path.join(dir, 'task.md'), task);
+            writeFileSync(path.join(dir, 'angles.json'), `${JSON.stringify(Object.fromEntries(s.lines.map((l, i) => [l.id, dealt[i]])), null, 2)}\n`);
             s.lines.forEach((l, i) => {
-                writeFileSync(path.join(dir, 'briefs', `${l.id}.md`), renderBrief(task, l.id, angles.length > 0 ? (angles[i % angles.length] ?? null) : null));
+                writeFileSync(path.join(dir, 'briefs', `${l.id}.md`), renderBrief(task, l.id, dealt[i] ?? null));
             });
             save(s);
-            out(`initialised ${run}: ${n} lines, task ${s.taskHash.slice(0, 12)}`);
+            out(`initialised ${run}: ${n} lines, ${angles.length > 0 ? 'angles from file' : 'one distinct angle each'}, task ${s.taskHash.slice(0, 12)}`);
             out(describe(next(s), run));
             return 0;
         }
@@ -211,9 +226,62 @@ export function main(argv: string[]): number {
             out(describe(next(s), s.runId));
             return 0;
         }
+        case 'briefs': {
+            const s = load(need(args, 'run'));
+            const dir = runDir(s.runId);
+            const m = s.matches.find((x) => x.id === need(args, 'match'));
+            if (m === undefined) throw new BracketError('unknown-match', `no match ${need(args, 'match')}`);
+            if (m.b === null) throw new BracketError('bye', `${m.id} is a bye`);
+            if (m.winner !== null) throw new BracketError('match-closed', `${m.id} already has a winner`);
+            const billing = need(args, 'seat-billing');
+            if (!(BILLINGS as readonly string[]).includes(billing)) throw new BracketError('bad-billing', `unknown billing ${billing}`);
+            const seat = { id: need(args, 'seat-id'), family: need(args, 'seat-family'), billing: billing as Billing };
+            if (billing === 'free-quota') throw new BracketError('free-seat-verdict', `a free-quota seat cannot carry a match verdict — collect would refuse it (ADR-257)`);
+            const anglesFile = path.join(dir, 'angles.json');
+            const dealtByLine = existsSync(anglesFile) ? (JSON.parse(readFileSync(anglesFile, 'utf8')) as Record<string, Angle | string>) : {};
+            const mdir = path.join(dir, 'matches', m.id);
+            mkdirSync(path.join(mdir, 'briefs'), { recursive: true });
+            for (const [side, id] of [['a', m.a], ['b', m.b]] as const) {
+                const body = readFileSync(path.join(dir, 'lines', `${id}.md`), 'utf8');
+                writeFileSync(path.join(mdir, `original-${side}.md`), body);
+                if (!existsSync(path.join(mdir, `revised-${side}.md`))) writeFileSync(path.join(mdir, `revised-${side}.md`), body);
+            }
+            writeFileSync(path.join(mdir, 'seat.json'), `${JSON.stringify(seat)}\n`);
+            const briefs = matchBriefs({
+                task: readFileSync(path.join(dir, 'task.md'), 'utf8'),
+                match: m.id,
+                round: m.round,
+                a: { angle: dealtByLine[m.a] ?? null },
+                b: { angle: dealtByLine[m.b] ?? null },
+                dir: path.resolve(mdir),
+                seat,
+            });
+            for (const [role, text] of Object.entries(briefs)) writeFileSync(path.join(mdir, 'briefs', `${role}.md`), text);
+            out(`${m.id}: briefs written — attack-a + attack-b, then defend-a + defend-b, then judge (a paid seat)  [${path.join(mdir, 'briefs')}]`);
+            return 0;
+        }
         case 'collect': {
             const s = load(need(args, 'run'));
-            const m = collect(s, need(args, 'match'), JSON.parse(readFileSync(need(args, 'verdict'), 'utf8')));
+            const dir = runDir(s.runId);
+            const matchId = need(args, 'match');
+            if (!/^R\d+M\d+$/.test(matchId)) throw new BracketError('unknown-match', `no match ${matchId}`);
+            const mdir = path.join(dir, 'matches', matchId);
+            const verdictFile = flag(args, 'verdict') ?? path.join(mdir, 'verdict.json');
+            const raw = JSON.parse(readFileSync(verdictFile, 'utf8')) as { seat?: Partial<Record<'id' | 'family' | 'billing', unknown>> };
+            const seatFile = path.join(mdir, 'seat.json');
+            const named = existsSync(seatFile) ? (JSON.parse(readFileSync(seatFile, 'utf8')) as Record<'id' | 'family' | 'billing', string>) : null;
+            if (named !== null && (['id', 'family', 'billing'] as const).some((k) => raw.seat?.[k] !== named[k])) {
+                throw new BracketError('seat-mismatch', `${matchId}: the verdict's seat differs from the seat named at briefs — request the verdict again`);
+            }
+            const m = collect(s, matchId, raw);
+            // The winner carries its revision into the next round; the pre-match text is kept beside it.
+            const winSide = m.winner === m.a ? 'a' : 'b';
+            const revised = path.join(mdir, `revised-${winSide}.md`);
+            if (m.winner !== null && existsSync(revised) && statSync(revised).size > 0) {
+                const current = path.join(dir, 'lines', `${m.winner}.md`);
+                renameSync(current, path.join(dir, 'lines', `${m.winner}.before-${m.id}.md`));
+                writeFileSync(current, readFileSync(revised, 'utf8'));
+            }
             save(s);
             out(`${m.id}: ${m.winner} beats ${m.loser}${m.notes.length ? ` (${m.notes.join('; ')})` : ''}`);
             out(describe(next(s), s.runId));
@@ -273,7 +341,7 @@ export function main(argv: string[]): number {
             return 0;
         }
         default:
-            out('usage: cli <plan|init|scan|next|advance|collect|correct|card|decline|status> …');
+            out('usage: cli <plan|init|scan|dedupe|next|advance|briefs|collect|correct|card|decline|jury|status> …');
             return 2;
     }
 }
