@@ -25,6 +25,8 @@ relates:
 > releases 20.0.0 and 20.2.0 and an owner-side bench feedback chat. Drafted
 > against `main@ada1f46a85` on 2026-11-10. Every reading marked *(executed)* was
 > re-run there.
+>
+> **Arrivals:** 1 — latest `road-to-owner-overrides-that-do-not-block-releases` (2026-11-25): #3037 is another kernel-gated merge over a red check. Its bypass record was written after the fact (`2026-11-25-standing-bypass-3037.md`), so 2.3's replay should count it as recorded. 2.3 carries it.
 
 ## Goal
 
