@@ -29,10 +29,17 @@ const loads = (rel: string, body: string): string[] =>
 const unread = (rel: string, body: string): string[] =>
     writeTimeFindings(rel, body, register, table).filter((h) => h.check === 'third-party-load-unread').map((h) => `${String(h.line)}`);
 
+// The fastest of three runs: a shared CI runner adds scheduler noise to any one
+// run (417 ms measured on macOS against a 250 ms ceiling), never to all three,
+// while a quadratic path (2,562 ms) stays above the ceiling on every run.
 const timed = (fn: () => unknown): number => {
-    const t = performance.now();
-    fn();
-    return performance.now() - t;
+    let best = Number.POSITIVE_INFINITY;
+    for (let i = 0; i < 3; i++) {
+        const t = performance.now();
+        fn();
+        best = Math.min(best, performance.now() - t);
+    }
+    return best;
 };
 
 const CASES: Record<string, string> = {
