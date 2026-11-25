@@ -562,6 +562,40 @@ An entry belongs under a dated release section, not here — see
 > that forces a new era split (`# Era: 20.9.x`, etc.) — see
 > [`docs/contracts/CHANGELOG-conventions.md § Era splits`](docs/contracts/CHANGELOG-conventions.md).
 
+## [20.9.0](https://github.com/event4u-app/agent-config/compare/20.8.0...20.9.0) (2026-11-25)
+
+### Release highlights
+
+- **Behaviour changes:** _none_
+- **Default changes + migration:** _none_
+- **Security and correctness:** seed the decision ledger with the two arena harvest rows (fcdd064).
+- **Honest nulls:** _none_
+- **Known limitations:** _none_
+
+> **Governance mix:** governance-only 3 vs consumer-only 1 (mixed 3, maintenance 1; taxonomy 1.1.0; range 8bcc444530ce..367f9b92270a).
+
+### Features
+
+* **hooks:** arena-route — an arena is the bracket engine, not a hand-rolled Workflow (#3037) ([2404338](https://github.com/event4u-app/agent-config/commit/2404338fffd35f392f656b4976a900bc6d5e8f6c))
+* **bracket:** deal distinct approach angles and render blind match briefs ([28f25bc](https://github.com/event4u-app/agent-config/commit/28f25bc9f4d04d75be57df1829befdc5d9a90147))
+
+### Bug Fixes
+
+* **provenance:** seed the decision ledger with the two arena harvest rows ([fcdd064](https://github.com/event4u-app/agent-config/commit/fcdd0644ea27e812009b401f3375c4600a835647))
+* **host-docs:** re-establish the drifted copilot and codex hooks rows ([c224721](https://github.com/event4u-app/agent-config/commit/c22472160ff8552f39c05c23e69eaefe19fb6d9f))
+
+### Documentation
+
+* **bypass:** record the owner override of #3037 and the follow-up roadmap order ([2691629](https://github.com/event4u-app/agent-config/commit/2691629c0f686dd75b7053a63c3628967b5f1dee))
+* **judge-bracket:** standalone task file, dealt angles, driver briefs ([4e281ca](https://github.com/event4u-app/agent-config/commit/4e281ca576eaf46de55b18d53cd0b25c099b22ef))
+* **evidence:** ratify the copilot and codex row re-establishment (#3028) ([da0d088](https://github.com/event4u-app/agent-config/commit/da0d0882062c38eb8cefe8c89946bf87daf7931a))
+
+### Chores
+
+* **evaluator:** refresh the nightly measurement record ([f6827cb](https://github.com/event4u-app/agent-config/commit/f6827cb88667e8999671c632c1d62020f6c15b6c))
+
+Tests: 41118 (+41 since 20.8.0)
+
 ## [20.8.0](https://github.com/event4u-app/agent-config/compare/20.7.0...20.8.0) (2026-11-25)
 
 ### Release highlights
