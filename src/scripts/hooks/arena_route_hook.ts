@@ -44,7 +44,6 @@
  */
 import { createHash } from 'node:crypto';
 import * as fs from 'node:fs';
-import * as os from 'node:os';
 import * as path from 'node:path';
 import { fileURLToPath, pathToFileURL } from 'node:url';
 
@@ -57,6 +56,7 @@ const SCRIPT_MAX_BYTES = 256 * 1024;
 const META_WINDOW = 2000;
 const MAX_RUN_REFS = 32;
 const STATE_MAX_BYTES = 4 * 1024 * 1024;
+const META_DECL = /\bexport\s+const\s+meta\b/;
 const ARENA_WORD = /(^|[^A-Za-z0-9])(arena|bracket)s?($|[^A-Za-z0-9])/i;
 const RUN_ID = '[A-Za-z0-9][A-Za-z0-9._-]*';
 // An absolute prefix, when the script spells one out; a `${REPO}/` prefix is left to the cwd.
@@ -107,7 +107,7 @@ export function extractWorkflowCall(envelope: JsonObject): WorkflowCall {
 
 /** The `name` and `description` strings of the script's `export const meta`. Pure. */
 export function metaText(script: string): string {
-    const at = script.indexOf('export const meta');
+    const at = META_DECL.exec(script)?.index ?? -1;
     if (at < 0) return '';
     const head = script.slice(at, at + META_WINDOW);
     const field = (key: string) => new RegExp(`\\b${key}\\s*:\\s*(['"\`])([^'"\`]*)\\1`).exec(head)?.[2] ?? '';
@@ -171,8 +171,8 @@ export function verdict(call: WorkflowCall): { block: boolean; reason: string } 
     return {
         block: true,
         reason:
-            'This Workflow is named an arena but carries no bracket run the engine wrote (no ' +
-            'agents/runtime/bracket/<run>/bracket.json it names exists). An arena here is /arena ' +
+            'This Workflow is named an arena but names no bracket run the engine would accept (a ' +
+            'folder agents/runtime/bracket/<run> whose bracket.json matches its task.md). An arena here is /arena ' +
             '(= /judge bracket): `agent-config bracket plan`, then `agent-config bracket init --run <id> ' +
             '--task <file> --tier S1`, then dispatch the lines, scan, advance, collect, appeals. Workflow ' +
             'agents may carry the lines and judges once the run exists — name its folder in the script. ' +
@@ -181,9 +181,7 @@ export function verdict(call: WorkflowCall): { block: boolean; reason: string } 
     };
 }
 
-export function main(argv?: string[]): number {
-    const args = argv ?? process.argv.slice(2);
-    if (args.includes('--self-test')) return selfTest();
+export function main(): number {
     if (process.env[KILL_SWITCH] === '1') return 0;
     const raw = readHookStdin();
     if (!raw.trim()) return 0;
@@ -200,50 +198,6 @@ export function main(argv?: string[]): number {
         return 1;
     }
     return 0;
-}
-
-/** Write a run as `agent-config bracket init` leaves it: task.md and a bracket.json bound to it. Test support. */
-export function writeEngineRun(root: string, run: string, task = 'the task'): string {
-    const dir = path.join(root, 'agents/runtime/bracket', run);
-    fs.mkdirSync(dir, { recursive: true });
-    fs.writeFileSync(path.join(dir, 'task.md'), task);
-    const taskHash = createHash('sha256').update(task).digest('hex');
-    fs.writeFileSync(path.join(dir, 'bracket.json'), JSON.stringify({ version: 1, runId: run, taskHash, lines: [], matches: [], log: [] }));
-    return dir;
-}
-
-export function selfTest(): number {
-    const root = fs.mkdtempSync(path.join(os.tmpdir(), 'arena-route-self-'));
-    writeEngineRun(root, 'live');
-    fs.mkdirSync(path.join(root, 'agents/runtime/bracket/imitation'), { recursive: true });
-    fs.writeFileSync(path.join(root, 'agents/runtime/bracket/imitation/bracket.json'), '{}');
-    const wf = (script: string): WorkflowCall => ({ tool: 'Workflow', script, cwd: root });
-    const cases: Array<[string, WorkflowCall, boolean]> = [
-        ['a hand-rolled arena is denied', wf("export const meta = { name: 'pr-gate-arena', description: 'x' }"), true],
-        ['a bracket in the description is denied', wf("export const meta = { name: 'pick', description: 'A bracket of designs' }"), true],
-        ['a carrier of a run the engine wrote is allowed', wf("export const meta = { name: 'a-arena-judge' }\nconst RUN = `${REPO}/agents/runtime/bracket/live`"), false],
-        ['a CLI-driving carrier of a live run is allowed', wf("export const meta = { name: 'a-arena' }\n// agent-config bracket scan --run live"), false],
-        ['a mention of a run the engine never wrote is denied', wf("export const meta = { name: 'x-arena' }\n// agents/runtime/bracket/nothing-here"), true],
-        ['a bare bracket.json the engine did not write is denied', wf("export const meta = { name: 'x-arena' }\nconst B = 'agents/runtime/bracket/imitation'"), true],
-        ['tournament alone is not the trigger', wf("export const meta = { name: 'tournament-selection', description: 'genetic algorithm' }"), false],
-        ['an ordinary workflow is allowed', wf("export const meta = { name: 'find-bugs', description: 'find bugs' }"), false],
-        ['a longer identifier is not the word', wf("export const meta = { name: 'map-arenaview' }"), false],
-        ['another tool is never seen', { tool: 'Bash', script: "export const meta = { name: 'arena' }", cwd: root }, false],
-        ['an empty script is allowed', wf(''), false],
-    ];
-    let failed = 0;
-    try {
-        for (const [name, call, want] of cases) {
-            const got = verdict(call).block;
-            const ok = got === want;
-            process.stdout.write(`${ok ? '✅' : '❌'}  ${name} — block=${String(got)}${ok ? '\n' : ` (wanted ${String(want)})\n`}`);
-            if (!ok) failed += 1;
-        }
-    } finally {
-        fs.rmSync(root, { recursive: true, force: true });
-    }
-    process.stdout.write(`\narena_route --self-test: ${String(cases.length - failed)}/${String(cases.length)} case(s) behaved\n`);
-    return failed > 0 ? 1 : 0;
 }
 
 if (process.argv[1] !== undefined && import.meta.url === pathToFileURL(process.argv[1]).href) {

@@ -6,13 +6,24 @@
 // The allow cases include the real carrier shapes the engine's own procedure
 // produces, because a guard that blocks the engine it routes to is worse than
 // none. The release is engine STATE: a run whose bracket.json exists.
+import { createHash } from 'node:crypto';
 import * as fs from 'node:fs';
 import * as os from 'node:os';
 import * as path from 'node:path';
 import { afterAll, beforeAll, describe, expect, it } from 'vitest';
 
-import { engineRun, extractWorkflowCall, main, runDirs, selfTest, verdict, writeEngineRun } from '../../src/scripts/hooks/arena_route_hook.js';
+import { engineRun, extractWorkflowCall, main, runDirs, verdict } from '../../src/scripts/hooks/arena_route_hook.js';
 import { clearHookStdinOverride, setHookStdinOverride } from '../../src/scripts/hooks/hook_stdin.js';
+
+/** A run as `agent-config bracket init` leaves it: task.md and a bracket.json bound to it. */
+function writeEngineRun(root: string, run: string, task = 'the task'): string {
+    const dir = path.join(root, 'agents/runtime/bracket', run);
+    fs.mkdirSync(dir, { recursive: true });
+    fs.writeFileSync(path.join(dir, 'task.md'), task);
+    const taskHash = createHash('sha256').update(task).digest('hex');
+    fs.writeFileSync(path.join(dir, 'bracket.json'), JSON.stringify({ version: 1, runId: run, taskHash, lines: [], matches: [], log: [] }));
+    return dir;
+}
 
 let repo = '';
 let elsewhere = '';
@@ -45,7 +56,7 @@ afterAll(() => {
 function run(envelope: unknown): number {
     setHookStdinOverride(JSON.stringify(envelope));
     try {
-        return main([]);
+        return main();
     } finally {
         clearHookStdinOverride();
     }
@@ -149,7 +160,7 @@ describe('arena-route — the allow path', () => {
         expect(run({})).toBe(0);
         setHookStdinOverride('{not json');
         try {
-            expect(main([])).toBe(0);
+            expect(main()).toBe(0);
         } finally {
             clearHookStdinOverride();
         }
@@ -185,11 +196,5 @@ describe('arena-route — what counts as an engine run', () => {
         expect(engineRun(path.join(repo, 'agents/runtime/bracket/drifted'))).toBe(false);
         expect(engineRun(path.join(repo, 'agents/runtime/bracket/copied'))).toBe(false);
         expect(engineRun(path.join(repo, 'agents/runtime/bracket/missing'))).toBe(false);
-    });
-});
-
-describe('arena-route — self-test', () => {
-    it('passes its own fixtures', () => {
-        expect(selfTest()).toBe(0);
     });
 });
