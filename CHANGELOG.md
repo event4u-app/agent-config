@@ -562,6 +562,79 @@ An entry belongs under a dated release section, not here — see
 > that forces a new era split (`# Era: 20.9.x`, etc.) — see
 > [`docs/contracts/CHANGELOG-conventions.md § Era splits`](docs/contracts/CHANGELOG-conventions.md).
 
+## [20.8.0](https://github.com/event4u-app/agent-config/compare/20.7.0...20.8.0) (2026-11-25)
+
+### Release highlights
+
+- **Behaviour changes:** _none_
+- **Default changes + migration:** _none_
+- **Security and correctness:** make the two macOS timing flakes deterministic (e13d1b7); an unset target tier is not a tier mismatch (b8a698a); carry the prose-hold parser to its own roadmap (9f57ccf); a negation never releases a phrase carrying its own 'only' (7e0f32b); release a cited blocker only directly after the hold phrase (2761767); a resolution never releases a hold with several objects (42eff09); +11 more.
+- **Honest nulls:** R2 completion review — honest-null on the final scope (e831727).
+- **Known limitations:** _none_
+
+> **Governance mix:** governance-only 8 vs consumer-only 3 (mixed 23, maintenance 2; taxonomy 1.1.0; range b10d45539ac3..fc5e3a4c2fd8).
+
+### Features
+
+* **council:** live table with declared seats and a human inbox ([1ce5fd8](https://github.com/event4u-app/agent-config/commit/1ce5fd8131e687fdd2bafc4176f495979cba74ed))
+
+### Bug Fixes
+
+* **tests:** make the two macOS timing flakes deterministic ([e13d1b7](https://github.com/event4u-app/agent-config/commit/e13d1b70b6dec269221a29aace9d3762acf0dbae))
+* **lint_handoffs:** an unset target tier is not a tier mismatch ([b8a698a](https://github.com/event4u-app/agent-config/commit/b8a698a57c304e96ae1f2b35b4e7636bd906ac42))
+* **roadmaps:** blocker Routed line in the decider roadmap matches rule 20 ([fb51642](https://github.com/event4u-app/agent-config/commit/fb51642a30cf4d55dd10284bedcd900ff607cd4f))
+* **roadmaps:** receipts, carry annotations, and the depth budget ([8712556](https://github.com/event4u-app/agent-config/commit/8712556d5c264af4ca59805c3e560a7cd8a19a93))
+* **drain-queue:** a negation never releases a phrase carrying its own 'only' ([7e0f32b](https://github.com/event4u-app/agent-config/commit/7e0f32b2f304b85411f8bf03f298ac930ce8d0be))
+* **drain-queue:** release a cited blocker only directly after the hold phrase ([2761767](https://github.com/event4u-app/agent-config/commit/276176770b8c7c648b9bd3b8995df439d561a1c4))
+* **drain-queue:** a resolution never releases a hold with several objects ([42eff09](https://github.com/event4u-app/agent-config/commit/42eff09d95c5a01f6cba120aed09239fd398a88f))
+* **drain-queue:** parked and on-hold release again; a citation is the whole object ([ffa7dd2](https://github.com/event4u-app/agent-config/commit/ffa7dd256252c422c5106aca9ff7f90246894006))
+* **drain-queue:** a resolution may carry only a date after its verb ([c9aa912](https://github.com/event4u-app/agent-config/commit/c9aa912e711c0d7e2ada86d863c8628b8dac902e))
+* **drain-queue:** a resolved blocker releases only the hold that cites it ([13e9c80](https://github.com/event4u-app/agent-config/commit/13e9c80f4a34da8f29dad029a7d5f0dd7a6ae60e))
+* **drain-queue:** tie a resolution to its own hold and sentence end ([7a66b95](https://github.com/event4u-app/agent-config/commit/7a66b95e91b084da7e12252eaec76a8009f28556))
+* **drain-queue:** release a prose hold only on its own resolution ([5730206](https://github.com/event4u-app/agent-config/commit/573020696229f6e7ff10451b12ef8097e8cf16d3))
+* **drain-queue:** judge each prose hold in its own clause ([78ba5e4](https://github.com/event4u-app/agent-config/commit/78ba5e4da07a2abb8f3b008e9fcce57f33554a54))
+* **drain-queue:** the emergency halt refuses every entry, re-dispatch included ([2179808](https://github.com/event4u-app/agent-config/commit/2179808f5d014620e364f57c3a0d9859d7745293))
+* **council:** read one inline-findings predicate for prompt and harvest ([9d01a13](https://github.com/event4u-app/agent-config/commit/9d01a133b8611cd6a612c3e05b7144b27c4eefae))
+* **council:** close a ratification round on one stance contract ([19c06ba](https://github.com/event4u-app/agent-config/commit/19c06ba0d20cf21788ad72b6ccbffe43fe2a6c4c))
+* **council:** ratification prompts bypass the necessity gate ([84a12cd](https://github.com/event4u-app/agent-config/commit/84a12cd808be4bded0d7bc0692d22d6b748a8537))
+* **release:** resume an in-flight release without the flag ([4778319](https://github.com/event4u-app/agent-config/commit/477831953032aca484aca72d09d9476409bc637a))
+
+### Reverts
+
+* **drain-queue:** carry the prose-hold parser to its own roadmap ([9f57ccf](https://github.com/event4u-app/agent-config/commit/9f57ccf65bbccd94f6e1a3272fb325681d2fae15))
+
+### Documentation
+
+* **ci:** record why Linux is no longer selected ([f7d6bca](https://github.com/event4u-app/agent-config/commit/f7d6bca41fd67957edb13974c30169ad37a56401))
+* **contracts:** council live table and the seats key ([e72619d](https://github.com/event4u-app/agent-config/commit/e72619d3fab60d74f23ae8be6d89b30000cd9de4))
+* **roadmaps:** record standing-criteria ranking as PD19 ([0f2db03](https://github.com/event4u-app/agent-config/commit/0f2db03f5fc526481610767450a404fb5362d8b0))
+* **roadmaps:** three later/ roadmaps from inbox round inbox-2026-11-xa ([1a7edd7](https://github.com/event4u-app/agent-config/commit/1a7edd78253233833daeaf09583f01c5e03040b8))
+* **process-full-all:** one precise halt sentence where dispatch_hold is explained ([f7adf6a](https://github.com/event4u-app/agent-config/commit/f7adf6aac64077be6df49732d558825ec194a5aa))
+* **roadmaps:** carry Phase 2 with its criterion intact and a tracked council record ([b8b7b4c](https://github.com/event4u-app/agent-config/commit/b8b7b4cd602eb12cd243a129b74b3c39deaf8f7d))
+
+### Refactoring
+
+* keep the fixes out of files over the source-size ratchet ([205ced1](https://github.com/event4u-app/agent-config/commit/205ced133562ce47b2db68e02eef69027e647eb9))
+
+### Tests
+
+* **release:** skip the single-writer history half on a grafted history ([5d17697](https://github.com/event4u-app/agent-config/commit/5d176971ddf59c7b523a217cacc8914667894d65))
+
+### CI
+
+* **tests:** run the whole suite on Linux for every pull request ([67b7bc0](https://github.com/event4u-app/agent-config/commit/67b7bc042f095ba69aa0debd5680627d1b8be8a1))
+
+### Chores
+
+* **gates:** lower the source-size baseline to the measured total ([61e0c14](https://github.com/event4u-app/agent-config/commit/61e0c149b0262f549fa9f2b592222b0d25020390))
+* **gates:** reaffirm the lint_handoffs baseline by owner decision ([db3d2c5](https://github.com/event4u-app/agent-config/commit/db3d2c54c223c316e06439415254f3634fd0702a))
+* **reviews:** R2 completion review — final round, findings dispositioned ([26222ae](https://github.com/event4u-app/agent-config/commit/26222aede62c6bd9f7ffdb3d4dbba197ba80b54c))
+* **reviews:** R2 completion review — honest-null on the final scope ([e831727](https://github.com/event4u-app/agent-config/commit/e8317279cba1418e6a4fab4541b9ae12cd4eea24))
+* **roadmaps:** carry the two open prose-hold findings into a follow-up ([316d3bd](https://github.com/event4u-app/agent-config/commit/316d3bd432e8a70a9ff2b2c28f73596596ce7a3e))
+* **roadmaps:** archive road-to-a-halt-that-holds-every-lane ([55b27d0](https://github.com/event4u-app/agent-config/commit/55b27d08ccee9469dcecb909cdc1809d196cd915))
+
+Tests: 41077 (-42 since 20.7.0)
+
 # Era: pre-4.0.0 — archived
 
 > All entries from `3.2.0` and `3.3.0` live in
