@@ -14,8 +14,10 @@
  * the registration no longer describes the code.
  */
 import * as fs from 'node:fs';
+import * as os from 'node:os';
 import * as path from 'node:path';
 import { fileURLToPath } from 'node:url';
+import ts from 'typescript';
 import { describe, expect, it } from 'vitest';
 
 import { autoInviteDecision, type InviteInput } from '../../src/scripts/_lib/update_invite.js';
@@ -75,21 +77,50 @@ describe('condition 3 — the user opt-in is read BEFORE the ring-0 kill switch'
 });
 
 /**
+ * The runtime module specifiers of one source file, read from the TypeScript
+ * AST rather than by regex over comment-stripped text: a `/*` inside a string
+ * literal is not a comment, and stripping from it to the next `*\/` would erase
+ * whatever imports sit in between. Static, side-effect and re-export
+ * declarations count unless they are `import type` / `export type` (erased by
+ * the compiler); `import(...)` and `require(...)` with a string literal count
+ * wherever they appear.
+ */
+function runtimeSpecifiers(file: string): string[] {
+    const sf = ts.createSourceFile(file, fs.readFileSync(file, 'utf-8'), ts.ScriptTarget.Latest, true, ts.ScriptKind.TS);
+    const out: string[] = [];
+    const visit = (node: ts.Node): void => {
+        if (ts.isImportDeclaration(node)) {
+            if (!(node.importClause?.isTypeOnly ?? false) && ts.isStringLiteral(node.moduleSpecifier)) {
+                out.push(node.moduleSpecifier.text);
+            }
+        } else if (ts.isExportDeclaration(node)) {
+            if (!node.isTypeOnly && node.moduleSpecifier !== undefined && ts.isStringLiteral(node.moduleSpecifier)) {
+                out.push(node.moduleSpecifier.text);
+            }
+        } else if (ts.isCallExpression(node)) {
+            const arg = node.arguments[0];
+            const isImport = node.expression.kind === ts.SyntaxKind.ImportKeyword;
+            const isRequire = ts.isIdentifier(node.expression) && node.expression.text === 'require';
+            if ((isImport || isRequire) && arg !== undefined && ts.isStringLiteralLike(arg)) out.push(arg.text);
+        }
+        ts.forEachChild(node, visit);
+    };
+    visit(sf);
+    return out;
+}
+
+/**
  * Every module a file can load at runtime, following relative VALUE imports
- * (static, side-effect, re-export and dynamic) and skipping `import type` /
- * `export type`, which the compiler erases. Bare specifiers are recorded, not
- * followed: a package is a leaf whose name says whether it can spawn.
+ * (see {@link runtimeSpecifiers}). Bare specifiers are recorded, not followed:
+ * a package is a leaf whose name says whether it can spawn.
  */
 function runtimeClosure(entry: string): { files: Map<string, string | null>; bare: Map<string, string> } {
     const files = new Map<string, string | null>([[entry, null]]);
     const bare = new Map<string, string>();
     const queue = [entry];
-    const spec = /(?:^|[\s;])(?:import|export)\s+(?!type\s)(?:[^'"]*?\sfrom\s+)?['"]([^'"]+)['"]|import\(\s*['"]([^'"]+)['"]\s*\)|require\(\s*['"]([^'"]+)['"]\s*\)/gu;
     while (queue.length > 0) {
         const file = queue.shift() as string;
-        const src = fs.readFileSync(file, 'utf-8').replace(/\/\*[\s\S]*?\*\//gu, '').replace(/^\s*\/\/.*$/gmu, '');
-        for (const m of src.matchAll(spec)) {
-            const s = (m[1] ?? m[2] ?? m[3]) as string;
+        for (const s of runtimeSpecifiers(file)) {
             if (!s.startsWith('.')) {
                 if (!bare.has(s)) bare.set(s, path.relative(ROOT, file));
                 continue;
@@ -142,6 +173,30 @@ describe('condition 4 — neither concern may invoke an upgrade command', () => 
             expect(bindings.map((f) => chainTo(files, f))).toEqual([]);
         });
     }
+
+    it('the walker is not blinded by comment-like text inside a string', () => {
+        // A `/*` inside a string literal (a glob, say) must not open a comment:
+        // stripping from there to the next `*/` would erase the import between
+        // them, and the spawn behind it with it.
+        const dir = fs.mkdtempSync(path.join(os.tmpdir(), 'walker-'));
+        try {
+            fs.writeFileSync(
+                path.join(dir, 'entry.ts'),
+                "const glob = 'src/*.ts';\nimport { run } from './spawner.js';\nconst end = '*/';\nexport const x = [glob, end, run];\n",
+            );
+            fs.writeFileSync(path.join(dir, 'spawner.ts'), "import { spawnSync } from 'node:child_process';\nexport const run = spawnSync;\n");
+            fs.writeFileSync(path.join(dir, 'typed.ts'), "import type { X } from './gone.js';\n// import { y } from 'node:child_process';\n/* require('node:child_process') */\nexport type Y = X;\n");
+            const { files, bare } = runtimeClosure(path.join(dir, 'entry.ts'));
+            expect(files.has(path.join(dir, 'spawner.ts'))).toBe(true);
+            expect([...bare.keys()]).toContain('node:child_process');
+            // And real comments and type-only imports still reach nothing.
+            const typed = runtimeClosure(path.join(dir, 'typed.ts'));
+            expect([...typed.bare.keys()]).toEqual([]);
+            expect([...typed.files.keys()]).toEqual([path.join(dir, 'typed.ts')]);
+        } finally {
+            fs.rmSync(dir, { recursive: true, force: true });
+        }
+    });
 
     it('the walker sees a transitive spawn — sensitivity of the check above', () => {
         // before_complete_hook reaches `node:child_process` only through
