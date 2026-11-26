@@ -24,7 +24,7 @@ const TS_SCRIPT = path.join(REPO_ROOT, 'src', 'scripts', 'check_trigger_evals.ts
 // The script imports the scan-scope assertion and the `asOf()` time seam, so
 // the fixture tree needs both libs beside it. Each imports only node builtins,
 // so the chain ends here.
-const LIB_SRCS = ['scan_scope.ts', 'as_of.ts', 'trigger_eval_freshness.ts'] as const;
+const LIB_SRCS = ['scan_scope.ts', 'as_of.ts', 'package_root.ts', 'trigger_eval_freshness.ts'] as const;
 const TSX_BIN = path.join(
     REPO_ROOT,
     'node_modules',

@@ -29,6 +29,7 @@ import * as path from 'node:path';
 import { fileURLToPath } from 'node:url';
 
 import { isEnvKillSwitchActive } from '../_lib/env_kill_switch.js';
+import { resolvePackageRoot } from '../_lib/package_root.js';
 import {
     isSoloConcluded,
     SOLO_FLOOR_MIN_PRESENT,
@@ -113,7 +114,8 @@ const _KILL_SWITCH_ENV = 'AGENT_CONFIG_NO_EVENTS_LOG';
 
 const _HERE = fileURLToPath(import.meta.url);
 // src/scripts/ai_council/events_log.py → parents[3] == repo root.
-const _REPO_ROOT = path.resolve(path.dirname(_HERE), '..', '..', '..');
+// Marker-anchored, not hop-counted — three hops from a bundle chunk land on `<pkg>/..`.
+const _REPO_ROOT = resolvePackageRoot(_HERE);
 
 /**
  * Default log path, resolved relative to the package root (two levels above
