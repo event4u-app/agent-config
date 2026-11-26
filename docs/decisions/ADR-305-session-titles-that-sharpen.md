@@ -78,6 +78,16 @@ default, and global.
 - Agent Switch must read the sidecar and honour `custom-title` to show the
   result; that change lives in its own repository.
 
+## Evidence
+
+The owner's request (basis 1). Before this change the eight most recent Claude
+transcripts of this checkout each carried exactly one distinct `ai-title` value,
+repeated between 6 and 452 times, and Agent Switch's `readSessionHeader` read
+`ai-title` and `summary` only, so a `/rename` was not shown there either. The
+council reviewed the gated manifest change in three rounds
+(`agents/evidence/council/session-title-ratification-r{1,2,3}-20261126.question.md`);
+round 3 split, recorded in `agents/evidence/ratifications/session-title-20261126.md`.
+
 ## Alternatives
 
 - **A small-model call from the hook** — reliable cadence, but quota or spend and
