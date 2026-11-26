@@ -13620,7 +13620,13 @@ var MERGEABLE_KEYS = [
   // writes it once in the user-global file expects every checkout without its
   // own value to honour it — without this row the off switch would be
   // discarded silently. A project value still wins.
-  "retro.enabled"
+  "retro.enabled",
+  // `sessions.auto_title` is a GLOBAL preference by the owner's request of
+  // 2026-11-26: whether session titles keep sharpening is decided once per
+  // developer, and `settings:set` writes it user-global — without this row the
+  // off switch it writes would be discarded at the merge. A project value
+  // still wins.
+  "sessions.auto_title"
 ];
 var TEMPLATE_RELATIVE = path28.join("src", "config", "agent-settings.template.yml");
 var _PACKAGE_ROOT = resolvePackageRoot(import.meta.url);

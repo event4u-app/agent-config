@@ -248,10 +248,12 @@ dispatch runs, not WHETHER the layer exists, so they keep their own C rows.
 
 | Class | Keys |
 |---|---|
-| A — preference | 11 |
+| A — preference | 12 |
 | B — consent | 4 |
 | C — guarded | 104 |
-| **Total** | **119** |
+| **Total** | **120** |
+
+It rose to 120 on 2026-11-26 when `sessions.auto_title` was added — one A, `un-inferrable`: whether session titles keep sharpening is the user's taste, the worst case is a worse title in a sidecar file, and the owner asked for it to be switchable by instruction, which only class A allows. It ships `true` by the owner's request of 2026-11-26 and is whitelisted in `MERGEABLE_KEYS`, because it is meant to be set once, user-global.
 
 It rose to 119 on 2026-11-04 when `road-to-an-observation-provider-slot` step 1.1 added `reconstruction.observation_providers` — one C, `un-inferrable`: the roadmap planned it as class A, but it is a list of evidence sources whose observations may close ledger rows and it decides which MCP server the reference door calls, so C-tests 2 and 5 fire and the plan yielded to this contract.
 
@@ -411,10 +413,10 @@ the template, which is the drift this contract exists to prevent.
 | Disposition | Keys |
 |---|---|
 | derivable | 33 |
-| un-inferrable | 12 |
+| un-inferrable | 13 |
 | consent | 54 |
 | policy | 20 |
-| **Total** | **119** |
+| **Total** | **120** |
 
 First measured 2026-08-12 at 140 leaves (derivable 88 · consent 38 ·
 un-inferrable 9 · policy 5), from the table below rather than predicted — the
@@ -593,6 +595,7 @@ Rows follow template order, so a diff against the template reads straight down.
 | `commands.create_pr.screenshots` | C | `false` | puts captured screenshots into a published PR body | consent |
 | `continuity.auto_record` | C | `"on"` | arms an automatic producer on the normal session-end path | consent |
 | `continuity.run_checkpoints` | C | `"on"` | disabling it removes a recovery artifact a killed run resumes from | consent |
+| `sessions.auto_title` | A | `true` | lets the agent replace the host's one-shot session title with a sharper one at prompt milestones; a `/rename` title stays final, and nothing outside the title sidecar changes | un-inferrable |
 | `retro.enabled` | C | `true` | arms automatic producers on the merge, push and first-session paths (ADR-292) | consent |
 | `memory.redact_patterns` | C | `[]` | deny-list of secret and PII regexes | policy |
 | `memory.session_index` | A | `"off"` | injects a compact index at session start | derivable — the row cap and index cost the mechanism already computes; the flag only holds an unproven ship-criterion open |

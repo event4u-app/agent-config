@@ -333,6 +333,9 @@ describe('MERGEABLE_KEYS', () => {
             // ADR-292: the retro's one switch ships `true`, so `false` is the only
             // value worth writing, and it must hold from the user-global file.
             'retro.enabled',
+            // ADR-305: a global preference by the owner's request; `settings:set`
+            // writes it user-global, so the off switch must survive the merge.
+            'sessions.auto_title',
         ]);
     });
 
