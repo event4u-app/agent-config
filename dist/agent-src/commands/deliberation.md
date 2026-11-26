@@ -6,6 +6,7 @@ intent: "Choose whether the agent offers, auto-runs or never offers /council, /a
 routes_to: [ai-council]
 replaces: []
 visibility: internal
+cluster: council
 description: Set deliberation.mode — off (default), offer or auto — for council/arena/panel, for this chat or globally
 argument-hint: "[off|offer|auto|inherit] [--session]"
 suggestion:

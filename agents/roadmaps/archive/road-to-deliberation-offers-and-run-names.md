@@ -35,17 +35,17 @@ and an arena run carries a human name and a one-line decision Agent Switch shows
 
 ## Phase 1 — Deliberation mode
 
-- [x] **1.1** Setting `deliberation.mode` in the template, schema and class
+- [x] **1.1** Setting `deliberation.mode` in the template, schema and class <!-- receipt: class=R3 · shadow · would-skip=none · bound=override-list path: src/config/agent-settings.template.yml -->
       contract; `deliberation:get|set` with the per-session override under the
       user-global `state/deliberation/`.
-- [x] **1.2** `deliberation-mode` concern on `user_prompt_submit`, admitted in
+- [x] **1.2** `deliberation-mode` concern on `user_prompt_submit`, admitted in <!-- receipt: class=R3 · shadow · would-skip=none · bound=override-list path: src/config/agent-settings.template.yml -->
       `agents/decisions/concern-admissions.jsonl`.
-- [x] **1.3** Command `/deliberation` and `ai-council` § deliberation mode; no
+- [x] **1.3** Command `/deliberation` and `ai-council` § deliberation mode; no <!-- receipt: class=R3 · shadow · would-skip=none · bound=override-list path: src/config/agent-settings.template.yml -->
       rule file, so the per-spawn preamble does not grow.
 
 ## Phase 2 — Run names
 
-- [x] **2.1** `bracket name --text|--decision` writing `name.json`; the engine
+- [x] **2.1** `bracket name --text|--decision` writing `name.json`; the engine <!-- receipt: class=R3 · shadow · would-skip=none · bound=override-list path: src/config/agent-settings.template.yml -->
       never reads it.
-- [x] **2.2** `/judge bracket` and `/arena` name the run after `init` and record
+- [x] **2.2** `/judge bracket` and `/arena` name the run after `init` and record <!-- receipt: class=R3 · shadow · would-skip=none · bound=override-list path: src/config/agent-settings.template.yml -->
       the decision at `done`.

@@ -9,7 +9,7 @@
  * production data/infra, bulk deletion and irreversible external actions. The
  * line is the carrier on purpose — no rule file, so the per-spawn preamble does
  * not grow; the procedure is `/deliberation` and the `ai-council` skill's
- * § Deliberation mode.
+ * deliberation-mode reference.
  *
  * Resolution: session override (`state/deliberation/<session_id>.json`) >
  * user-global `deliberation.mode` > `off` (`_lib/deliberation_mode.ts`). `off`
