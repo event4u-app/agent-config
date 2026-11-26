@@ -17,6 +17,7 @@ import { load_agent_settings } from "../_lib/agent_settings.js";
 import {
   autoTitleEnabled,
   isMilestone,
+  pruneState,
   readHostTitles,
   readRefinedTitle,
   readState,
@@ -66,11 +67,13 @@ export function tick(input: TickInput): string | null {
   const text = input.prompt.trim();
   if (text === "" || isSyntheticPrompt(text)) return null;
   const prev = readState(input.sessionId, input.root);
+  if (prev?.frozen === true) return null;
   const state: SessionTitleState = {
     session_id: input.sessionId,
     transcript_path: input.transcriptPath,
     prompts: (prev?.prompts ?? 0) + 1,
     last_nudge_prompt: prev?.last_nudge_prompt ?? 0,
+    frozen: false,
   };
   let nudge: string | null = null;
   if (isMilestone(state.prompts)) {
@@ -78,6 +81,9 @@ export function tick(input: TickInput): string | null {
     if (host.custom === null) {
       nudge = nudgeLine(input.sessionId, state.prompts, readRefinedTitle(input.transcriptPath)?.title ?? host.ai);
       state.last_nudge_prompt = state.prompts;
+      pruneState(input.root);
+    } else {
+      state.frozen = true;
     }
   }
   writeState(state, input.root);

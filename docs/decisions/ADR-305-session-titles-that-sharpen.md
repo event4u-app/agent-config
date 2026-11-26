@@ -20,8 +20,12 @@ evidence:
     - agents/evidence/owner-directives/2026-11-26-session-titles-that-sharpen.md
 review_trigger: >-
   Reopened when a host starts refreshing its own generated title, when Claude
-  Code objects to or removes files beside a transcript, or when the nudge is
-  found to be ignored often enough that titles do not move.
+  Code objects to or removes files beside a transcript, or when the measurement
+  in road-to-session-titles-beyond-claude shows either failure: titles do not
+  move (most nudged sessions carry no sidecar), or users correct them (a
+  /rename lands after a refined title in more than one session in five).
+  Either one is the rollback criterion: set the template default of
+  sessions.auto_title to false and drop the concern binding.
 ---
 
 # ADR-305 — Session titles sharpen as the session learns; a user's title is final
@@ -38,8 +42,8 @@ default, and global.
 
 1. **The agent phrases the title** (owner's choice over a separate model call and
    a deterministic rule). The `session-title` concern on claude
-   `user_prompt_submit` counts real prompts and, at milestones 3, 8, 20, 45, 100
-   and every 100 after, injects one line asking whether the goal can now be named
+   `user_prompt_submit` counts real prompts and, at milestones 3, 8, 20, 45, 100,
+   200 and every 200 after, injects one line asking whether the goal can now be named
    more precisely. The agent publishes with `agent-config session:title`.
 2. **A user title is final.** A `custom-title` line in the transcript (`/rename`)
    silences the nudge and makes `session:title` refuse. Readers resolve
@@ -60,6 +64,13 @@ default, and global.
   session.
 - Model-carried: nothing verifies the agent acts on the nudge; a session whose
   agent ignores it keeps the host title, which is today's behaviour.
+- Bounds, from the round-1 council review: the writer caps a title at 60
+  characters (the length the nudge asks for), writes only beside an existing
+  `<session-id>.jsonl`, and refuses once a user title exists; the concern stops
+  reading and writing a session's state once it has seen a user title, and drops
+  state files untouched for 60 days. `sessions.auto_title: false` stops new
+  nudges and writes; sidecars already written stay visible, because they are
+  titles, not instructions, and a `/rename` still outranks them.
 - Agent Switch must read the sidecar and honour `custom-title` to show the
   result; that change lives in its own repository.
 

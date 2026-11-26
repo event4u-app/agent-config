@@ -28,7 +28,8 @@ import { event4u_root } from "./user_global_paths.js";
 
 export const SETTING_KEY = "sessions.auto_title";
 export const SIDECAR_SUFFIX = ".agent-title.json";
-export const TITLE_MAX = 80;
+/** The nudge asks for at most 60 characters; the writer enforces the same cap. */
+export const TITLE_MAX = 60;
 
 /**
  * Prompt counts at which the agent is asked to reconsider the title. Spaced
@@ -36,8 +37,8 @@ export const TITLE_MAX = 80;
  * a clock: early milestones catch the goal settling, later ones the scope
  * moving. Past the last entry the cadence repeats every `REPEAT_EVERY` prompts.
  */
-export const MILESTONES: readonly number[] = [3, 8, 20, 45, 100];
-export const REPEAT_EVERY = 100;
+export const MILESTONES: readonly number[] = [3, 8, 20, 45, 100, 200];
+export const REPEAT_EVERY = 200;
 
 export function isMilestone(prompt: number): boolean {
   if (MILESTONES.includes(prompt)) return true;
@@ -66,6 +67,8 @@ export interface SessionTitleState {
   transcript_path: string | null;
   prompts: number;
   last_nudge_prompt: number;
+  /** Set once a user title was seen; the concern stops reading and writing for this session. */
+  frozen: boolean;
 }
 
 export function stateDir(root: string = event4u_root()): string {
@@ -81,6 +84,7 @@ export function readState(sessionId: string, root?: string): SessionTitleState |
       transcript_path: typeof raw.transcript_path === "string" ? raw.transcript_path : null,
       prompts: Number.isInteger(raw.prompts) && raw.prompts >= 0 ? raw.prompts : 0,
       last_nudge_prompt: Number.isInteger(raw.last_nudge_prompt) ? raw.last_nudge_prompt : 0,
+      frozen: raw.frozen === true,
     };
   } catch {
     return null;
@@ -89,6 +93,46 @@ export function readState(sessionId: string, root?: string): SessionTitleState |
 
 export function writeState(state: SessionTitleState, root?: string): void {
   write_atomic(path.join(stateDir(root), `${safeId(state.session_id)}.json`), `${JSON.stringify(state)}\n`);
+}
+
+/** State files untouched this long belong to sessions nobody resumes. */
+export const STATE_TTL_MS = 60 * 24 * 60 * 60 * 1000;
+
+/** Drop state files older than `STATE_TTL_MS`; at most `limit` entries examined. Best-effort. */
+export function pruneState(root?: string, now: number = Date.now(), limit = 500): number {
+  let removed = 0;
+  try {
+    const dir = stateDir(root);
+    for (const name of fs.readdirSync(dir).slice(0, limit)) {
+      if (!name.endsWith(".json")) continue;
+      const file = path.join(dir, name);
+      try {
+        if (now - fs.statSync(file).mtimeMs > STATE_TTL_MS) {
+          fs.rmSync(file, { force: true });
+          removed++;
+        }
+      } catch {
+        // A file that vanished or cannot be read is skipped.
+      }
+    }
+  } catch {
+    // No state directory yet.
+  }
+  return removed;
+}
+
+/**
+ * The transcript a title may be written beside: an existing `<sessionId>.jsonl`.
+ * Binding the file name to the session id keeps the CLI from writing a sidecar
+ * beside an arbitrary path.
+ */
+export function transcriptFor(sessionId: string, transcriptPath: string): string | null {
+  if (path.basename(transcriptPath) !== `${sessionId}.jsonl`) return null;
+  try {
+    return fs.statSync(transcriptPath).isFile() ? transcriptPath : null;
+  } catch {
+    return null;
+  }
 }
 
 export interface RefinedTitle {

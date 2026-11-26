@@ -22,6 +22,7 @@ import {
     readHostTitles,
     readState,
     sanitizeTitle,
+    transcriptFor,
     writeRefinedTitle,
 } from './_lib/session_title.js';
 
@@ -53,9 +54,14 @@ export function cmd_session_title(argv: string[] = process.argv.slice(2), opts: 
         else words.push(a);
     }
     if (sessionId === null || sessionId.trim() === '') return usage();
-    const transcriptPath = transcript ?? readState(sessionId, opts.root)?.transcript_path ?? null;
-    if (transcriptPath === null) {
+    const candidate = transcript ?? readState(sessionId, opts.root)?.transcript_path ?? null;
+    if (candidate === null) {
         err(`session:title: no transcript known for session ${sessionId} — pass --transcript <path>`);
+        return 1;
+    }
+    const transcriptPath = transcriptFor(sessionId, candidate);
+    if (transcriptPath === null) {
+        err(`session:title: ${candidate} is not an existing ${sessionId}.jsonl — refusing to write beside it`);
         return 1;
     }
     if (show) {

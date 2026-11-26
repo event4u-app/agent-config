@@ -24,7 +24,10 @@ host's session file, and teach its reader the same precedence.
 
 **Compliance.** Nothing measures whether the agent acts on the nudge; a session
 whose agent ignores it keeps the host title. The sidecar's `revision` against the
-state file's `last_nudge_prompt` is the measurement, and it is not taken.
+state file's `last_nudge_prompt` is one measurement; a `custom-title` line
+appended after a refined title (the user correcting it) is the other. Neither is
+taken yet. ADR-305's rollback criterion reads both: most nudged sessions without a
+sidecar, or a correction in more than one session in five.
 
 **Trigger.** A month of real sessions after release, or a report that titles do
 not move.

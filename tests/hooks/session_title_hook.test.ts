@@ -8,7 +8,12 @@ import { clearHookStdinOverride, setHookStdinOverride } from '../../src/scripts/
 import { main, tick } from '../../src/scripts/hooks/session_title_hook.js';
 import {
     MILESTONES,
+    REPEAT_EVERY,
+    STATE_TTL_MS,
+    TITLE_MAX,
     effectiveTitle,
+    pruneState,
+    stateDir,
     isMilestone,
     readHostTitles,
     readState,
@@ -53,9 +58,9 @@ afterEach(() => {
 
 describe('isMilestone', () => {
     it('fires on each listed milestone and then on the repeat cadence, nowhere else', () => {
-        const fired = Array.from({ length: 400 }, (_, i) => i + 1).filter(isMilestone);
         const last = MILESTONES[MILESTONES.length - 1] as number;
-        expect(fired).toEqual([...MILESTONES, last + 100, last + 200, last + 300]);
+        const fired = Array.from({ length: last + 3 * REPEAT_EVERY }, (_, i) => i + 1).filter(isMilestone);
+        expect(fired).toEqual([...MILESTONES, last + REPEAT_EVERY, last + 2 * REPEAT_EVERY, last + 3 * REPEAT_EVERY]);
     });
 });
 
@@ -75,10 +80,22 @@ describe('tick', () => {
         expect(out.at(-1)).toContain('«Refactor billing export»');
     });
 
-    it('stays silent for good once the user renamed the session, but keeps counting', () => {
+    it('stays silent for good once the user renamed the session, and stops counting', () => {
         fs.appendFileSync(transcript, line({ type: 'custom-title', customTitle: 'Mine', sessionId: SID }));
         expect(prompts(MILESTONES[2] as number).every((n) => n === null)).toBe(true);
-        expect(readState(SID, root)?.prompts).toBe(MILESTONES[2]);
+        expect(readState(SID, root)).toMatchObject({ frozen: true, prompts: MILESTONES[0] });
+    });
+
+    it('prunes state files nobody touched within the TTL, and keeps fresh ones', () => {
+        prompts(1);
+        const dir = stateDir(root);
+        const old = path.join(dir, 'old-session.json');
+        fs.writeFileSync(old, '{}');
+        const past = (Date.now() - STATE_TTL_MS - 60_000) / 1000;
+        fs.utimesSync(old, past, past);
+        expect(pruneState(root)).toBe(1);
+        expect(fs.existsSync(old)).toBe(false);
+        expect(readState(SID, root)).not.toBeNull();
     });
 
     it('does not count harness turns as prompts', () => {
@@ -161,6 +178,21 @@ describe('session:title CLI', () => {
         expect(r.out[0]).toContain('final');
         expect(fs.existsSync(sidecarPath(transcript))).toBe(false);
         expect(effectiveTitle(transcript)).toEqual({ title: 'Mine', source: 'custom' });
+    });
+
+    it('caps a title at the length the nudge asks for', () => {
+        prompts(1);
+        cli('--session', SID, 'x'.repeat(200));
+        const t = JSON.parse(fs.readFileSync(sidecarPath(transcript), 'utf8')).title as string;
+        expect(t.length).toBe(TITLE_MAX);
+    });
+
+    it('refuses to write beside a file that is not this session\'s transcript', () => {
+        const other = path.join(tmp, 'elsewhere.jsonl');
+        fs.writeFileSync(other, '');
+        expect(cli('--session', SID, '--transcript', other, 'Hijack').rc).toBe(1);
+        expect(fs.existsSync(sidecarPath(other))).toBe(false);
+        expect(cli('--session', SID, '--transcript', path.join(tmp, `${SID}.jsonl`), 'Missing').rc).toBe(1);
     });
 
     it('fails with a hint when the session is unknown, and rejects a missing title', () => {

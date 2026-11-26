@@ -1129,7 +1129,7 @@ concerns:
     effect: context
   # Session titles that sharpen as the session learns. Claude Code writes its
   # `ai-title` once and repeats it; at prompt milestones (3, 8, 20, 45, 100,
-  # then every 100) this asks the agent whether the goal can now be named more
+  # 200, then every 200) this asks the agent whether the goal can now be named more
   # precisely and how to publish it (`agent-config session:title`). Silent
   # between milestones, after the user renamed the session (a `custom-title`
   # is final), and when `sessions.auto_title: false` — a global setting, on by
