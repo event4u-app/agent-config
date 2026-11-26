@@ -28,7 +28,8 @@ import { rawKeyPrefixPattern } from './egress_rules.js';
 import { write_atomic } from './fs_atomic.js';
 import { claudeHomeInfo, codexHomeInfo } from './provider_home.js';
 import { iso_now, ttl_seconds_for } from './session_register.js';
-import { readRefinedTitle } from './session_title.js';
+import { load_agent_settings } from './agent_settings.js';
+import { autoTitleEnabled, readRefinedTitle } from './session_title.js';
 import { DEFAULT_EVENT4U_ROOT_RELATIVE, type EnvMap, event4u_root } from './user_global_paths.js';
 
 export const CATALOG_SCHEMA_VERSION = 1;
@@ -1032,6 +1033,8 @@ export interface BuildOptions {
     home?: string;
     now?: Date;
     budget_bytes?: number;
+    /** Overrides `sessions.auto_title` for whether refined titles are shown; tests set it. */
+    refined_titles?: boolean;
 }
 
 function repos_for(st: ParsedState, git_cache: Map<string, string | null>): CatalogRepo[] {
@@ -1136,6 +1139,8 @@ export function build_index(options: BuildOptions = {}): CatalogIndex {
     const live = read_live(live_register_dirs(env, home), now);
     const git_cache = new Map<string, string | null>();
     const sessions: CatalogSession[] = [];
+    // `sessions.auto_title: false` hides refined titles already written, not only future ones.
+    const refined = options.refined_titles ?? autoTitleEnabled(load_agent_settings({ cwd: home }) as Record<string, unknown>);
 
     const read = (t: TranscriptFile): { st: ParsedState; complete: boolean } => {
         const parsed = parse_incremental(t, cache.files[t.file] ?? null, budget);
@@ -1208,7 +1213,7 @@ export function build_index(options: BuildOptions = {}): CatalogIndex {
             live: rec !== null,
             idle_seconds: idle,
             // User's own title > the agent's refined one (session_title.ts) > the host's.
-            title: st.title_custom ? st.title : (readRefinedTitle(t.file)?.title ?? st.title),
+            title: st.title_custom || !refined ? st.title : (readRefinedTitle(t.file)?.title ?? st.title),
             roadmap_slug: rec?.roadmap_slug ?? null,
             repos: repos_for(st, git_cache),
             usage: st.usage,

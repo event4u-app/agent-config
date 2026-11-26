@@ -24,8 +24,8 @@ A council marker never raises a grade above `E0`. That is structural here, not a
 
 | Axis | Value | Records |
 |---|---|---|
-| `evidence.strength` | `E0` | 87 |
-| `evidence.strength` | `E1` | 87 |
+| `evidence.strength` | `E0` | 86 |
+| `evidence.strength` | `E1` | 88 |
 | `evidence.strength` | `E2` | 53 |
 | `evidence.strength` | `E3` | 25 |
 | `evidence.strength` | `E4` | 0 |
@@ -282,7 +282,7 @@ A council marker never raises a grade above `E0`. That is structural here, not a
 | `docs/decisions/ADR-302-host-owned-module-class.md` | `unknown` | `E0` — no evidence marker found | `incomplete` | _none_ | provenance: agentic · evidence: E1 |
 | `docs/decisions/ADR-303-the-graph-is-an-index-never-the-truth.md` | `unknown` | `E0` — no evidence marker found | `incomplete` | _none_ | provenance: human · evidence: E1 |
 | `docs/decisions/ADR-304-security-operations-guidance-and-read-only-audit.md` | `human` | `E0` — markers present, none graded: owner (an owner or maintainer declaration is provenance, not evidence) | `incomplete` | owner @ ADR-304-security-operations-guidance-and-read-only-audit.md:91 | provenance: agentic · evidence: E1 |
-| `docs/decisions/ADR-305-session-titles-that-sharpen.md` | `human` | `E0` — markers present, none graded: owner (an owner or maintainer declaration is provenance, not evidence) | `incomplete` | owner @ ADR-305-session-titles-that-sharpen.md:8 | provenance: agentic · evidence: E1 |
+| `docs/decisions/ADR-305-session-titles-that-sharpen.md` | `human` | `E1` — one dated local observation | `incomplete` | owner @ ADR-305-session-titles-that-sharpen.md:8<br>measurement @ ADR-305-session-titles-that-sharpen.md:73 | provenance: agentic · evidence: E1 |
 | `docs/decisions/ADR-rule-kernel-and-router.md` | `unknown` | `E1` — one dated local observation | `incomplete` | measurement @ ADR-rule-kernel-and-router.md:55, ADR-rule-kernel-and-router.md:107, ADR-rule-kernel-and-router.md:112, ADR-rule-kernel-and-router.md:113, ADR-rule-kernel-and-router.md:117 | provenance: — · evidence: — |
 | `docs/adrs/cost/0001-hard-stop-hook.md` | `unknown` | `E0` — no evidence marker found | `incomplete` | _none_ | provenance: — · evidence: — |
 | `docs/adrs/memory/0001-consumer-side-snapshot.md` | `unknown` | `E0` — no evidence marker found | `incomplete` | _none_ | provenance: — · evidence: — |

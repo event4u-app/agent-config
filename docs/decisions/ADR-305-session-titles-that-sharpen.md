@@ -22,8 +22,8 @@ review_trigger: >-
   Reopened when a host starts refreshing its own generated title, when Claude
   Code objects to or removes files beside a transcript, or when the measurement
   in road-to-session-titles-beyond-claude shows either failure: titles do not
-  move (most nudged sessions carry no sidecar), or users correct them (a
-  /rename lands after a refined title in more than one session in five).
+  move (under half of the nudged sessions carry a sidecar), or users correct
+  them (a /rename lands after a refined title in more than one session in five).
   Either one is the rollback criterion: set the template default of
   sessions.auto_title to false and drop the concern binding.
 ---
@@ -71,8 +71,10 @@ default, and global.
   the session for good: no further counting or nudges, even if that title were
   later removed, because a user who renamed once has said whose title it is; and drops
   state files untouched for 60 days. `sessions.auto_title: false` stops new
-  nudges and writes; sidecars already written stay visible, because they are
-  titles, not instructions, and a `/rename` still outranks them.
+  nudges and writes and hides sidecars already written in `sessions:catalog` and
+  Agent Switch, so switching off restores the host titles without a cleanup step.
+  It is a global preference: `settings:set` writes it user-global, and a project
+  value, where one is set, still wins for that checkout.
 - Agent Switch must read the sidecar and honour `custom-title` to show the
   result; that change lives in its own repository.
 

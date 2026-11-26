@@ -1111,7 +1111,8 @@ continuity:
 # goal can now be named more precisely, and publishes the better title in a
 # sidecar beside the transcript that Agent Switch and `sessions:catalog` read.
 # A title the user set with /rename is final and is never replaced.
-# A GLOBAL preference — set it once, user-global, and every checkout follows:
+# Off also hides refined titles already written. A GLOBAL preference — set it
+# once, user-global, and every checkout follows (a project value still wins):
 #   agent-config settings:set sessions.auto_title false
 sessions:
   auto_title: true
