@@ -221,7 +221,7 @@ Tier 1 — power-user (release shape, audit, migration):
                                     decision:memo list --run <id>
   bracket                    Drive an /arena bracket run: competing solutions,
                              script-scored matches, appealable losses.
-                             Usage: bracket plan|init|scan|dedupe|next|advance|collect|correct|card|decline|jury|status [options]
+                             Usage: bracket plan|init|scan|dedupe|next|advance|collect|correct|card|decline|jury|status|name [options]
   run:supervise              Report runs whose session died with open steps
                              left. Report-only; --relaunch is the acting path.
                              NEVER merges, pushes, or closes anything.
@@ -363,6 +363,13 @@ Tier 2 — maintenance / internal (hooks, MCP, memory, telemetry):
                              (guarded) key from docs/contracts/settings-classes.md, and
                              refuses everything when that contract is unreadable.
                              --source auto-detected|jit-answer|manual|gui, --dry-run.
+  deliberation:get           The effective deliberation.mode (off|offer|auto) and where it
+                             came from: session override, user-global setting, or default.
+                             Usage: deliberation:get [--session <id>] [--json]
+  deliberation:set           Set deliberation.mode globally (via settings:set) or for one
+                             session (--session <id>; inherit removes the override).
+                             Usage: deliberation:set <off|offer|auto|inherit> [--session <id>]
+                             [--source auto-detected|jit-answer|manual|gui] [--json]
   hooks:install              Install the combined pre-commit hook (roadmap-progress
                              + ADR-013 artefact frontmatter lint).
                              (use --print to dump it, --force to overwrite an existing hook)
@@ -1701,6 +1708,16 @@ cmd_settings_set() {
   exec_ts "$PACKAGE_ROOT/src/scripts/_cli/cmd_settings_set.ts" "$@"
 }
 
+# `agent-config deliberation:get|set` — deliberation.mode (off|offer|auto):
+# whether the agent offers /council, /arena or /panel on a real decision.
+# Global writes go through settings:set; a per-session override lives at
+# ~/.event4u/agent-config/state/deliberation/<session-id>.json.
+# Exit 0 done, 1 refused, 2 usage.
+cmd_deliberation() {
+  local sub="$1"; shift || true
+  exec_ts "$PACKAGE_ROOT/src/scripts/_cli/cmd_deliberation.ts" "$sub" "$@"
+}
+
 # `agent-config uninstall` — remove bridge markers (project) or lockfile
 # entries (global). Idempotent. Pass `--purge` to also delete deployed
 # content directories under user-scope anchors (destructive). See
@@ -1915,6 +1932,8 @@ main() {
     settings:sync)           cmd_settings_sync "$@" ;;
     settings:migrate)        cmd_settings_migrate "$@" ;;
     settings:set)            cmd_settings_set "$@" ;;
+    deliberation:get)        cmd_deliberation get "$@" ;;
+    deliberation:set)        cmd_deliberation set "$@" ;;
     uninstall)               cmd_uninstall "$@" ;;
     prune)                   cmd_prune "$@" ;;
     doctor)                  cmd_doctor "$@" ;;

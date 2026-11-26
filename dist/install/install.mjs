@@ -22725,6 +22725,11 @@ var settingsSchema = object({
       "Set to true once you have starred the repository; the ask then stops for good. The agent may set it when you tell it you have starred."
     )
   }).prefault({ mode: "monthly", starred: false }),
+  deliberation: object({
+    mode: _enum(["off", "offer", "auto"]).default("off").describe(
+      "Whether the agent offers /council, /arena or /panel when a question carries a real decision with trade-offs. off (default) never offers and never runs one unasked \u2014 it is switched on only when you ask, for one session or globally; offer lists the fitting one(s) as numbered options with the plain answer last; auto is an automatic mode you switch on: the agent runs the fitting one itself and answers its own implementation questions (approach, design, library) instead of asking, naming each decision with a one-line reason; it still asks before merge, deploy, push, release/tag, production data or infra, bulk deletion and any irreversible external action, and the tools' own spend and seat rules still apply. A per-session override (agent-config deliberation:set <mode> --session <id>) wins for that session."
+    )
+  }).prefault({ mode: "off" }),
   advisories: object({
     mode: _enum(["off", "notify"]).default("notify").describe(
       "Whether the first session start of a day prints the advisory findings that need action today. notify (default) reads the local cache only \u2014 a session start never touches the network; off prints nothing, and agent-config audit:deps show still works."
