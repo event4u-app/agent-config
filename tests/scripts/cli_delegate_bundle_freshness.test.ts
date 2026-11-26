@@ -61,8 +61,10 @@ interface Fixture {
  * `dist/cli-delegate/<name>.js`. `devTree: false` omits `src/` entirely — that
  * is what a consumer install looks like.
  */
-function makeFixture(devTree: boolean, withTsx = true): Fixture {
+function makeFixture(devTree: boolean, withTsx = true, sourceTree = withTsx): Fixture {
     const root = fs.mkdtempSync(path.join(os.tmpdir(), 'delegate-freshness-'));
+    // Every source tree carries tsconfig.json; the tarball never does (not in files[]).
+    if (sourceTree) fs.writeFileSync(path.join(root, 'tsconfig.json'), '{}\n');
     if (withTsx) {
         // The dev-tree marker the guard actually reads.
         const binDir = path.join(root, 'node_modules', '.bin');
@@ -154,6 +156,28 @@ describe('cli_delegate_bundle freshness guard', () => {
         expect(fs.existsSync(path.join(f.root, 'src'))).toBe(true);
         expect(fs.existsSync(path.join(f.root, 'node_modules', '.bin', 'tsx'))).toBe(false);
         expect(resolveBundle(f.root)).toBe(f.bundle);
+    });
+
+    it('keeps the consumer fast path when the user added tsx to the install', () => {
+        // The old tsx warning told consumers to fix the fallback themselves; one
+        // who added tsx to the package dir turned the install into a "dev tree",
+        // and every bundled command then ran from shipped source through tsx.
+        // Package-local tsx alone is not a source tree — no tsconfig.json, no dev tree.
+        const f = track(makeFixture(true, true, false));
+        setOrder(f, 'source');
+        expect(fs.existsSync(path.join(f.root, 'node_modules', '.bin', 'tsx'))).toBe(true);
+        expect(fs.existsSync(path.join(f.root, 'tsconfig.json'))).toBe(false);
+        expect(resolveBundle(f.root)).toBe(f.bundle);
+    });
+
+    it('the source-tree marker is never shipped', () => {
+        // The guard's premise: a tarball install has no tsconfig.json. If files[]
+        // ever ships it, every consumer with a stray local tsx is a "dev tree" again.
+        const pkg = JSON.parse(fs.readFileSync(path.join(path.dirname(DISPATCH), '..', '..', 'package.json'), 'utf-8')) as {
+            files?: string[];
+        };
+        const shipped = (pkg.files ?? []).filter((f) => !f.startsWith('!') && /(^|\/)tsconfig[^/]*\.json$|^\*|^\.\/?$/.test(f));
+        expect(shipped).toEqual([]);
     });
 
     it('scans src/ whole, not just the entry point directory', () => {

@@ -245,3 +245,67 @@ describe('agent-src + aux delegate bundles', () => {
         expect(bytes, 'check_update_banner bundle produced no output').toBeGreaterThan(0);
     }, 60_000);
 });
+
+/**
+ * `cmd_script.js <key>` must answer exactly as `tsx src/scripts/<key>.ts` does.
+ *
+ * Probing `cmd_script.js --help` alone proves nothing: `--help` is not a key, so
+ * no target loads. And a target that loads but resolves its package root by
+ * counting parent hops answers differently from a `dist/cli-delegate/` chunk —
+ * measured on the first cut: `capabilities:index --check` said "stale" from the
+ * bundle and "up to date" from source, because `_lib/agent_src` landed one level
+ * above the package root and found no commands. Running every key both ways,
+ * plus one tree-reading verb, catches both classes.
+ */
+describe('cmd_script delegate parity', () => {
+    const TSX = path.join(REPO, 'node_modules', '.bin', 'tsx');
+    const keys = (() => {
+        const dispatch = fs.readFileSync(path.join(REPO, 'src', 'scripts', '_dispatch.bash'), 'utf-8');
+        const m = /^SCRIPT_DELEGATES=" ([^"]+) "$/m.exec(dispatch);
+        return m === null ? [] : (m[1] ?? '').split(' ');
+    })();
+
+    const run = (argv: string[]): { status: number | null; out: string } => {
+        const res = spawnSync(argv[0] as string, argv.slice(1), {
+            cwd: REPO,
+            encoding: 'utf-8',
+            input: '',
+            timeout: 60_000,
+            env: { ...process.env, AGENT_CONFIG_NO_EVENTS_LOG: '1' },
+        });
+        // Elapsed-time figures ("…, 66ms)") differ run to run; nothing else may.
+        return { status: res.status, out: `${res.stdout}${res.stderr}`.replace(/\b\d+(?:\.\d+)?\s?ms\b/g, '<n>ms') };
+    };
+    const viaBundle = (key: string, args: string[]) =>
+        run([process.execPath, path.join(OUT_DIR, 'cmd_script.js'), key, ...args]);
+    const viaTsx = (key: string, args: string[]) => run([TSX, path.join(REPO, 'src', 'scripts', `${key}.ts`), ...args]);
+
+    it('reads the key list from the dispatcher', () => {
+        expect(keys.length).toBeGreaterThan(25);
+        expect(fs.existsSync(path.join(OUT_DIR, 'cmd_script.js'))).toBe(true);
+    });
+
+    it('every key answers --help exactly as the source does', () => {
+        const drift: string[] = [];
+        for (const key of keys) {
+            const b = viaBundle(key, ['--help']);
+            const t = viaTsx(key, ['--help']);
+            if (b.status !== t.status || b.out !== t.out) {
+                drift.push(`${key}: bundle exit ${String(b.status)} / tsx exit ${String(t.status)}`);
+            }
+        }
+        expect(drift).toEqual([]);
+    }, 300_000);
+
+    it('a tree-reading verb resolves the same package root from the bundle', () => {
+        const b = viaBundle('generate_capabilities_index', ['--check']);
+        const t = viaTsx('generate_capabilities_index', ['--check']);
+        expect({ status: b.status, out: b.out }).toEqual({ status: t.status, out: t.out });
+    }, 120_000);
+
+    it('an unknown key fails loudly instead of running nothing', () => {
+        const r = viaBundle('no_such_script', []);
+        expect(r.status).toBe(127);
+        expect(r.out).toContain('no precompiled delegate for src/scripts/no_such_script.ts');
+    });
+});

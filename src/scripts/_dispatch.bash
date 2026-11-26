@@ -574,9 +574,11 @@ require_tsx() {
     return 0
   fi
   if command -v npx >/dev/null 2>&1; then
-    echo "⚠️  agent-config: package-local tsx not found — falling back to \`npx tsx\`" >&2
-    echo "    (subject to this project's npm config; reinstall the package to fix:" >&2
-    echo "     npm install -g @event4u/agent-config)" >&2
+    # No "reinstall to fix": a published install never ships tsx, so reinstalling
+    # changes nothing, and adding tsx by hand defeats the bundle fast path.
+    echo "⚠️  agent-config: this command is not precompiled in this install yet —" >&2
+    echo "    running it through \`npx tsx\` (subject to this project's npm config)." >&2
+    echo "    Reinstalling does not change this." >&2
     TSX_BIN="npx tsx"
     return 0
   fi
@@ -601,8 +603,9 @@ require_tsx() {
 #     local Node hard-failed with EBADDEVENGINES.
 #
 # Basenames are unique ACROSS both roots (`_cli/` is all `cmd_*`, agent-src is
-# none), so one flat outdir stays collision-free. Other exec_ts callers (the
-# remaining resolve_script results, the work engine, …) are unaffected.
+# none), so one flat outdir stays collision-free. Plain `src/scripts/` targets
+# go through `cmd_script` instead (see SCRIPT_DELEGATES); the work engine and the
+# unbundled-server fallback of `mcp:run` remain on the tsx path.
 #
 # In a DEV tree the bundle is also suppressed when any `src/**/*.ts` is newer
 # than it — see cli_delegate_bundle_is_stale.
@@ -622,6 +625,40 @@ cli_delegate_bundle() {
     cli_delegate_bundle_is_stale "$bundle" && return 0
     printf '%s' "$bundle"
   fi
+}
+
+# The plain `src/scripts/` modules the dispatcher runs (exec_ts AND exec_hook), keyed by their path
+# under `src/scripts/` without `.ts`. They share ONE precompiled entry,
+# `dist/cli-delegate/cmd_script.js <key>` (see `src/scripts/_cli/cmd_script.ts`),
+# instead of reaching `require_tsx` — and `npx tsx` against the consumer's npm
+# config — in every install that ships no tsx. Must match `DELEGATES` in
+# cmd_script.ts; tests/scripts/runtime_dependencies.test.ts pins both that and
+# that every `src/scripts/` dispatcher route outside the bundled roots is listed.
+SCRIPT_DELEGATES=" advisories agent_actions_detect audit_security benchmark bracket/cli chat_history check_proposal code_audit conformance_scan context_hygiene_hook council_cli decision_memo derive_live_surfaces discovery_graph generate_capabilities_index hook_effect_doctor hooks/replay_hook hooks_doctor hooks_status knowledge_global_cli learning_sidecar linked_projects_list mcp_render media_bundle memory_lookup onboarding_gate_hook profile_use reach_doctor refine_ticket_detect roadmap_context roadmap_progress_hook routing_doctor run_supervise security_audit_config self_repair_cli sessions_catalog_cli sessions_cli workspace_doctor worktree_cleanup_check "
+
+# Echo the cmd_script key for an absolute `src/scripts/<key>.ts`, or nothing.
+script_delegate_key() {
+  local ts_abs="$1"
+  case "$ts_abs" in
+    "$PACKAGE_ROOT/src/scripts/"*.ts) ;;
+    *) return 0 ;;
+  esac
+  local key="${ts_abs#"$PACKAGE_ROOT/src/scripts/"}"
+  key="${key%.ts}"
+  [[ "$SCRIPT_DELEGATES" == *" $key "* ]] && printf '%s' "$key"
+  return 0
+}
+
+# Exec `cmd_script.js <key>` for a listed `src/scripts/<key>.ts` when its bundle
+# is usable; return (so the caller falls through to tsx) otherwise.
+exec_script_delegate() {
+  local ts_abs="$1"; shift
+  local key bundle
+  key="$(script_delegate_key "$ts_abs")"
+  [[ -n "$key" ]] || return 0
+  bundle="$(cli_delegate_bundle "$PACKAGE_ROOT/src/scripts/_cli/cmd_script.ts")"
+  [[ -n "$bundle" ]] || return 0
+  exec node "$bundle" "$key" "$@"
 }
 
 # Is a `dist/cli-delegate/` bundle older than the sources it was built from?
@@ -656,6 +693,12 @@ cli_delegate_bundle_is_stale() {
   # against the CONSUMER's npm config, which is strictly worse than a compile
   # that may lag a source edit no consumer can make.
   [[ -x "$PACKAGE_ROOT/node_modules/.bin/tsx" ]] || return 1
+  # Local tsx alone is not a source tree: a consumer who added tsx to the install
+  # dir (what the old `npx tsx` warning told them to do) got every bundled
+  # command re-run from shipped source. `tsconfig.json` is in every source tree
+  # (clone, worktree, vendored subdir, source zip, Docker COPY) and never in
+  # the tarball — files[] does not list it.
+  [[ -f "$PACKAGE_ROOT/tsconfig.json" ]] || return 1
   [[ -d "$PACKAGE_ROOT/src" ]] || return 1
   local newer
   newer="$(find "$PACKAGE_ROOT/src" -name '*.ts' -newer "$bundle" -print -quit 2>/dev/null)"
@@ -705,6 +748,7 @@ exec_ts() {
   if [[ -n "$bundle" ]]; then
     exec node "$bundle" "$@"
   fi
+  exec_script_delegate "$ts_abs" "$@"
   if [[ ! -f "$ts_abs" ]]; then
     echo "❌  agent-config: script not found: $ts_abs" >&2
     exit 127
@@ -724,6 +768,7 @@ exec_hook() {
     echo "❌  agent-config: hook not found: ${base}.ts" >&2
     return 1
   fi
+  exec_script_delegate "$ts_abs" "$@"
   require_tsx
   # shellcheck disable=SC2086
   exec $TSX_BIN "$ts_abs" "$@"

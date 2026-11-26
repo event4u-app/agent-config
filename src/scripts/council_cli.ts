@@ -188,7 +188,7 @@ import { openLiveTable } from './ai_council/live_table.js';
 // ── argparse-style exit plumbing ────────────────────────────────────
 // Mirror CPython argparse: a `prog: error: …` line on stderr + exit 2.
 // `_ArgExit` unwinds the call stack after `process.exitCode` is set.
-class _ArgExit extends Error {}
+export class _ArgExit extends Error {}
 
 /** Mirror Python `argparse.ArgumentTypeError` (caught in `main` → exit 2). */
 class ArgumentTypeError extends Error {}
