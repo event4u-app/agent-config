@@ -7,9 +7,9 @@ Artefacts that maintain this package (agent-config itself).
 - **id**: `meta`
 - **owner**: agent-config-maintainer
 - **requires**: engineering-base
-- **artefacts**: 315
+- **artefacts**: 316
 
-## Commands (168)
+## Commands (169)
 
 - **`agent-design`** — Design orchestrator — routes audit/render/review to the Class-A commands and the six intervention verbs to fe-design with a declared operation
 - **`agent-handoff`** — Pick a recent session, generate a handoff from its transcript, and seed a fresh session with it — or summarize the live conversation for copy-paste.
@@ -45,6 +45,7 @@ Artefacts that maintain this package (agent-config itself).
 - **`contribution-precheck`** — Contributor self-service precheck: run the PR-relevant lint subset (skill linter, originality gate, frontmatter schema) on changed files locally — a verdict with fix hints before opening a PR.
 - **`cost`** — Cost orchestrator — routes to report (session token cost + budget ladder) and profile (change the rule_loading_tier)
 - **`cost-profile`** — Change the rule_loading_tier in .agent-settings.yml — shows each profile's meaning and applies the selection
+- **`deliberation`** — Set deliberation.mode — off (default), offer or auto — for council/arena/panel, for this chat or globally
 - **`estimate-ticket`** — Estimate a Jira/Linear ticket before sprint planning — size + risk + split recommendation + uncertainty, sibling to /refine-ticket, ends with a close-prompt
 - **`explain-run`** — Read-only 'why did that happen' run report — resolved rule set, rules fired, artefact engagement, subagent dispatches, hook/loop/freshness state — even when the user just says 'explain the last run'.
 - **`feature`** — Feature orchestrator — routes to explore, plan, refactor, roadmap, dev
