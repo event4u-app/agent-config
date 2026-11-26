@@ -233,6 +233,7 @@ one the task calls for, not the set.
 | Run a session end to end | [`references/procedure.md`](references/procedure.md) | The neutrality context-handoff, the numbered procedure, the convener-skeptic stance, why a mechanism claim needs a probe rather than a second opinion, what this is NOT |
 | Place the artefact, or render the synthesis | [`references/output-and-synthesis.md`](references/output-and-synthesis.md) | Output path convention with its forbidden and exempt sets, lens-aware synthesis templates, the `--prose-synthesis` escape hatch, renderer lens resolution |
 | Estimate or gate the spend, or check what is redacted | [`references/cost-and-redaction.md`](references/cost-and-redaction.md) | Redaction expectations, cost awareness, the pre-call estimate format, the stale price-table gate, the mid-flow overrun callback |
+| Offer, auto-run or never offer council / arena / panel (`deliberation.mode`) | [`references/deliberation-mode.md`](references/deliberation-mode.md) | When each tool fits, the three modes, what `auto` decides on its own and the Hard Floor it never passes |
 | Multi-round debate, deep tier, advisors, replay, low-impact fast-path | [`references/advanced-modes.md`](references/advanced-modes.md) | `rounds:N` debate, the deep-reasoning tier and its manual-mode parity, `/council debate`, Karpathy peer-review, thinking-style advisors, the decision-replay artefact, the Lightweight-QA fast-path with its own Iron Law and output markers |
 
 Two of those bodies carry obligations a pointer cannot summarise: the

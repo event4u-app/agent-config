@@ -205,7 +205,7 @@ Your agent now understands slash commands:
 | `/fix quality` | Run and fix all quality checks |
 | [Crash recovery](#crash-recovery--agentsruntimeagent-chat-history) | Automatically records session state; restart recovery requires manual reconstruction from the latest usable continuity record |
 
-→ [Browse all 218 active commands](../dist/agent-src/commands/)
+→ [Browse all 219 active commands](../dist/agent-src/commands/)
 
 ---
 

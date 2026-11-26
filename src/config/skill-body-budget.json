@@ -11,7 +11,7 @@
         "agent-security-review": 6120,
         "agents-md-thin-root": 13319,
         "ai-code-blindspots": 14468,
-        "ai-council": 22271,
+        "ai-council": 22519,
         "alerting-doctrine": 8755,
         "analysis-autonomous-mode": 7380,
         "analysis-skill-router": 4139,
@@ -330,6 +330,12 @@
         "worktree-lifecycle": 9502
     },
     "raised": [
+        {
+            "skill": "ai-council",
+            "old": 22271,
+            "new": 22519,
+            "reason": "One reference-table row pointing at references/deliberation-mode.md (deliberation.mode offer|auto|off, owner request 2026-11-26). The obligation was moved out of a rule file so the per-spawn preamble does not grow; the body lives in the reference, the SKILL.md carries only the pointer row."
+        },
         {
             "skill": "agents-md-thin-root",
             "old": 13263,
