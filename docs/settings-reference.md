@@ -312,6 +312,12 @@ explanation lives now that the file no longer carries it as comments.
 |---|---|---|---|---|---|
 | `security_ops.plan` | B | boolean | `false` |  | The persisted answer to "plan a security & maintenance section?", offered once when /audit security or feature planning finds a deployed project with no lever inventory (ADR-304). true = the agent drafts the section with feature-planning and the control-section blueprint when the finding appears — it plans, never builds or throws a lever. false (default) = not planned; the finding stays in the report and the offer is made once while no answer is recorded (written with --source jit-answer). Prose-only reader: nothing can refuse the plan. |
 
+## sessions
+
+| Key | Class | Type | Default | Allowed values | What it does |
+|---|---|---|---|---|---|
+| `sessions.auto_title` | A | boolean | `true` |  | Session titles that sharpen as the session learns (ADR-305). true (default) = at a few prompt milestones the agent is asked whether the session goal can be named more precisely and publishes a better title beside the transcript, which sessions:catalog and Agent Switch show. A title you set with /rename is final and never replaced. false = no prompts, no writes, and refined titles already written are hidden. A global preference: set it once user-global (agent-config settings:set sessions.auto_title false). |
+
 ## star_ask
 
 | Key | Class | Type | Default | Allowed values | What it does |
