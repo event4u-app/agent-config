@@ -174,3 +174,12 @@ STANCE: ratified | CONFIDENCE: high | DEALBREAKER: no
 
 STANCE: refused | CONFIDENCE: med | DEALBREAKER: yes
 ```
+
+## Owner decision on the split (ADR-282)
+
+- **Owner:** the repository owner, 2026-11-26, in session: chose option 1 (land over the split, record the decision here, open the pull request) of: land over the split; a fourth round; park the branch. On the open pull request the owner then ordered: fix the CI where possible, and merge regardless.
+- **What was put to the owner:** three rounds. Round 1 refused unanimously, mainly on a phantom removal of `deliberation-mode` in the compiled manifest diff — an artefact of diffing against an `origin/main` that had moved past the branch's merge base; the branch merged main. It also found real gaps, fixed: the CLI wrote beside any `--transcript` path (now only an existing `<session-id>.jsonl`), titles were not capped at the 60 characters the nudge asks for, renamed sessions kept accumulating state, the state directory grew without bound, the cadence past 100 was heavy. Round 2 split on the freeze waiting for a milestone; fixed with a per-prompt 64 KiB tail check. Round 3 split: anthropic `ratified`, openai `refused` with DEALBREAKER yes, on rollout design — an unquantified uptake threshold, an open-ended measurement window, sidecars staying visible after switching off. All three were fixed after round 3 outside the watched set (catalog and Agent Switch hide refined titles when `sessions.auto_title` is false; uptake under half of nudged sessions; window capped at 90 days), so the subject above is unchanged.
+- **Expected gain:** session lists in `sessions:catalog` and Agent Switch name what a session is about instead of its first prompt.
+- **Risk:** at most a worse title in a sidecar file; advisory concern, never denies, bound on claude only. Cost per prompt: one settings load, a ≤ 64 KiB tail read, ≤ 1 KB state I/O; about 420 B of context at a milestone.
+- **What this record does not change:** the verdict above is the one derived from the seats, `refused`. The decision to land despite it is the owner's, recorded here and not in the header.
+- **Rollback:** `agent-config settings:set sessions.auto_title false` restores host titles at once; full rollback reverts the merge commit of this PR. Triggers are in ADR-305's `review_trigger` and the admission record (`agents/decisions/concern-admissions.jsonl`, concern `session-title`).
