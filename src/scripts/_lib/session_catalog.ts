@@ -28,6 +28,7 @@ import { rawKeyPrefixPattern } from './egress_rules.js';
 import { write_atomic } from './fs_atomic.js';
 import { claudeHomeInfo, codexHomeInfo } from './provider_home.js';
 import { iso_now, ttl_seconds_for } from './session_register.js';
+import { readRefinedTitle } from './session_title.js';
 import { DEFAULT_EVENT4U_ROOT_RELATIVE, type EnvMap, event4u_root } from './user_global_paths.js';
 
 export const CATALOG_SCHEMA_VERSION = 1;
@@ -1206,7 +1207,8 @@ export function build_index(options: BuildOptions = {}): CatalogIndex {
             status,
             live: rec !== null,
             idle_seconds: idle,
-            title: st.title,
+            // User's own title > the agent's refined one (session_title.ts) > the host's.
+            title: st.title_custom ? st.title : (readRefinedTitle(t.file)?.title ?? st.title),
             roadmap_slug: rec?.roadmap_slug ?? null,
             repos: repos_for(st, git_cache),
             usage: st.usage,

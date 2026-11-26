@@ -86,6 +86,7 @@ export const REGISTRY: readonly CommandEntry[] = [
     { name: 'use', disposition: 'delegate', synopsis: 'Switch the active experience/profile (writes profile.id).' },
     { name: 'sessions:list', disposition: 'delegate', synopsis: 'List live agent sessions plus unmerged branches held by other worktrees; --json, --branches.' },
     { name: 'sessions:catalog', disposition: 'delegate', synopsis: 'Every Claude Code and Codex session on this machine, newest first, with profile, model, repos/branches, tokens and resume command; refreshes sessions.json + SESSIONS.md; --json, --all, --status, --live.' },
+    { name: 'session:title', disposition: 'delegate', synopsis: 'Set (or --show) the refined title of a session; a title the user set with /rename is never overridden.' },
     { name: 'sessions:claim', disposition: 'delegate', synopsis: 'Claim a roadmap for this session so other sessions skip it; --release clears it.' },
     { name: 'session:recycle', disposition: 'delegate', synopsis: 'Validate + write the main-session recycle envelope (--verify validates only, --project names the repo); the successor resumes from it after /clear.' },
     { name: 'roadmap:context', disposition: 'delegate', synopsis: 'One live situational-awareness probe: open PRs + their file sets, roadmap-tail branches, live sessions, inbox note names, sibling-roadmap keyword hits; --roadmap <slug>, --json.' },

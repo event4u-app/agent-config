@@ -264,7 +264,10 @@ Tier 2 — maintenance / internal (hooks, MCP, memory, telemetry):
                              first: profile, model, repos/branches, tokens, resume.
                              Refreshes ~/.event4u/agent-config/sessions.json + SESSIONS.md.
                              Flags: --json, --all, --limit N, --status S, --live
-  session:recycle            Validate + write the main-session recycle envelope (--verify validates only)
+  session:title              Set the refined title of a session: --session <id> "<title>",
+                             or --show. A /rename title is final and never overridden.
+                             Off globally: settings:set sessions.auto_title false
+  session:recycle           Validate + write the main-session recycle envelope (--verify validates only)
                              (deliberate recycle instead of auto-compact). Flags:
                              --file <json> | --template; default reads stdin
   roadmap:context            One live situational-awareness probe: open PRs and the
@@ -634,7 +637,7 @@ cli_delegate_bundle() {
 # config — in every install that ships no tsx. Must match `DELEGATES` in
 # cmd_script.ts; tests/scripts/runtime_dependencies.test.ts pins both that and
 # that every `src/scripts/` dispatcher route outside the bundled roots is listed.
-SCRIPT_DELEGATES=" advisories agent_actions_detect audit_security benchmark bracket/cli chat_history check_proposal code_audit conformance_scan context_hygiene_hook council_cli decision_memo derive_live_surfaces discovery_graph generate_capabilities_index hook_effect_doctor hooks/replay_hook hooks_doctor hooks_status knowledge_global_cli learning_sidecar linked_projects_list mcp_render media_bundle memory_lookup onboarding_gate_hook profile_use reach_doctor refine_ticket_detect roadmap_context roadmap_progress_hook routing_doctor run_supervise security_audit_config self_repair_cli sessions_catalog_cli sessions_cli workspace_doctor worktree_cleanup_check "
+SCRIPT_DELEGATES=" advisories agent_actions_detect audit_security benchmark bracket/cli chat_history check_proposal code_audit conformance_scan context_hygiene_hook council_cli decision_memo derive_live_surfaces discovery_graph generate_capabilities_index hook_effect_doctor hooks/replay_hook hooks_doctor hooks_status knowledge_global_cli learning_sidecar linked_projects_list mcp_render media_bundle memory_lookup onboarding_gate_hook profile_use reach_doctor refine_ticket_detect roadmap_context roadmap_progress_hook routing_doctor run_supervise security_audit_config self_repair_cli sessions_catalog_cli sessions_cli session_title_cli workspace_doctor worktree_cleanup_check "
 
 # Echo the cmd_script key for an absolute `src/scripts/<key>.ts`, or nothing.
 script_delegate_key() {
@@ -913,6 +916,10 @@ cmd_sessions_claim() {
 
 cmd_sessions_catalog() {
   exec_ts "$PACKAGE_ROOT/src/scripts/sessions_catalog_cli.ts" "$@"
+}
+
+cmd_session_title() {
+  exec_ts "$PACKAGE_ROOT/src/scripts/session_title_cli.ts" "$@"
 }
 
 # Main-session recycle envelope producer (road-to-token-economy-recycling
@@ -1822,6 +1829,7 @@ main() {
     sessions:list)           cmd_sessions_list "$@" ;;
     sessions:catalog)        cmd_sessions_catalog "$@" ;;
     sessions:claim)          cmd_sessions_claim "$@" ;;
+    session:title)           cmd_session_title "$@" ;;
     session:recycle)         cmd_session_recycle "$@" ;;
     packs:active)            cmd_packs_active "$@" ;;
     settings:get)            cmd_settings_get "$@" ;;
