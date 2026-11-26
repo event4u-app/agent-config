@@ -179,7 +179,8 @@ import {
 } from '../before_complete_hook.js';
 // Re-exported: two test files address `readTurnRunState` at this path, and a
 // reader arriving at detector C should find the reader where the detector uses
-// it. The DEFINITION lives with the producer of the shape it reads.
+// it. The DEFINITION lives in `_lib/turn_run_state.ts`, beside the path builder
+// the producer writes with; `before_complete_hook` re-exports it.
 export { readTurnRunState };
 // The spec-backed options-block reading, imported rather than re-derived:
 // `user-interaction` Iron Law 1's definition of an ask — a block PLUS its
