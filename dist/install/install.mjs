@@ -22602,6 +22602,11 @@ var settingsSchema = object({
       "Deterministic run-checkpoint production at session end (road-to-continuity-writer-activation Phase 1.4). on (default) = a session above the recycle threshold and inside a running roadmap contract leaves agents/runtime/state/checkpoints/<run>.json, so a killed run resumes from a derived checkpoint rather than from bookkeeping. off = no checkpoint; continuity writing and the context-fill surface are unaffected. Default ON because it is the behavior the tree already had \u2014 the switch exists to make the three session-end handlers independently disableable, not to change what ships."
     )
   }),
+  sessions: object({
+    auto_title: boolean2().default(true).describe(
+      "Session titles that sharpen as the session learns (ADR-305). true (default) = at a few prompt milestones the agent is asked whether the session goal can be named more precisely and publishes a better title beside the transcript, which sessions:catalog and Agent Switch show. A title you set with /rename is final and never replaced. false = no prompts, no writes, and refined titles already written are hidden. A global preference: set it once user-global (agent-config settings:set sessions.auto_title false)."
+    )
+  }).prefault({}),
   retro: object({
     enabled: boolean2().default(true).describe(
       "Automatic retro after merged work (ADR-292, docs/contracts/retro-v1.md). true (default, owner directive 2026-10-12) = a merged PR and the first session of a new local day enqueue finished work; a deterministic triage picks what is worth one learning, and nothing behavior-changing is applied without a person. The one network read is the daily probe asking GitHub, through your own gh login, whether a pushed PR merged (repository and PR number only, three-second budget). false = no automatic path runs \u2014 no merge enqueue, no forge-merge marker, no daily probe and no network read; an explicit /retro still runs on request. Class C: an agent cannot set it; it cascades from the user-global file."
