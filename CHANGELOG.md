@@ -588,6 +588,91 @@ An entry belongs under a dated release section, not here — see
 > that forces a new era split (`# Era: 20.9.x`, etc.) — see
 > [`docs/contracts/CHANGELOG-conventions.md § Era splits`](docs/contracts/CHANGELOG-conventions.md).
 
+## [20.10.0](https://github.com/event4u-app/agent-config/compare/20.9.0...20.10.0) (2026-11-26)
+
+### Release highlights
+
+- **Behaviour changes:** a major's own BREAKING_CHANGES row reaches its changelog head (9e1f48a).
+- **Default changes + migration:** deliberation.mode, off by default (f1b0df4); regenerate the doc-path inventory for the release head's MIGRATION pointer (6777cb4).
+- **Security and correctness:** sessions.auto_title in the server settings schema (4d91dae); switching sessions.auto_title off hides refined titles (9de36ec); freeze on the first prompt after a /rename, not the next milestone (4aaf9d7); bound session:title after the round-1 council review (dc59c68); council cluster, step receipts, plain hook comment (c6ea2b1); precompile every plain src/scripts route, no npx tsx (104828f); +9 more.
+- **Honest nulls:** _none_
+- **Known limitations:** an escaped pipe does not split a by-major row's What-broke cell (src/scripts/_lib/release_highlights.ts declares a residual) (837740d); a major's by-major row replaces the Pending rows it carries in the head (src/scripts/_lib/release_highlights.ts declares a residual) (dd1aaa7); a major's own BREAKING_CHANGES row reaches its changelog head (src/scripts/_lib/release_highlights.ts declares a residual) (9e1f48a).
+
+> **Governance mix:** governance-only 16 vs consumer-only 8 (mixed 15, maintenance 15; taxonomy 1.1.0; range 2f837e1ceb31..4056206ddac9).
+
+### Features
+
+* **hooks:** session-title asks the agent to sharpen the session title ([695105f](https://github.com/event4u-app/agent-config/commit/695105fb56405b13ddbae58015bf3f375994b693))
+* **sessions:** session:title publishes a refined title beside the transcript ([ce0d8f6](https://github.com/event4u-app/agent-config/commit/ce0d8f66a1917d4237b4ad62d5b132b9d6f630d4))
+* **settings:** sessions.auto_title, a global switch for sharpening titles (ADR-305) ([dcdc9bd](https://github.com/event4u-app/agent-config/commit/dcdc9bd0e7f5fd43047b464040f8f85ff47624df))
+* **arena:** bracket name — a run's name and the decision it reached ([a35e803](https://github.com/event4u-app/agent-config/commit/a35e803ad41a8d4ff2ad515519d4aa7829a6c4f7))
+* **commands:** /deliberation and the ai-council deliberation-mode reference ([6416730](https://github.com/event4u-app/agent-config/commit/64167302ef0d49c7bb159bab2604adff78116992))
+* **hooks:** deliberation-mode concern carries the session's mode on every prompt ([007c3c7](https://github.com/event4u-app/agent-config/commit/007c3c7a5e7a09deb840f8ba38b99ad06995e9b2))
+* **cli:** deliberation:get and deliberation:set, globally or for one session ([bfee728](https://github.com/event4u-app/agent-config/commit/bfee728a40aa6020d3b392c01ad57a6f242d1a4e))
+* **settings:** deliberation.mode, off by default ([f1b0df4](https://github.com/event4u-app/agent-config/commit/f1b0df4414e118e4b8bd053f8f1f81307a6923cd))
+
+### Bug Fixes
+
+* **settings:** sessions.auto_title in the server settings schema ([4d91dae](https://github.com/event4u-app/agent-config/commit/4d91daeae1a96d7ec6f61e3268f43821dbf5422b))
+* **sessions:** switching sessions.auto_title off hides refined titles ([9de36ec](https://github.com/event4u-app/agent-config/commit/9de36ec5cffb397e546dd9cb1f3619b28d2447c9))
+* **sessions:** freeze on the first prompt after a /rename, not the next milestone ([4aaf9d7](https://github.com/event4u-app/agent-config/commit/4aaf9d7b0921f7f31b31c8d192f554b3c79b365d))
+* **sessions:** bound session:title after the round-1 council review ([dc59c68](https://github.com/event4u-app/agent-config/commit/dc59c68e7459e8cefe89aea24edf3b3f24551d26))
+* **deliberation:** council cluster, step receipts, plain hook comment ([c6ea2b1](https://github.com/event4u-app/agent-config/commit/c6ea2b11cb9cc1a27feeb11c539e890350148094))
+* **dispatch:** precompile every plain src/scripts route, no npx tsx ([104828f](https://github.com/event4u-app/agent-config/commit/104828fb57fd33e8a1b8e3f63e9e1b74fdb1d00b))
+* **scripts:** resolve the package root by marker, not hop count ([1be1e36](https://github.com/event4u-app/agent-config/commit/1be1e361c100206abda83d61e9df4e99d35c3448))
+* **projection-gates:** host-tree parity refuses to pass without a form record ([e02fc5b](https://github.com/event4u-app/agent-config/commit/e02fc5b7d9c8ced3da9dfca5c3f025f6f24c1e58))
+* **release:** an escaped pipe does not split a by-major row's What-broke cell ([837740d](https://github.com/event4u-app/agent-config/commit/837740de8be5e0c2b4a208b9c16a065b7fc40088))
+* **release:** a major's by-major row replaces the Pending rows it carries in the head ([dd1aaa7](https://github.com/event4u-app/agent-config/commit/dd1aaa7abbf159108c3fce887911d6f7de53fd80))
+* **projection-gates:** refuse an unknown flag in check_rule_projection_integrity ([3a6c5eb](https://github.com/event4u-app/agent-config/commit/3a6c5ebd829a018a159aa879de7d3f16caaa2c42))
+* **evidence-temperature:** class merge clearances hot; the gate reads them by constructed path ([271ec01](https://github.com/event4u-app/agent-config/commit/271ec0131649f27f11f323ce5ba9c533b041c48a))
+* **projection-gates:** stop reading the removed lean_projection key (ADR-293) ([db770ad](https://github.com/event4u-app/agent-config/commit/db770ad85de1dff03bb8fdf91e3ac78f2d84a56a))
+* **update-invite:** keep child_process out of the concern's runtime import graph ([353aacd](https://github.com/event4u-app/agent-config/commit/353aacd123b2b8dd6b767f9a86e830bdf98afd2b))
+* **release:** a major's own BREAKING_CHANGES row reaches its changelog head ([9e1f48a](https://github.com/event4u-app/agent-config/commit/9e1f48a1dfc5a3e3d88c661a80e8bc79b6885b6e))
+
+### Documentation
+
+* **evidence:** bypass record for the #3049 merge over the ratification split ([0945b03](https://github.com/event4u-app/agent-config/commit/0945b030ebca8c512137f504f07749696a802e4e))
+* **evidence:** record the owner decision on the session-title split ([9ef69ad](https://github.com/event4u-app/agent-config/commit/9ef69adfc793509425f8a0ea802521c16a22dca9))
+* **settings:** regenerate the settings reference for sessions.auto_title ([4db72d8](https://github.com/event4u-app/agent-config/commit/4db72d89da69ca9cbfbc594addc8ea3b86330fc6))
+* **adr:** ADR-305 discloses its evidence ([d217718](https://github.com/event4u-app/agent-config/commit/d217718c95fada2632bbe8a131ab55c5f5dcad71))
+* **evidence:** session-title ratification record, round 3 (split) ([71002a6](https://github.com/event4u-app/agent-config/commit/71002a6e6159af1b245a0b35a944a4326f7421c3))
+* **evidence:** session-title ratification prompt, round 3 ([18bf2a6](https://github.com/event4u-app/agent-config/commit/18bf2a611d5562286fb5a056469ab0a84444b593))
+* **evidence:** session-title ratification prompt, round 2 ([a5a5398](https://github.com/event4u-app/agent-config/commit/a5a5398dfc5332dc009c2d2b9eb877fe239c5833))
+* **evidence:** narrow the round-1 prompt to the council bundle ceiling ([a0b52c9](https://github.com/event4u-app/agent-config/commit/a0b52c96491fcdf2732338f36099a116b5ad3b26))
+* **evidence:** session-title ratification prompt, round 1 ([223303e](https://github.com/event4u-app/agent-config/commit/223303e3bf713d88e0b9d5f36c13f7f16980778d))
+* **evidence:** deliberation-mode ratification prompts ([c2330db](https://github.com/event4u-app/agent-config/commit/c2330db987955774231e8dbbf3a327b17fc96b21))
+* **turn-end-gate:** point the readTurnRunState comment at _lib/turn_run_state.ts ([4e09ed5](https://github.com/event4u-app/agent-config/commit/4e09ed558f122614e75889407f99de941fe55b57))
+* **breaking:** say the cut also reads a major's own by-major row ([b950604](https://github.com/event4u-app/agent-config/commit/b950604048a9c695d790c4158e9ffbc3271d713f))
+* **maintainers:** regenerate the doc-path inventory for the release head's MIGRATION pointer ([6777cb4](https://github.com/event4u-app/agent-config/commit/6777cb4fb0d83a152022f9e9580d2945114f7d10))
+* **breaking:** name the three renamed commands and the removed --apply in 17.0.0 ([f10581e](https://github.com/event4u-app/agent-config/commit/f10581e1ceb76f23bdf4904c0cf99c9bcf27c93d))
+* **roadmap:** mirror the depends relation ([1907ae8](https://github.com/event4u-app/agent-config/commit/1907ae8860ea11e27d9f50dbce13dd97ef76c392))
+* **roadmap:** fix relation keyword and give 1.1 a failing verify ([b0415c0](https://github.com/event4u-app/agent-config/commit/b0415c033b58164a7be96e472d328402c7efddc3))
+* **roadmap:** owner overrides that do not block releases ([bbf57ff](https://github.com/event4u-app/agent-config/commit/bbf57ffbc377d6e3fa182558bc3ed4ea3db2328c))
+
+### Tests
+
+* **update-invite:** read the import graph from the TypeScript AST ([260748b](https://github.com/event4u-app/agent-config/commit/260748b00392526e903c3eb3f7f41b0071e126fc))
+* **release:** replace the vacuous head-cap assertions with a line-break check ([35aef38](https://github.com/event4u-app/agent-config/commit/35aef383208246e5e90148a057e12f5d71e471d4))
+
+### CI
+
+* stop claiming the 22.6.0 engines floor is measured ([5d9080f](https://github.com/event4u-app/agent-config/commit/5d9080ff7350ba298dc9c4d8ecbc1f4a91ebabae))
+* refresh Node-version comments that still describe the Node 20 floor ([9c7fa82](https://github.com/event4u-app/agent-config/commit/9c7fa8276c24d7aa41a9b226ddc23e1ccd186902))
+
+### Chores
+
+* **hooks:** admit session-title in the concern ledger ([3644d9b](https://github.com/event4u-app/agent-config/commit/3644d9b413cce7309c1cf949f129b4f8756cbe14))
+* **evaluator:** refresh the nightly measurement record ([9277432](https://github.com/event4u-app/agent-config/commit/92774320ad8a1f044c10f746239f96a4ad588448))
+* regenerate artefact index and catalog ([ba52278](https://github.com/event4u-app/agent-config/commit/ba52278883a0f101f410cd3f68454e7a85eda557))
+* **evidence:** host cost census ([594a7a1](https://github.com/event4u-app/agent-config/commit/594a7a1df3e280b1f74f489cf92b5d62b7565e6c))
+* regenerate derived docs ([875c68d](https://github.com/event4u-app/agent-config/commit/875c68d47293099f273f497326f7484a1d4c4d17))
+* **budget:** lower the source-size baseline to 16607 ([b69298e](https://github.com/event4u-app/agent-config/commit/b69298ef71012a28a027e98a43a2b63ae37d9db2))
+* **budget:** re-anchor the built pack surface for the delegate bundle ([2b3c2e6](https://github.com/event4u-app/agent-config/commit/2b3c2e6075def88f8fc3e0198540440a382b42fc))
+* **deps:** bump the site group in /site with 3 updates ([fe1e19c](https://github.com/event4u-app/agent-config/commit/fe1e19cf8348c077994d0f1c14ba74b71b31b90a))
+* **deps-dev:** bump @cloudflare/workers-types ([9009d9a](https://github.com/event4u-app/agent-config/commit/9009d9a08d91f0d973aa8d7a57b7006199b83961))
+
+Tests: 41208 (+90 since 20.9.0)
+
 ## [20.9.0](https://github.com/event4u-app/agent-config/compare/20.8.0...20.9.0) (2026-11-25)
 
 ### Release highlights

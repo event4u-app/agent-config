@@ -1,5 +1,5 @@
 {
-  "version": "20.9.0",
+  "version": "20.10.0",
   "entries": {
     "advisories.egress": {
       "type": "string",
@@ -198,6 +198,15 @@
     "decision_engine.require_memory_hits": {
       "type": "boolean",
       "default": false
+    },
+    "deliberation.mode": {
+      "type": "string",
+      "default": "off",
+      "enum": [
+        "off",
+        "offer",
+        "auto"
+      ]
     },
     "delivery.merge": {
       "type": "string",
@@ -587,6 +596,10 @@
     "security_ops.plan": {
       "type": "boolean",
       "default": false
+    },
+    "sessions.auto_title": {
+      "type": "boolean",
+      "default": true
     },
     "star_ask.mode": {
       "type": "string",
