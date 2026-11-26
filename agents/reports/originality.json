@@ -1,12 +1,12 @@
 {
   "fail_threshold": 60,
   "warn_threshold": 40,
-  "artifacts_scanned": 551,
+  "artifacts_scanned": 552,
   "distribution": {
-    "worst": 44.7,
+    "worst": 42.9,
     "p95": 0,
     "median": 0,
-    "comparisons": 69841
+    "comparisons": 70059
   },
   "pairs": [
     {
@@ -15,7 +15,7 @@
       "b": "override",
       "a_path": "src/domains/engineering-base/tests/command.md",
       "b_path": "src/domains/meta/override/command.md",
-      "overlap": 44.7
+      "overlap": 42.9
     },
     {
       "cls": "command",
@@ -23,7 +23,7 @@
       "b": "override",
       "a_path": "src/domains/engineering-base/fix/command.md",
       "b_path": "src/domains/meta/override/command.md",
-      "overlap": 43.7
+      "overlap": 41.8
     },
     {
       "cls": "skill",

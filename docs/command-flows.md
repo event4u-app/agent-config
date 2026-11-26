@@ -7,7 +7,7 @@
 
 > Every command is classified in `src/flows/surface-map.yaml` (coverage enforced by `scripts/lint_command_flow_coverage.py`). The four user-work flows carry rich definitions in `src/flows/<flow>.yaml`.
 
-**218 commands** across **10 surfaces** (4 user-work flows + 6 platform/domain surfaces).
+**219 commands** across **10 surfaces** (4 user-work flows + 6 platform/domain surfaces).
 
 ## User-work flows
 
@@ -297,4 +297,5 @@ _Handoff / status / mode — conversation lifecycle._
 
 - `agent-handoff` — Pick a recent session, generate a handoff from its transcript, and seed a fresh session with it — or summar…
 - `agent-status` — Show current conversation stats — message count, token costs, task progress, next freshness check.
+- `deliberation` — Set deliberation.mode — off (default), offer or auto — for council/arena/panel, for this chat or globally
 - `mode` — Set the active role mode — prints the contract, lists default skills, and refuses work outside the contract…

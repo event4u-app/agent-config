@@ -30,6 +30,32 @@ Entry-shape contract: [`docs/contracts/CHANGELOG-conventions.md`](docs/contracts
 
 ## [Unreleased]
 
+### Added
+
+* **deliberation:** a new user-global setting `deliberation.mode` (class A,
+  default `off`) decides what happens when a question carries a real decision
+  with trade-offs. It stays off until the user asks to switch it on, for one
+  session or globally. `offer` lists the fitting `/council`, `/arena` or `/panel` as
+  numbered options with the plain answer last; `auto` is an automatic mode the
+  user switches on — the agent runs the fitting tool and answers its own
+  implementation questions instead of asking, while merge, deploy, push,
+  release, production data or infra, bulk deletion and irreversible external
+  actions still ask; `off` never offers one. `agent-config deliberation:get [--session <id>]
+  [--json]` prints the effective mode and its source (`session`, `global`,
+  `default`); `agent-config deliberation:set <off|offer|auto|inherit>
+  [--session <id>]` writes it globally through `settings:set` or as a
+  per-session override at `~/.event4u/agent-config/state/deliberation/<id>.json`.
+  The `deliberation-mode` hook concern (`user_prompt_submit`, kill switch
+  `AGENT_CONFIG_NO_DELIBERATION_HINT=1`) delivers the mode per prompt; the
+  command `/deliberation` and the `ai-council` skill carry the procedure. No
+  rule file, so the per-spawn preamble does not grow.
+* **arena:** `agent-config bracket name --run <id> --text "…"` /
+  `--decision "…"` writes `name.json` beside `bracket.json` — the run's human
+  name and its one-line decision with the current champion, as Agent Switch
+  shows them. A field the user set is kept unless `--force`; an empty value
+  clears it. `/judge bracket` and `/arena` now name the run right after `init`
+  and record the decision at `done`.
+
 ### Changed
 
 * **claude plugin:** the marketplace plugin root is `./.claude-plugin`, no
