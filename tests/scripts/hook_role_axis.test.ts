@@ -56,6 +56,8 @@ const WORKER_DROP = [
     'self-repair',
     'session-eol',
     'interruption-ledger',
+    // ADR-305: the title belongs to the user's session, not to a worker slice.
+    'session-title',
 ];
 
 function manifest(): JsonObject {

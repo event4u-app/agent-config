@@ -1105,6 +1105,18 @@ continuity:
   #   off = no checkpoint; every other session-end handler is unaffected.
   run_checkpoints: "on"
 
+# Session titles that sharpen as the session learns (`session-title` concern,
+# `agent-config session:title`). Claude Code names a session once, from its first
+# prompt; with this on, the agent is asked at a few prompt milestones whether the
+# goal can now be named more precisely, and publishes the better title in a
+# sidecar beside the transcript that Agent Switch and `sessions:catalog` read.
+# A title the user set with /rename is final and is never replaced.
+# Off also hides refined titles already written. A GLOBAL preference — set it
+# once, user-global, and every checkout follows (a project value still wins):
+#   agent-config settings:set sessions.auto_title false
+sessions:
+  auto_title: true
+
 # Automatic retro after merged work (ADR-292, docs/contracts/retro-v1.md).
 retro:
   # On by default by the owner's directive of 2026-10-12. A merged pull request

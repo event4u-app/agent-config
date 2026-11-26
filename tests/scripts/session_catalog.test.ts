@@ -163,6 +163,15 @@ describe('Claude transcripts', () => {
         expect(find(ID1)!.title).toBe('Rotate [redacted]');
     });
 
+    it('shows a refined title over the host title, under a user title, and hides it when switched off (ADR-305)', () => {
+        const file = claude_transcript(ID1, line({ type: 'ai-title', aiTitle: 'First guess' }) + assistant('m1'));
+        fs.writeFileSync(file.replace(/\.jsonl$/, '.agent-title.json'), JSON.stringify({ title: 'Billing CSV export' }));
+        expect(find(ID1, { refined_titles: true })!.title).toBe('Billing CSV export');
+        expect(find(ID1, { refined_titles: false })!.title).toBe('First guess');
+        fs.appendFileSync(file, line({ type: 'custom-title', customTitle: 'Mine' }));
+        expect(find(ID1, { refined_titles: true })!.title).toBe('Mine');
+    });
+
     it('attributes repos written through edit tools, not ones only read', () => {
         const lib = make_repo('lib', 'develop');
         const dots = make_repo('dots', 'main');

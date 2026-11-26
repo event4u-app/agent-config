@@ -341,6 +341,7 @@ and keep the full search — this file only adds candidates to it.
 | road-to-sentences-and-instruments-from-inbox-2026-10-o | stubs | — | the sentences and the instruments round inbox-2026-10-o found |
 | road-to-sep-2640-skill-resources | stubs | — | SEP-2640 (`skill://` resources) — a quarterly date carrier |
 | road-to-session-closeout-gated | stubs | — | Session-closeout residue that needs something this repository cannot supply |
+| road-to-session-titles-beyond-claude | stubs | — | session titles beyond Claude Code, and whether the nudge is followed |
 | road-to-single-line-estate-claims | stubs | — | road to estate claims the gate can actually read |
 | road-to-skill-retirement-signal | stubs | — | the skill-retirement signal |
 | road-to-skill-tiering-live-arm | stubs | — | the live arm for skill tiering (H1) — needs host sessions, not a repository |

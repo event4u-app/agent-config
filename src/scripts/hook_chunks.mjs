@@ -118,6 +118,13 @@ export const HOOK_CHUNKS = Object.freeze([
         entry: 'src/scripts/hooks/intake_pass_hook.ts',
         outfile: 'dist/hooks/intake_pass.chunk.cjs',
     }),
+    // `session-title` on claude `user_prompt_submit`. `yaml` external for the
+    // reason given at `chat_history`: the concern reads `sessions.auto_title`.
+    Object.freeze({
+        entry: 'src/scripts/hooks/session_title_hook.ts',
+        outfile: 'dist/hooks/session_title.chunk.cjs',
+        external: Object.freeze(['yaml']),
+    }),
     // `deliberation-mode` on `user_prompt_submit`; `yaml` external: it reads
     // the user-global settings layers for `deliberation.mode`.
     Object.freeze({

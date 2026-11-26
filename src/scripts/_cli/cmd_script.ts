@@ -112,6 +112,7 @@ export const DELEGATES: Readonly<Record<string, Delegate>> = {
     self_repair_cli: d(async (a) => (await import('../self_repair_cli.js')).main(a), true),
     sessions_catalog_cli: d(async (a) => (await import('../sessions_catalog_cli.js')).cmd_catalog(a), true),
     sessions_cli: d(async (a) => (await import('../sessions_cli.js')).main(a), true),
+    session_title_cli: d(async (a) => (await import('../session_title_cli.js')).cmd_session_title(a), true),
     workspace_doctor: d(async (a) => (await import('../workspace_doctor.js')).main(a), true),
     worktree_cleanup_check: d(async (a) => {
         try {

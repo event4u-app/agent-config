@@ -248,10 +248,12 @@ dispatch runs, not WHETHER the layer exists, so they keep their own C rows.
 
 | Class | Keys |
 |---|---|
-| A — preference | 12 |
+| A — preference | 13 |
 | B — consent | 4 |
 | C — guarded | 104 |
-| **Total** | **120** |
+| **Total** | **121** |
+
+It rose to 121 on 2026-11-26 when `sessions.auto_title` was added — one A, `un-inferrable`: whether session titles keep sharpening is the user's taste, the worst case is a worse title in a sidecar file, and the owner asked for it to be switchable by instruction, which only class A allows. It ships `true` by the owner's request of 2026-11-26 and is whitelisted in `MERGEABLE_KEYS`, because it is meant to be set once, user-global.
 
 It rose to 120 on 2026-11-26 when `deliberation.mode` was added — one A, `consent`: the user's own choice whether a decision gets a `/council`, `/arena` or `/panel` offered (`offer`), run (`auto`) or neither (`off`, the default — the owner ruled the same day that it is switched on only when the user asks, for one session or globally). It is not B even with that conservative default: the B lint admits only `false` / `""` / `0` / `[]` / `null` / `{}` as a default, and `"off"` is an enum value, not one of them; recasting the key as a boolean would lose the three-way choice. Test 4 (the agent's own autonomy) reads on `auto`, which lets the agent answer its own implementation questions; the key is A anyway by the owner's ruling of the same day (recorded in `agents/evidence/owner-directives/2026-11-26-deliberation-mode-concern.md`) that the user switches it on through the agent and Agent Switch. What keeps that bounded is not the class: `auto` raises no spend ceiling (`cost.budgets.*` stays C) and passes no Hard-Floor action — merge, deploy, push, release, production data, bulk deletion and irreversible external actions still ask.
 
@@ -413,10 +415,10 @@ the template, which is the drift this contract exists to prevent.
 | Disposition | Keys |
 |---|---|
 | derivable | 33 |
-| un-inferrable | 12 |
+| un-inferrable | 13 |
 | consent | 55 |
 | policy | 20 |
-| **Total** | **120** |
+| **Total** | **121** |
 
 First measured 2026-08-12 at 140 leaves (derivable 88 · consent 38 ·
 un-inferrable 9 · policy 5), from the table below rather than predicted — the
@@ -595,6 +597,7 @@ Rows follow template order, so a diff against the template reads straight down.
 | `commands.create_pr.screenshots` | C | `false` | puts captured screenshots into a published PR body | consent |
 | `continuity.auto_record` | C | `"on"` | arms an automatic producer on the normal session-end path | consent |
 | `continuity.run_checkpoints` | C | `"on"` | disabling it removes a recovery artifact a killed run resumes from | consent |
+| `sessions.auto_title` | A | `true` | lets the agent replace the host's one-shot session title with a sharper one at prompt milestones; a `/rename` title stays final, and nothing outside the title sidecar changes | un-inferrable |
 | `retro.enabled` | C | `true` | arms automatic producers on the merge, push and first-session paths (ADR-292) | consent |
 | `memory.redact_patterns` | C | `[]` | deny-list of secret and PII regexes | policy |
 | `memory.session_index` | A | `"off"` | injects a compact index at session start | derivable — the row cap and index cost the mechanism already computes; the flag only holds an unproven ship-criterion open |

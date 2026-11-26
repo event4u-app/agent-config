@@ -1,12 +1,12 @@
 {
     "schema_version": 1,
     "_comment": "Written by src/scripts/record_evaluator_measurements.mjs, invoked from src/scripts/evaluator_umbrella.sh when UMBRELLA_RECORD=1 (the nightly). check_evaluator_budgets.ts --recorded compares a fresh measurement set against this file; a contradiction on a DETERMINISTIC metric warns on main and fails on release. Do not hand-edit — refresh it from a real run.",
-    "recorded_at": "2026-11-26T12:37:23.929Z",
-    "git_sha": "cbc9cea5481fe87b31cfe5d554ec31850278ffcb",
-    "run_url": "https://github.com/event4u-app/agent-config/actions/runs/45820941649",
-    "conditions": "Linux/x86_64 · node v22.23.2 · npm 10.9.8 · npm install --omit=dev from a LOCAL tarball (no registry round-trip for the package itself; a real first-touch install adds registry latency)",
+    "recorded_at": "2026-11-26T18:02:41.957Z",
+    "git_sha": "9f57fd426ed3a267d26c54959e7500c0380db10e",
+    "run_url": null,
+    "conditions": "Linux/x86_64 · node v22.23.2 · npm 10.9.8 · npm install --omit=dev from a LOCAL tarball (no registry round-trip for the package itself; a real first-touch install adds registry latency) · cli_help_command_count re-counted from src/cli/registry.ts on 2026-11-26 (ADR-305); other metrics carried from run 45820941649",
     "measurements": {
-        "cli_help_command_count": 132,
+        "cli_help_command_count": 133,
         "cli_version_cold_ms": 366,
         "cold_start_conditions": "Linux/x86_64 · node v22.23.2 · npm 10.9.8 · npm install --omit=dev from a LOCAL tarball (no registry round-trip for the package itself; a real first-touch install adds registry latency)",
         "cold_start_install_to_doctor_ms": 12971,
