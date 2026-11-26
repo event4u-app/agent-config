@@ -380,7 +380,8 @@ describe("effect: — the census's field (Phase 2.2)", () => {
     // and 74 since `memory-audience-shadow` (road-to-a-memory-each-worker-is-handed 2.2/2.3).
     // and 75 since `compact-checkpoint` (road-to-state-and-pins-across-compaction 1.2).
     // and 76 since `arena-route` (an arena is the bracket engine, 2026-11-25).
-    expect(names.length).toBe(76);
+    // and 77 since `session-title` (ADR-305).
+    expect(names.length).toBe(77);
     const missing = names.filter((n) => !CONCERN_EFFECTS.has(String(manifest.concerns[n]?.effect)));
     expect(missing).toStrictEqual([]);
     const mismatched = names.filter(

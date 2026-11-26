@@ -1127,6 +1127,19 @@ concerns:
     fail_closed: false
     severity: advisory
     effect: context
+  # Session titles that sharpen as the session learns. Claude Code writes its
+  # `ai-title` once and repeats it; at prompt milestones (3, 8, 20, 45, 100,
+  # then every 100) this asks the agent whether the goal can now be named more
+  # precisely and how to publish it (`agent-config session:title`). Silent
+  # between milestones, after the user renamed the session (a `custom-title`
+  # is final), and when `sessions.auto_title: false` — a global setting, on by
+  # default. Claude only: no other host writes a title this could refine.
+  session-title:
+    script: src/scripts/hooks/session_title_hook.ts
+    args: []
+    fail_closed: false
+    severity: advisory
+    effect: context
   # road-to-trigger-delivered-rule-bodies Phase 1 — the DELIVERY twin of
   # `skill-route` above: same two slots, opposite payload policy. `skill-route`
   # ships pointers because a skill is invoked; this ships BODIES because a rule
@@ -1761,7 +1774,7 @@ roles:
     # contacts, so a worker turn that ends in a question to its orchestrator
     # would be recorded as a contact that never reached a human, inflating the
     # exact baseline Phase 0 pre-registers.
-    drop: [delegation-nudge, skill-route, intake-pass, end-review-nudge, review-baseline, council-availability, team-review-gate, self-repair, session-eol, interruption-ledger]
+    drop: [delegation-nudge, skill-route, intake-pass, end-review-nudge, review-baseline, council-availability, team-review-gate, self-repair, session-eol, interruption-ledger, session-title]
 
 platforms:
   # `ask:` — the SHAPE of this host's user-facing question primitive.
@@ -1803,7 +1816,7 @@ platforms:
     # was not restored at all.
     session_end:      [chat-history, memory-learn, session-register, roadmap-progress, telemetry-flush, journal-record]
     stop:             [chat-history, verify-before-complete, team-review-gate, end-review-nudge, obligation-settle, turn-end-gate, self-repair, session-register, session-eol, interruption-ledger, roadmap-progress, design-pass-stop, suggestion-capture, code-graph-refresh, journal-record]
-    user_prompt_submit: [chat-history, verify-before-complete, minimal-safe-diff, language-mirror, delegation-nudge, skill-route, git-authorization, session-canary, self-repair, session-register, rule-inject, suggestion-capture, journal-record, quota-notice, intake-pass]
+    user_prompt_submit: [chat-history, verify-before-complete, minimal-safe-diff, language-mirror, delegation-nudge, skill-route, git-authorization, session-canary, self-repair, session-register, rule-inject, suggestion-capture, journal-record, quota-notice, intake-pass, session-title]
     # `rule-inject` was bound here and is not any more
     # (road-to-delivery-for-every-host 3.2, owner ruling E2). E2's strategy is
     # `user_prompt_submit` + `pre_compact`; this slot is the hottest one in the
