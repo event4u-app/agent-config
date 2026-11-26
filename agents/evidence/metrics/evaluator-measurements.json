@@ -1,19 +1,19 @@
 {
     "schema_version": 1,
     "_comment": "Written by src/scripts/record_evaluator_measurements.mjs, invoked from src/scripts/evaluator_umbrella.sh when UMBRELLA_RECORD=1 (the nightly). check_evaluator_budgets.ts --recorded compares a fresh measurement set against this file; a contradiction on a DETERMINISTIC metric warns on main and fails on release. Do not hand-edit — refresh it from a real run.",
-    "recorded_at": "2026-11-26T17:24:22.596Z",
-    "git_sha": "3c75931f132c0491046c2e111b022011ee4754c5",
+    "recorded_at": "2026-11-26T18:02:41.957Z",
+    "git_sha": "9f57fd426ed3a267d26c54959e7500c0380db10e",
     "run_url": null,
-    "conditions": "Linux/x86_64 · node v22.23.2 · npm 10.9.8 · npm install --omit=dev from a LOCAL tarball (no registry round-trip for the package itself; a real first-touch install adds registry latency) · cli_help_command_count re-counted from src/cli/registry.ts on 2026-11-26 (ADR-305); other metrics carried from the 2026-11-24 nightly",
+    "conditions": "Linux/x86_64 · node v22.23.2 · npm 10.9.8 · npm install --omit=dev from a LOCAL tarball (no registry round-trip for the package itself; a real first-touch install adds registry latency) · cli_help_command_count re-counted from src/cli/registry.ts on 2026-11-26 (ADR-305); other metrics carried from run 45820941649",
     "measurements": {
-        "cli_help_command_count": 131,
-        "cli_version_cold_ms": 371,
+        "cli_help_command_count": 133,
+        "cli_version_cold_ms": 366,
         "cold_start_conditions": "Linux/x86_64 · node v22.23.2 · npm 10.9.8 · npm install --omit=dev from a LOCAL tarball (no registry round-trip for the package itself; a real first-touch install adds registry latency)",
-        "cold_start_install_to_doctor_ms": 13249,
-        "mcp_boot_to_initialize_ms": 483,
+        "cold_start_install_to_doctor_ms": 12971,
+        "mcp_boot_to_initialize_ms": 475,
         "mcp_public_tool_count": 29,
-        "node_modules_mb": 145,
+        "node_modules_mb": 148,
         "runtime_dep_count": 200,
-        "unpacked_size_mb": 73.679337
+        "unpacked_size_mb": 76.419274
     }
 }

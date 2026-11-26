@@ -241,6 +241,7 @@ commands:
     - agent-handoff
     - agent-status
     - mode
+    - deliberation
 
   media:
     - image

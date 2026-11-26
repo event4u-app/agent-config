@@ -25,6 +25,10 @@
  *           `card`/`decline` record it as the shadow jury; `jury` lets it decide
  *           and is refused until `binding` is unlocked (appeal_jury.ts).
  *   status  --run ID [--json]
+ *   name    --run ID (--text "<name>" | --decision "<one line>") [--force]
+ *           writes name.json beside bracket.json as `by: "agent"` (name.ts); an empty value clears the
+ *           field; a field the user set is kept unless --force; --decision records the current champion.
+ *           Without --text/--decision prints name.json.
  *
  * State lives under `agents/runtime/bracket/<run>/` (gitignored): `bracket.json`,
  * `task.md`, `angles.json`, `briefs/<line>.md`, `lines/<line>.md` (written by the line
@@ -56,6 +60,7 @@ import {
 } from './engine.js';
 import { resolveJuryMode, tallyAppealJury, type JurorVote, type JuryRecord } from './appeal_jury.js';
 import { dealAngles, type Angle } from './deck.js';
+import { applyAgentWrite, readRunName, writeRunName, type RunName } from './name.js';
 import { matchBriefs } from './roles.js';
 import { freeSeatAllowance } from './seats.js';
 import { callsFor, resolveTier, saturationStop, tier, TIER_IDS, type TierId } from './tiers.js';
@@ -112,6 +117,20 @@ function save(s: BracketState): void {
     const tmp = `${file}.tmp`;
     writeFileSync(tmp, `${JSON.stringify(s, null, 2)}\n`);
     renameSync(tmp, file);
+}
+
+/**
+ * The line that leads now: the winner once the run is done, otherwise the
+ * still-alive winner of the most recent decided match. `null` before any match.
+ */
+export function currentChampion(s: BracketState): string | null {
+    const n = next(s);
+    if (n.kind === 'done') return n.winner;
+    for (let i = s.matches.length - 1; i >= 0; i--) {
+        const w = s.matches[i]?.winner ?? null;
+        if (w !== null && s.lines.find((l) => l.id === w)?.status === 'alive') return w;
+    }
+    return null;
 }
 
 export function describe(a: NextAction, run: string): string {
@@ -340,8 +359,45 @@ export function main(argv: string[]): number {
             out(describe(next(s), s.runId));
             return 0;
         }
+        case 'name': {
+            const run = need(args, 'run');
+            const dir = runDir(run);
+            if (!existsSync(path.join(dir, 'bracket.json'))) throw new BracketError('no-run', `run ${run} has no bracket.json`);
+            const text = flag(args, 'text');
+            const decision = flag(args, 'decision');
+            if (text !== undefined && decision !== undefined) throw new BracketError('name-both', 'pass --text or --decision, not both');
+            const force = args.includes('--force');
+            let current: RunName;
+            try {
+                current = readRunName(dir);
+            } catch (e) {
+                if (!(force && e instanceof BracketError && e.code === 'name-unreadable')) throw e;
+                current = { v: 1 };
+            }
+            if (text === undefined && decision === undefined) {
+                out(JSON.stringify(current, null, 2));
+                return 0;
+            }
+            const champion = decision !== undefined ? currentChampion(load(run)) : null;
+            const r = applyAgentWrite(current, {
+                field: text !== undefined ? 'name' : 'decision',
+                text: (text ?? decision) as string,
+                force,
+                now: new Date(),
+                champion,
+            });
+            if (r.change !== 'unchanged') writeRunName(dir, r.state);
+            const field = text !== undefined ? 'name' : 'decision';
+            const shown = r.state[field];
+            out(
+                r.change === 'cleared' || r.change === 'unchanged'
+                    ? `${run}: ${field} cleared`
+                    : `${run}: ${field} "${shown?.text ?? ''}"${field === 'decision' ? (champion ? ` · champion ${champion}` : ' · no champion yet') : ''}`,
+            );
+            return 0;
+        }
         default:
-            out('usage: cli <plan|init|scan|dedupe|next|advance|briefs|collect|correct|card|decline|jury|status> …');
+            out('usage: cli <plan|init|scan|dedupe|next|advance|briefs|collect|correct|card|decline|jury|status|name> …');
             return 2;
     }
 }

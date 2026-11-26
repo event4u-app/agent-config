@@ -125,6 +125,13 @@ export const HOOK_CHUNKS = Object.freeze([
         outfile: 'dist/hooks/session_title.chunk.cjs',
         external: Object.freeze(['yaml']),
     }),
+    // `deliberation-mode` on `user_prompt_submit`; `yaml` external: it reads
+    // the user-global settings layers for `deliberation.mode`.
+    Object.freeze({
+        entry: 'src/scripts/hooks/deliberation_mode_hook.ts',
+        outfile: 'dist/hooks/deliberation_mode.chunk.cjs',
+        external: Object.freeze(['yaml']),
+    }),
     // `arena-route` on claude `pre_tool_use`, Workflow calls only; reads no YAML.
     Object.freeze({
         entry: 'src/scripts/hooks/arena_route_hook.ts',

@@ -66,6 +66,13 @@ judged on a question the orchestrator improvised.
   not used**; the single paid card seat still decides. The vote becomes binding
   only when the pre-registered claim `paid-appeal-jury` is backed.
 
+## Names
+
+Right after `init` the run gets a short human name (3–6 words, what the arena
+decides), and at `done` a one-line decision saying what was chosen —
+`agent-config bracket name --run <id> --text "…"` / `--decision "…"`. Agent
+Switch shows both instead of the run id.
+
 ## Rules
 
 - Never call a same-model fan-out a council.

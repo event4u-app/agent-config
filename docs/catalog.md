@@ -1,6 +1,6 @@
 # agent-config — Public Catalog
 
-Consumer-facing catalog of all **762 public artefacts** shipped by
+Consumer-facing catalog of all **763 public artefacts** shipped by
 this package. Internal package-maintenance rules and deprecation shims
 are excluded.
 
@@ -456,7 +456,7 @@ are excluded.
 | rule | [`user-interrupt-priority`](../dist/agent-src/rules/user-interrupt-priority.md) | auto | New user instruction mid-flight — STOP the current task, run the new one in full, ASK before resuming |
 | rule | [`verify-before-complete`](../dist/agent-src/rules/verify-before-complete.md) | always | Verify before completion — run tests and quality tools before claiming done |
 
-## Commands (218)
+## Commands (219)
 
 | kind | name | cluster | description |
 |---|---|---|---|
@@ -524,6 +524,7 @@ are excluded.
 | command | [`council-design`](../dist/agent-src/commands/council/design.md) | cluster: council | Run the council on a design document, ADR, or architecture proposal — surfaces hidden coupling, missing rollback, and sequencing risk before commitment. |
 | command | [`council-optimize`](../dist/agent-src/commands/council/optimize.md) | cluster: council | Run the council on an optimization target — perf hot path, memory pattern, query, or an /optimize-* output — for ranked, evidence-based suggestions instead of generic advice. |
 | command | [`council-pr`](../dist/agent-src/commands/council/pr.md) | cluster: council | Pull a GitHub PR via gh CLI and run the council on the diff with a PR-specific neutrality preamble — read-only by default; comment posting is opt-in. |
+| command | [`deliberation`](../dist/agent-src/commands/deliberation.md) | cluster: council | Set deliberation.mode — off (default), offer or auto — for council/arena/panel, for this chat or globally |
 | command | [`design-system`](../dist/agent-src/commands/design-system.md) | cluster: design-system | Design-system onramp — generate one from the corpus, import an extractor's output, or capture the current repo's. Three doors onto machinery that already ships. |
 | command | [`design-system-capture`](../dist/agent-src/commands/design-system/capture.md) | cluster: design-system | Inventory this repo's own components and tokens and emit them in the design-system.json shape, so the import path is identical to an external extraction. |
 | command | [`design-system-generate`](../dist/agent-src/commands/design-system/generate.md) | cluster: design-system | Ground a design system in the curated design corpus from a product or industry brief, then optionally persist it as MASTER.md or seed DESIGN.md. |

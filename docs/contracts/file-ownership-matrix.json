@@ -1548,6 +1548,12 @@
       "load_context": [],
       "load_context_eager": []
     },
+    ".agent-src.uncondensed/skills/ai-council/references/deliberation-mode.md": {
+      "kind": "skill",
+      "rule_type": null,
+      "load_context": [],
+      "load_context_eager": []
+    },
     ".agent-src.uncondensed/skills/ai-council/references/execution-modes.md": {
       "kind": "skill",
       "rule_type": null,
@@ -10671,6 +10677,13 @@
     },
     {
       "source": ".agent-src.uncondensed/skills/ai-council/SKILL.md",
+      "target": ".agent-src.uncondensed/skills/ai-council/references/deliberation-mode.md",
+      "type": "READ_ONLY",
+      "via": "body_link",
+      "depth": 1
+    },
+    {
+      "source": ".agent-src.uncondensed/skills/ai-council/SKILL.md",
       "target": ".agent-src.uncondensed/skills/ai-council/references/execution-modes.md",
       "type": "READ_ONLY",
       "via": "body_link",
@@ -10721,6 +10734,13 @@
     {
       "source": ".agent-src.uncondensed/skills/ai-council/references/cost-and-redaction.md",
       "target": ".agent-src.uncondensed/skills/ai-council/references/cost-and-redaction.md",
+      "type": "WRITE",
+      "via": "self",
+      "depth": 0
+    },
+    {
+      "source": ".agent-src.uncondensed/skills/ai-council/references/deliberation-mode.md",
+      "target": ".agent-src.uncondensed/skills/ai-council/references/deliberation-mode.md",
       "type": "WRITE",
       "via": "self",
       "depth": 0

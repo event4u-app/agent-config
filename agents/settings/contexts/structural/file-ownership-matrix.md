@@ -5,8 +5,8 @@
 
 - Schema version: `1`
 - Source of truth: `.agent-src.uncondensed/`
-- Files indexed: **651**
-- Edges (incl. self-WRITE): **2492**
+- Files indexed: **652**
+- Edges (incl. self-WRITE): **2494**
 
 ## READ_ONLY edges
 
@@ -723,6 +723,7 @@
 | `.agent-src.uncondensed/skills/ai-council/SKILL.md` | `.agent-src.uncondensed/rules/non-destructive-by-default.md` | `body_link` | 1 |
 | `.agent-src.uncondensed/skills/ai-council/SKILL.md` | `.agent-src.uncondensed/skills/ai-council/references/advanced-modes.md` | `body_link` | 1 |
 | `.agent-src.uncondensed/skills/ai-council/SKILL.md` | `.agent-src.uncondensed/skills/ai-council/references/cost-and-redaction.md` | `body_link` | 1 |
+| `.agent-src.uncondensed/skills/ai-council/SKILL.md` | `.agent-src.uncondensed/skills/ai-council/references/deliberation-mode.md` | `body_link` | 1 |
 | `.agent-src.uncondensed/skills/ai-council/SKILL.md` | `.agent-src.uncondensed/skills/ai-council/references/execution-modes.md` | `body_link` | 1 |
 | `.agent-src.uncondensed/skills/ai-council/SKILL.md` | `.agent-src.uncondensed/skills/ai-council/references/output-and-synthesis.md` | `body_link` | 1 |
 | `.agent-src.uncondensed/skills/ai-council/SKILL.md` | `.agent-src.uncondensed/skills/ai-council/references/procedure.md` | `body_link` | 1 |
@@ -1861,5 +1862,5 @@
 | `context` | 81 |
 | `persona` | 36 |
 | `rule` | 122 |
-| `skill` | 412 |
+| `skill` | 413 |
 

@@ -248,12 +248,14 @@ dispatch runs, not WHETHER the layer exists, so they keep their own C rows.
 
 | Class | Keys |
 |---|---|
-| A — preference | 12 |
+| A — preference | 13 |
 | B — consent | 4 |
 | C — guarded | 104 |
-| **Total** | **120** |
+| **Total** | **121** |
 
-It rose to 120 on 2026-11-26 when `sessions.auto_title` was added — one A, `un-inferrable`: whether session titles keep sharpening is the user's taste, the worst case is a worse title in a sidecar file, and the owner asked for it to be switchable by instruction, which only class A allows. It ships `true` by the owner's request of 2026-11-26 and is whitelisted in `MERGEABLE_KEYS`, because it is meant to be set once, user-global.
+It rose to 121 on 2026-11-26 when `sessions.auto_title` was added — one A, `un-inferrable`: whether session titles keep sharpening is the user's taste, the worst case is a worse title in a sidecar file, and the owner asked for it to be switchable by instruction, which only class A allows. It ships `true` by the owner's request of 2026-11-26 and is whitelisted in `MERGEABLE_KEYS`, because it is meant to be set once, user-global.
+
+It rose to 120 on 2026-11-26 when `deliberation.mode` was added — one A, `consent`: the user's own choice whether a decision gets a `/council`, `/arena` or `/panel` offered (`offer`), run (`auto`) or neither (`off`, the default — the owner ruled the same day that it is switched on only when the user asks, for one session or globally). It is not B even with that conservative default: the B lint admits only `false` / `""` / `0` / `[]` / `null` / `{}` as a default, and `"off"` is an enum value, not one of them; recasting the key as a boolean would lose the three-way choice. Test 4 (the agent's own autonomy) reads on `auto`, which lets the agent answer its own implementation questions; the key is A anyway by the owner's ruling of the same day (recorded in `agents/evidence/owner-directives/2026-11-26-deliberation-mode-concern.md`) that the user switches it on through the agent and Agent Switch. What keeps that bounded is not the class: `auto` raises no spend ceiling (`cost.budgets.*` stays C) and passes no Hard-Floor action — merge, deploy, push, release, production data, bulk deletion and irreversible external actions still ask.
 
 It rose to 119 on 2026-11-04 when `road-to-an-observation-provider-slot` step 1.1 added `reconstruction.observation_providers` — one C, `un-inferrable`: the roadmap planned it as class A, but it is a list of evidence sources whose observations may close ledger rows and it decides which MCP server the reference door calls, so C-tests 2 and 5 fire and the plan yielded to this contract.
 
@@ -414,9 +416,9 @@ the template, which is the drift this contract exists to prevent.
 |---|---|
 | derivable | 33 |
 | un-inferrable | 13 |
-| consent | 54 |
+| consent | 55 |
 | policy | 20 |
-| **Total** | **120** |
+| **Total** | **121** |
 
 First measured 2026-08-12 at 140 leaves (derivable 88 · consent 38 ·
 un-inferrable 9 · policy 5), from the table below rather than predicted — the
@@ -623,6 +625,7 @@ Rows follow template order, so a diff against the template reads straight down.
 | `update_check.enabled` | C | `true` | a background safety check; disabling it pins the user to known-vulnerable code | consent |
 | `star_ask.mode` | A | `monthly` | a once-a-month line asking for a GitHub star; it changes nothing, reads nothing remote and costs one file read, so no C test fires | consent |
 | `star_ask.starred` | A | `false` | the user's own statement that they starred; the agent writes it when told, which is the stop condition ADR-301 relies on | consent |
+| `deliberation.mode` | A | `"off"` | off by default and switched on only when the user asks (owner ruling 2026-11-26); whether the agent offers `/council`, `/arena` or `/panel` on a real decision (`offer`), works in an automatic mode the user switched on (`auto`: runs the fitting tool, answers its own implementation questions) or neither (`off`). Test 4 (the agent's own autonomy) reads on `auto`; it is A by the owner's ruling of 2026-11-26 (agents/evidence/owner-directives/2026-11-26-deliberation-mode-concern.md) that the user must be able to switch it on through the agent and Agent Switch, and because it raises no ceiling and passes no Hard-Floor action — spend stays under the C-class `cost.budgets.*`, and merge, deploy, push, release, production data, bulk deletion and irreversible external actions still ask | consent |
 | `advisories.mode` | C | `notify` | a notice at every first session start of a day; turning it on for an install that never asked is a flip the agent may not make | consent |
 | `advisories.egress` | C | `query` | decides which package names and versions leave the machine on a refresh | policy |
 | `advisories.kev` | C | `on` | decides whether a refresh reads the CISA known-exploited catalog that raises a tier | policy |

@@ -109,6 +109,12 @@ explanation lives now that the file no longer carries it as comments.
 | `decision_engine.on_block` | C | string | `"stop"` | `stop` · `ask` · `warn` | What the decision engine does when a gate (min_confidence / block_on_risk / require_memory_hits) fires. stop (default) = halt and surface the reason. ask = present numbered options. warn = log and continue. |
 | `decision_engine.require_memory_hits` | C | boolean | `false` |  | During Phase=Refine, require at least one relevant memory hit (skill, ADR, past decision) before the agent proceeds. Off by default; turn on for highly conventional codebases where memory should always inform decisions. |
 
+## deliberation
+
+| Key | Class | Type | Default | Allowed values | What it does |
+|---|---|---|---|---|---|
+| `deliberation.mode` | A | string | `"off"` | `off` · `offer` · `auto` | Whether the agent offers /council, /arena or /panel when a question carries a real decision with trade-offs. off (default) never offers and never runs one unasked — it is switched on only when you ask, for one session or globally; offer lists the fitting one(s) as numbered options with the plain answer last; auto is an automatic mode you switch on: the agent runs the fitting one itself and answers its own implementation questions (approach, design, library) instead of asking, naming each decision with a one-line reason; it still asks before merge, deploy, push, release/tag, production data or infra, bulk deletion and any irreversible external action, and the tools' own spend and seat rules still apply. A per-session override (agent-config deliberation:set <mode> --session <id>) wins for that session. |
+
 ## delivery
 
 | Key | Class | Type | Default | Allowed values | What it does |

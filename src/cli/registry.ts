@@ -39,6 +39,8 @@ export const REGISTRY: readonly CommandEntry[] = [
     { name: 'settings:get', disposition: 'delegate', synopsis: 'Read one setting: value, resolved source file, class, and absent-vs-default divergence.' },
     { name: 'git:convention', disposition: 'delegate', synopsis: 'The git convention: show the keys, check subjects, read a ticket, render a branch name, measure the history.' },
     { name: 'settings:set', disposition: 'delegate', synopsis: 'Set one A/B-class setting in the global file; C-class keys are refused.' },
+    { name: 'deliberation:get', disposition: 'delegate', synopsis: 'The effective deliberation.mode (off|offer|auto) and its source: session override, user-global setting, or default; --json.' },
+    { name: 'deliberation:set', disposition: 'delegate', synopsis: 'Set deliberation.mode globally (via settings:set) or for one --session; inherit removes a session override.' },
     { name: 'uninstall', disposition: 'delegate', synopsis: 'Remove bridge markers (project) or lockfile entries (global).' },
     { name: 'prune', disposition: 'delegate', synopsis: 'Remove project bridge markers not declared in installed-tools.lock.' },
     { name: 'doctor', disposition: 'delegate', synopsis: 'Health report: install checks and manifest ↔ filesystem drift, with the next fix; --anatomy renders the injection anatomy.' },
@@ -151,7 +153,7 @@ export const REGISTRY: readonly CommandEntry[] = [
     { name: 'self-repair:release', disposition: 'delegate', synopsis: 'Publish one defect record as a PR, or an issue when a PR is impossible (Hard-Floor gated).' },
     { name: 'retro', disposition: 'delegate', synopsis: 'Read a finished unit\'s facts and triage for /retro, or record its one learning.' },
     { name: 'decision:memo', disposition: 'delegate', synopsis: 'Record or list an autonomously-resolved question so it stays reviewable (local-only).' },
-    { name: 'bracket', disposition: 'delegate', synopsis: 'Drive an /arena bracket run (plan|init|scan|dedupe|next|advance|collect|correct|card|decline|jury|status); state under agents/runtime/bracket/.' },
+    { name: 'bracket', disposition: 'delegate', synopsis: 'Drive an /arena bracket run (plan|init|scan|dedupe|next|advance|collect|correct|card|decline|jury|status|name); state under agents/runtime/bracket/.' },
     { name: 'run:supervise', disposition: 'delegate', synopsis: 'Report runs whose session died with open steps left. Never merges, pushes, or closes.' },
 ] as const;
 

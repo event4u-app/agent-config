@@ -42,6 +42,8 @@ const WORKER_DROP = [
     'skill-route',
     // OQ-25 (2026-10-28): the intake pass decides what to ask the owner, and a worker never talks to the user.
     'intake-pass',
+    // The deliberation line asks the agent to offer the user a council, arena or panel; a worker never talks to the user.
+    'deliberation-mode',
     'end-review-nudge',
     // Joined in road-to-a-question-that-survives-the-turn Phase 2, and the first
     // member here for a DERIVED reason rather than a clause of its own: it

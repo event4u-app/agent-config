@@ -1525,6 +1525,31 @@ star_ask:
   mode: monthly
   starred: false
 
+# --- Deliberation offers ---
+#
+# Whether the agent offers a deliberation tool — `/council` (a second opinion
+# from other model families), `/arena` (competing solutions judged pairwise),
+# `/panel decide|review` (independent judges vote) — when a question carries a
+# real decision with trade-offs. Never on a trivial ask. Read from the
+# user-global layer; a per-session override (`agent-config deliberation:set
+# <mode> --session <id>`) wins over it for that one session.
+#
+#   mode: off (default) never offer, never run one unasked; the agent switches
+#         it on only when you ask — for this session, or globally when you
+#         say so · offer the fitting tool(s) as numbered options, the plain
+#         answer always last · auto an automatic mode you switch on: the
+#         agent runs the fitting tool itself and answers its own
+#         implementation questions (approach, design, library) instead of
+#         asking, naming each decision with a one-line reason; it still asks
+#         before merge, deploy, push, release/tag, production data or infra,
+#         bulk deletion and any irreversible external action, and the tools'
+#         own spend and seat rules still apply
+#         (`agent-config deliberation:set offer --session <id>`,
+#         `agent-config deliberation:set auto`, or
+#         `agent-config settings:set deliberation.mode auto`)
+deliberation:
+  mode: "off"
+
 # --- Security advisories ---
 #
 # Advisories, malware reports, end-of-support dates and pre-announced security
