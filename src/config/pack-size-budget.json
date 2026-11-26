@@ -150,5 +150,19 @@
         },
         "measured_at": "2026-10-27",
         "measured_on": "GitHub Actions, PR #2727 head 3e241b2b0e, required job Sync + Generate Tools Consistency (run 40519493658)."
+    },
+    "built_surface_measurement_2026_11_26": {
+        "purpose": "Re-measure of the BUILT surface for the fix that puts every plain src/scripts dispatcher route behind a precompiled delegate (follow-up to #2988 / #3021). 37 consumer subcommands (council:*, self-repair:*, memory:*, chat-history:*, mcp:*, hooks:status / hooks:doctor and the other exec_hook routes, ...) reached require_tsx and therefore `npx tsx` against the CONSUMER's npm config in every published install; they now run dist/cli-delegate/cmd_script.js <key>. `task ci` measured the built tarball at 19.582 MB against the 19.446 ceiling derived from built_surface_measurement_2026_10_27's 17.678. OWNER-RESERVED under the 2026-10-17 precedent; the owner chose to re-anchor on 2026-11-26.",
+        "built": {
+            "packed_mb": 19.582,
+            "command": "task ci -> check-pack-size (deps: build-ts) on the BUILT surface, local worktree of this branch",
+            "note": "The derived ceiling becomes 21.540 at regression_pct 10. This record admits the itemised additions below only; it does not authorise unrelated growth."
+        },
+        "itemised_additions": {
+            "cli_delegate": "dist/cli-delegate/ grows from 6.2 MB to 9.0 MB unpacked (161 -> 269 files): cmd_script.js plus one lazily imported chunk per target and their shared chunks. By input: src/scripts/_lib 811 KB, code_graph 550 KB, hooks 455 KB, ai_council 446 KB, council_cli 101 KB; npm packages yaml 252 KB, zod 175 KB, js-yaml 115 KB. About 85% is this package's own source, which now ships twice: as the src/scripts/ tree the dispatcher still resolves, and compiled.",
+            "why_not_smaller": "Leaving npm packages external would save about 0.55 MB unpacked, not enough to clear the ceiling. Dropping the duplicated src/scripts/ subtree is the larger lever and needs every remaining tsx route (work engine, install regenerator) bundled first, per src_scripts_necessity above."
+        },
+        "measured_at": "2026-11-26",
+        "measured_on": "Local `task ci` on the branch worktree (macOS, Node from the repo's npm ci). The CI reading on the PR is authoritative; if it differs, this figure is replaced by that one."
     }
 }

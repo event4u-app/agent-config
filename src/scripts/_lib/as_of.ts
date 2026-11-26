@@ -64,6 +64,8 @@ import * as path from 'node:path';
 import process from 'node:process';
 import { fileURLToPath } from 'node:url';
 
+import { resolvePackageRoot } from './package_root.js';
+
 /** Which rung of the resolution order answered. */
 export type AsOfRung = 'argv' | 'env' | 'commit' | 'wall-clock';
 
@@ -100,7 +102,8 @@ export interface AsOfSources {
  */
 export class AsOfPinError extends Error {}
 
-const REPO_ROOT = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..', '..', '..');
+// Marker-anchored, not hop-counted — three hops from a bundle chunk land on `<pkg>/..`.
+const REPO_ROOT = resolvePackageRoot(import.meta.url);
 
 /** `--as-of <iso>` / `--as-of=<iso>`; `undefined` when the flag is absent. */
 function readArgvPin(argv: readonly string[]): string | undefined {

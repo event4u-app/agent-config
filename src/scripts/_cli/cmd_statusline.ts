@@ -251,8 +251,20 @@ export function main(argv: string[] = process.argv.slice(2)): number {
     return 2;
 }
 
+// `--splitting` moves this body into a shared chunk once another delegate entry
+// reaches it (cmd_script → hooks_status / hooks_doctor), and a chunk's
+// `import.meta.url` is never `argv[1]` — so inside the delegate bundle the invoked
+// file name decides (the cmd_migrate.ts note).
+declare const __AGENT_CONFIG_CLI_DELEGATE__: boolean | undefined;
 function _isCliEntry(): boolean {
     if (process.argv[1] === undefined) return false;
+    if (
+        typeof __AGENT_CONFIG_CLI_DELEGATE__ !== 'undefined' &&
+        __AGENT_CONFIG_CLI_DELEGATE__ &&
+        path.basename(process.argv[1], '.js') === 'cmd_statusline'
+    ) {
+        return true;
+    }
     const argvUrl = pathToFileURL(path.resolve(process.argv[1])).href;
     if (import.meta.url === argvUrl) return true;
     try {

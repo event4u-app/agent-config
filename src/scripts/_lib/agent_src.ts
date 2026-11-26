@@ -42,9 +42,9 @@
  */
 import * as fs from 'node:fs';
 import * as path from 'node:path';
-import { fileURLToPath } from 'node:url';
 
 import { iter_guidelines, resolve_guideline } from './guidelines_lane.js';
+import { resolvePackageRoot } from './package_root.js';
 
 // --- Path-root configuration (mutable to mirror Python module attributes) ----
 //
@@ -56,10 +56,10 @@ import { iter_guidelines, resolve_guideline } from './guidelines_lane.js';
 // fidelity, the roots live in a mutable config object whose getters the rest
 // of the module reads through; tests mutate the same object.
 
-const _HERE = path.dirname(fileURLToPath(import.meta.url));
-// _HERE === <repo>/src/scripts/_lib ; parents[3] of the .py file (src/scripts/
-// _lib/agent_src.py) is the repo root — three dirs up from _lib.
-const _DEFAULT_ROOT = path.resolve(_HERE, '..', '..', '..');
+// Not a hop count: three dirs up from `src/scripts/_lib` is the root, but bundled
+// into a `dist/cli-delegate/` chunk this module sits two levels below it, and
+// three hops land on `<pkg>/..`.
+const _DEFAULT_ROOT = resolvePackageRoot(import.meta.url);
 
 /**
  * Mutable root configuration. The exported `ROOT` / `LEGACY_SRC` / … getters

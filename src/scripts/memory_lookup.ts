@@ -32,7 +32,7 @@ import * as fs from 'node:fs';
 import * as path from 'node:path';
 import process from 'node:process';
 import { fileURLToPath, pathToFileURL } from 'node:url';
-import { createRequire } from 'node:module';
+import { loadTokenCount } from './_lib/token_count_lazy.js';
 import YAML, { parseDocument } from 'yaml';
 
 import { sanitize_entry } from './_lib/retrieval_sanitize.js'; // read-surface: ingested-corpus
@@ -749,8 +749,7 @@ let _tokenizer: { gpt_tokens: (t: string) => { tokens: number }; TIKTOKEN_AVAILA
 function _lazy_tokenizer(): typeof _tokenizer {
     if (_tokenizer === undefined) {
         try {
-            const req = createRequire(import.meta.url);
-            _tokenizer = req('./_lib/token_count.js');
+            _tokenizer = loadTokenCount();
         } catch {
             _tokenizer = null;
         }

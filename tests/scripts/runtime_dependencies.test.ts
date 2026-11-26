@@ -272,6 +272,55 @@ describe('runtime dependencies — consumer dispatcher surface', () => {
         );
     });
 
+    it('every plain src/scripts dispatcher route is covered by cmd_script', () => {
+        // ADR-204 and #3021 closed `npx tsx` for `_cli/`, `dist/agent-src/scripts/`
+        // and `code_graph/cli.ts`; 37 subcommands routed to other `src/scripts/`
+        // modules still reached `require_tsx` in every consumer install. They now
+        // share `dist/cli-delegate/cmd_script.js <key>`. A new route outside the
+        // bundled roots must be added to SCRIPT_DELEGATES and DELEGATES, or fail here.
+        const dispatch = fs.readFileSync(DISPATCH, 'utf-8');
+        const NOT_A_ROUTE: Readonly<Record<string, string>> = {
+            // Fallbacks behind their own bundle check (dist/mcp/server.mjs,
+            // delegate_aux_bundle 'sync_agent_settings.js'): reached only when
+            // dist/ itself is missing, where cmd_script.js would be missing too.
+            'mcp_server/__main__': 'dist/mcp/server.mjs fallback',
+            sync_agent_settings: 'delegate-aux bundle fallback',
+            'code_graph/cli': 'own bundle (build:code-graph-delegate)',
+            'hooks/dispatch_hook': 'dist/hooks/dispatch.js fallback',
+        };
+        const targets = new Set(
+            [
+                ...dispatch.matchAll(/resolve_script "src\/scripts\/([A-Za-z0-9_/]+)\.ts"/g),
+                ...dispatch.matchAll(/(?:exec_ts |server_main=)"\$PACKAGE_ROOT\/src\/scripts\/([A-Za-z0-9_/]+)\.ts"/g),
+                ...dispatch.matchAll(/exec_hook "src\/scripts\/([A-Za-z0-9_/]+)"/g),
+            ]
+                .map((m) => m[1] as string)
+                .filter((t) => !t.startsWith('_cli/') && !(t in NOT_A_ROUTE)),
+        );
+        expect(targets.size, 'the regexes found the surface').toBeGreaterThan(35);
+
+        const listMatch = /^SCRIPT_DELEGATES=" ([^"]+) "$/m.exec(dispatch);
+        expect(listMatch, 'SCRIPT_DELEGATES not found in the dispatcher').not.toBeNull();
+        const bashKeys = new Set(((listMatch as RegExpExecArray)[1] ?? '').split(' '));
+
+        const uncovered = [...targets].filter((t) => !bashKeys.has(t));
+        expect(uncovered, `dispatcher routes with no precompiled delegate: ${uncovered.join(', ')}`).toEqual([]);
+
+        const delegateSrc = fs.readFileSync(path.join(REPO_ROOT, 'src', 'scripts', '_cli', 'cmd_script.ts'), 'utf-8');
+        const tsKeys = new Set(
+            [...delegateSrc.matchAll(/^ {4}'?([A-Za-z0-9_/]+)'?: d\(/gm)].map((m) => m[1] as string),
+        );
+        expect([...tsKeys].sort(), 'cmd_script DELEGATES must match SCRIPT_DELEGATES').toEqual([...bashKeys].sort());
+
+        // Both runners must consult the delegate before require_tsx.
+        for (const fn of ['exec_ts', 'exec_hook']) {
+            const start = dispatch.indexOf(`${fn}() {`);
+            const body = dispatch.slice(start, dispatch.indexOf('\n}\n', start));
+            expect(body.indexOf('exec_script_delegate'), `${fn} must try cmd_script`).toBeGreaterThan(-1);
+            expect(body.indexOf('exec_script_delegate')).toBeLessThan(body.indexOf('require_tsx'));
+        }
+    });
+
     it('the two per-invocation probes never fall back to npx', () => {
         const dispatch = fs.readFileSync(DISPATCH, 'utf-8');
         const scripts = pkg.scripts ?? {};

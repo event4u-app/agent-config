@@ -44,6 +44,12 @@ function _discover_default_map(): string {
             return candidate;
         }
     }
+    // A published install ships no source tree, only the projection — and inside
+    // the delegate bundle `_artefact_roots` anchors one level too high.
+    const projected = path.join(REPO_ROOT, 'dist', 'agent-src', 'skills', 'refine-ticket', 'detection-map.yml');
+    if (_isFile(projected)) {
+        return projected;
+    }
     return path.join(
         REPO_ROOT,
         '.agent-src.uncondensed',
@@ -674,7 +680,7 @@ export {
     DEFAULT_MAP,
 };
 
-function main(): void {
+export function main(): void {
     const argv = process.argv.slice(2);
     let pathArg: string | null = null;
     for (const a of argv) {
