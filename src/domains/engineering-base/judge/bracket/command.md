@@ -65,6 +65,13 @@ opposite of a bracket. A rejected answer goes verbatim into its own file for § 
 agent-config bracket init --run <id> --task <file> --tier S1 [--seed N] [--angles <file>]
 ```
 
+Right after `init`, **name the run** — 3–6 words on what the arena decides, not
+the run id (Agent Switch shows it in place of the id):
+
+```bash
+agent-config bracket name --run <id> --text "Session names people recognise"
+```
+
 Without `--angles`, every line is dealt a **distinct approach angle** from the
 built-in deck — a reasoning mode, a workflow and a trade-off stance; no two lines
 share one, and each axis is spread evenly <!-- harvest:arena-dealt-approach-angles -->.
@@ -145,7 +152,16 @@ correct, FATAL rebutted, audit sample). For each:
 ### 6. Close honestly
 
 At `done`, compare the winner blind against the rejected baseline in **both**
-orders; a verdict that flips is "no clear winner". Report every card (signal,
+orders; a verdict that flips is "no clear winner". Then **record the decision** as one line
+saying WHAT was chosen, not only who won — `name` records the current champion
+beside it:
+
+```bash
+agent-config bracket name --run <id> --decision "Sidecar name.json with PR-style fallbacks"
+```
+
+A name or decision the user set in Agent Switch is kept; `--force` replaces it
+only when the user asked. An empty value clears the field. Report every card (signal,
 seat, path after), the call count, and — if AC decided for the user — record tier,
 N, cards and dissent under the run's `## Decisions`. Never apply the winner.
 
