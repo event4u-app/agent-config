@@ -29,6 +29,15 @@ appended after a refined title (the user correcting it) is the other. Neither is
 taken yet. ADR-305's rollback criterion reads both: most nudged sessions without a
 sidecar, or a correction in more than one session in five.
 
+**Measurement plan.** Window: the first 30 days after the release that ships
+ADR-305, on the owner's machine. Population: Claude sessions with at least one
+nudge (state file `last_nudge_prompt` > 0), floor 40 sessions; under 40 the
+window extends by 30 days rather than reading a rate off too few. Uptake: share
+of those sessions with a sidecar. Correction: share of sessions with a sidecar
+whose transcript carries a `custom-title` line timestamped after the sidecar's
+first `updated_at`. Both are counts over files already on disk, so the read is a
+one-off script, not a new store.
+
 **Trigger.** A month of real sessions after release, or a report that titles do
 not move.
 

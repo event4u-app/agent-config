@@ -66,8 +66,10 @@ default, and global.
   agent ignores it keeps the host title, which is today's behaviour.
 - Bounds, from the round-1 council review: the writer caps a title at 60
   characters (the length the nudge asks for), writes only beside an existing
-  `<session-id>.jsonl`, and refuses once a user title exists; the concern stops
-  reading and writing a session's state once it has seen a user title, and drops
+  `<session-id>.jsonl`, and refuses once a user title exists; the concern checks the
+  transcript's last 64 KiB on every prompt and, once it sees a user title, freezes
+  the session for good: no further counting or nudges, even if that title were
+  later removed, because a user who renamed once has said whose title it is; and drops
   state files untouched for 60 days. `sessions.auto_title: false` stops new
   nudges and writes; sidecars already written stay visible, because they are
   titles, not instructions, and a `/rename` still outranks them.

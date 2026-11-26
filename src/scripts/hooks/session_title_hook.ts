@@ -21,6 +21,7 @@ import {
   readHostTitles,
   readRefinedTitle,
   readState,
+  tailHasCustomTitle,
   writeState,
   type SessionTitleState,
 } from "../_lib/session_title.js";
@@ -68,6 +69,11 @@ export function tick(input: TickInput): string | null {
   if (text === "" || isSyntheticPrompt(text)) return null;
   const prev = readState(input.sessionId, input.root);
   if (prev?.frozen === true) return null;
+  if (tailHasCustomTitle(input.transcriptPath)) {
+    if (prev !== null) writeState({ ...prev, transcript_path: input.transcriptPath, frozen: true }, input.root);
+    else writeState({ session_id: input.sessionId, transcript_path: input.transcriptPath, prompts: 0, last_nudge_prompt: 0, frozen: true }, input.root);
+    return null;
+  }
   const state: SessionTitleState = {
     session_id: input.sessionId,
     transcript_path: input.transcriptPath,

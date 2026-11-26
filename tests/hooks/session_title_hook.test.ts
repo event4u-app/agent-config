@@ -83,7 +83,16 @@ describe('tick', () => {
     it('stays silent for good once the user renamed the session, and stops counting', () => {
         fs.appendFileSync(transcript, line({ type: 'custom-title', customTitle: 'Mine', sessionId: SID }));
         expect(prompts(MILESTONES[2] as number).every((n) => n === null)).toBe(true);
-        expect(readState(SID, root)).toMatchObject({ frozen: true, prompts: MILESTONES[0] });
+        expect(readState(SID, root)).toMatchObject({ frozen: true, prompts: 0 });
+    });
+
+    it('freezes on the first prompt after a /rename between milestones, not at the next milestone', () => {
+        prompts((MILESTONES[0] as number) + 1);
+        fs.appendFileSync(transcript, line({ type: 'custom-title', customTitle: 'Mine', sessionId: SID }));
+        expect(prompts(1)).toEqual([null]);
+        expect(readState(SID, root)).toMatchObject({ frozen: true, prompts: (MILESTONES[0] as number) + 1 });
+        expect(prompts(MILESTONES[2] as number).every((n) => n === null)).toBe(true);
+        expect(readState(SID, root)?.prompts).toBe((MILESTONES[0] as number) + 1);
     });
 
     it('prunes state files nobody touched within the TTL, and keeps fresh ones', () => {

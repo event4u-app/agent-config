@@ -221,6 +221,34 @@ function scanLine(line: string, out: HostTitles): void {
   else if (line.includes(AI_MARK)) out.ai = titleFrom(line, "aiTitle") ?? out.ai;
 }
 
+export const TAIL_BYTES = 64 * 1024;
+
+/**
+ * Whether the transcript's last `TAIL_BYTES` carry a user title. Claude Code
+ * re-appends a `custom-title` line as it does `ai-title`, so a /rename shows up
+ * in the tail within a turn; this is the per-prompt check, cheap enough to run on
+ * every prompt, and the full scan at a milestone remains the authority.
+ */
+export function tailHasCustomTitle(transcriptPath: string): boolean {
+  let fd: number;
+  try {
+    fd = fs.openSync(transcriptPath, "r");
+  } catch {
+    return false;
+  }
+  try {
+    const size = fs.fstatSync(fd).size;
+    const len = Math.min(size, TAIL_BYTES);
+    const buf = Buffer.alloc(len);
+    fs.readSync(fd, buf, 0, len, size - len);
+    return buf.toString("utf8").split("\n").some((l) => l.includes(CUSTOM_MARK) && titleFrom(l, "customTitle") !== null);
+  } catch {
+    return false;
+  } finally {
+    fs.closeSync(fd);
+  }
+}
+
 /** The title a reader should show: user's own > refined > host-generated. */
 export function effectiveTitle(transcriptPath: string): { title: string | null; source: "custom" | "refined" | "ai" | null } {
   const host = readHostTitles(transcriptPath);
